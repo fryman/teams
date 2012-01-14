@@ -68,16 +68,8 @@ public class ArchonPlayer extends BasePlayer {
 							+ targetLoc.toString());
 					buildTower();
 				}
-
-				/*
-				 * while (!builtSuccess) { myRC.setIndicatorString(1,
-				 * "attempting build at: " + targetLoc.toString()); builtSuccess
-				 * = attemptTowerBuild(); if (!builtSuccess) {
-				 * myRC.setIndicatorString(1, "attempting destroy at: " +
-				 * targetLoc.toString()); destroyTower(); } }
-				 */
-
 				myRC.yield();
+				
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -132,24 +124,11 @@ public class ArchonPlayer extends BasePlayer {
 
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
-
-			/*
-			 * RobotLevel lev = myRC.senseObjectAtLocation(target,
-			 * RobotLevel.POWER_NODE).getRobotLevel(); if (lev.equals(null)) {
-			 * System.out.println("empty power node -- build tower"); return
-			 * false; } else { System.out.println("enemy tower here"); return
-			 * true; }
-			 */
-
-			if (/*myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE) != null
-					&& !myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation(
-							target, RobotLevel.POWER_NODE))*/
-					myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)!= null &&
-					myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND).getTeam()!= myRC.getTeam()) {
-				System.out.println("enemy tower sensed");
-				return true;			//change this to true
+			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
+							.getTeam() != myRC.getTeam()) {
+				return true;
 			} else {
-				System.out.println("no enemy tower");
 				return false;
 			}
 
@@ -161,10 +140,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public void buildTower() {
 		try {
-			if (/*
-				 * myRC.senseObjectAtLocation(targetLoc, RobotLevel.POWER_NODE)
-				 * == null &&
-				 */myRC.getFlux() >= RobotType.TOWER.spawnCost) {
+			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				myRC.spawn(RobotType.TOWER);
 				targetLoc = null;
 				myRC.yield();
@@ -178,8 +154,10 @@ public class ArchonPlayer extends BasePlayer {
 	public void destroyTower(MapLocation target) {
 		try {
 			if (myRC.canAttackSquare(target)) {
-				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)!= null &&
-						myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND).getTeam()!= myRC.getTeam()) {
+				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+						&& myRC.senseObjectAtLocation(target,
+								RobotLevel.ON_GROUND).getTeam() != myRC
+								.getTeam()) {
 					myRC.attackSquare(target, RobotLevel.ON_GROUND);
 					myRC.yield();
 				}
