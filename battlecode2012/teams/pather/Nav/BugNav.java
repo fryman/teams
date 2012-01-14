@@ -26,6 +26,7 @@ public class BugNav extends Navigation {
 	private boolean tracing = false;
 	private boolean turnedLeft = false;
 	private boolean waited = false;
+
 	public BugNav(RobotController myRC) {
 		this.myRC = myRC;
 	}
@@ -71,8 +72,11 @@ public class BugNav extends Navigation {
 					// by sensing and if we hit a friendly,
 					// back up rather than turn
 					// sense whats in front of us
-					GameObject obstruction = myRC.senseObjectAtLocation(myRC.getLocation().add(dir), RobotLevel.ON_GROUND);
-					if (obstruction != null && obstruction.getTeam() == myRC.getTeam() && !waited){
+					GameObject obstruction = myRC.senseObjectAtLocation(myRC
+							.getLocation().add(dir), RobotLevel.ON_GROUND);
+					if (obstruction != null
+							&& obstruction.getTeam() == myRC.getTeam()
+							&& !waited) {
 						waited = true;
 						return;
 					}
@@ -82,17 +86,19 @@ public class BugNav extends Navigation {
 					// this choice can be made with a heuristic such as
 					// dot product of new direction with direction to
 					// target
-					
+
 					// "pick direction to trace"
-					if (num > 2) {
+					if (num > 1) {
 						myRC.setDirection(dir.rotateRight());
 						turnedLeft = false;
-						myRC.setIndicatorString(1, "Turning right to avoid obstacle");
+						myRC.setIndicatorString(1,
+								"Turning right to avoid obstacle");
 						return;
 					} else {
 						myRC.setDirection(dir.rotateLeft());
 						turnedLeft = true;
-						myRC.setIndicatorString(1, "Turning left to avoid obstacle");
+						myRC.setIndicatorString(1,
+								"Turning left to avoid obstacle");
 						return;
 					}
 				}
@@ -100,17 +106,27 @@ public class BugNav extends Navigation {
 				// tracing
 				if (clearOfObstacle(target)) {
 					// robot clear of obstacle
-					// *** this is definitely not a sufficient "clear of obstacle" condition 
+					// *** this is definitely not a sufficient
+					// "clear of obstacle" condition
 					tracing = false;
 					myRC.setIndicatorString(1, "Clear of obstacle");
 					return;
 				} else {
 					// follow the wall / obstacle boundary
-					// it is ALWAYS on our right side given the condition above
-					if (myRC.canMove(myRC.getDirection().rotateRight())){
-						myRC.setDirection(myRC.getDirection().rotateRight());
-						myRC.setIndicatorString(1, "Rotating right to follow obstacle border");
-						return;
+					if (turnedLeft) {
+						if (myRC.canMove(myRC.getDirection().rotateRight())) {
+							myRC.setDirection(myRC.getDirection().rotateRight());
+							myRC.setIndicatorString(1,
+									"Rotating right to follow obstacle border");
+							return;
+						}
+					} else {
+						if (myRC.canMove(myRC.getDirection().rotateLeft())) {
+							myRC.setDirection(myRC.getDirection().rotateLeft());
+							myRC.setIndicatorString(1,
+									"Rotating Left to follow obstacle border");
+							return;
+						}
 					}
 					if (myRC.canMove(myRC.getDirection())) {
 						myRC.moveForward();
@@ -121,11 +137,13 @@ public class BugNav extends Navigation {
 						if (turnedLeft) {
 							// System.out.println("Turning left!");
 							myRC.setDirection(myRC.getDirection().rotateLeft());
-							myRC.setIndicatorString(1, "Turning more left to avoid obstacle");
+							myRC.setIndicatorString(1,
+									"Turning more left to avoid obstacle");
 							return;
 						} else {
 							myRC.setDirection(myRC.getDirection().rotateRight());
-							myRC.setIndicatorString(1, "Turning more right to avoid obstacle");
+							myRC.setIndicatorString(1,
+									"Turning more right to avoid obstacle");
 							return;
 						}
 					}
@@ -136,8 +154,10 @@ public class BugNav extends Navigation {
 			e.printStackTrace();
 		}
 	}
-	public boolean clearOfObstacle(MapLocation target){
-		return myRC.getDirection().equals(myRC.getLocation().directionTo(target));
-		//return myRC.canMove(myRC.getLocation().directionTo(target));
+
+	public boolean clearOfObstacle(MapLocation target) {
+		return myRC.getDirection().equals(
+				myRC.getLocation().directionTo(target));
+		// return myRC.canMove(myRC.getLocation().directionTo(target));
 	}
 }
