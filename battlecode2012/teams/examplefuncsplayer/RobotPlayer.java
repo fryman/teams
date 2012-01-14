@@ -5,7 +5,7 @@ import battlecode.common.*;
 
 // taylor contribution!
 
-// and now brians!!
+// and now brians!! And stephen changed it
 public class RobotPlayer {
 
     public static void run(RobotController myRC) {
