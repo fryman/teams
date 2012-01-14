@@ -66,10 +66,10 @@ public class ArchonPlayer extends BasePlayer {
 				} else {
 					myRC.setIndicatorString(1, "attempting build at: "
 							+ targetLoc.toString());
-					buildTower();
+					buildTower(targetLoc);
 				}
 				myRC.yield();
-				
+
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -138,12 +138,18 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public void buildTower() {
+	public void buildTower(MapLocation target) {
 		try {
+			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
+							.getTeam() == myRC.getTeam()) {
+				getNewTarget();
+				return;
+			}
 			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				myRC.spawn(RobotType.TOWER);
-				targetLoc = null;
 				myRC.yield();
+				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 			}
 		} catch (GameActionException e) {

@@ -1,6 +1,5 @@
 package pather;
 
-import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
 public class ScoutPlayer extends BasePlayer {
