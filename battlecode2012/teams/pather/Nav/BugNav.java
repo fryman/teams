@@ -1,8 +1,10 @@
 package pather.Nav;
 
 import battlecode.common.Direction;
+import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotLevel;
 
 public class BugNav extends Navigation {
 	/*
@@ -22,7 +24,8 @@ public class BugNav extends Navigation {
 	 * is on_wall or not. If robot doesn't know, passes in false.
 	 */
 	private boolean tracing = false;
-
+	private boolean turnedLeft = false;
+	private boolean waited = false;
 	public BugNav(RobotController myRC) {
 		this.myRC = myRC;
 	}
@@ -32,6 +35,22 @@ public class BugNav extends Navigation {
 		/*
 		 * if (dir to target obstructed) trace around wall else go to target
 		 */
+		/*
+		 * if (myRC.isMovementActive()) { return; } try { Direction ideal =
+		 * myRC.getLocation().directionTo(target); if (myRC.canMove(ideal)){ //
+		 * if facing properly, go forward if
+		 * (myRC.getDirection().equals(ideal)){ myRC.moveForward(); return; }
+		 * else { // else turn move forward next round myRC.setDirection(ideal);
+		 * return; } } else { if (myRC.canMove(myRC.getDirection())){
+		 * myRC.moveForward(); return; } else { double num = Math.random(); //
+		 * this choice can be made with a heuristic such as // dot product of
+		 * new direction with direction to // target if (num > .5) {
+		 * myRC.setDirection(myRC.getDirection().rotateRight()); return; } else
+		 * { myRC.setDirection(myRC.getDirection().rotateLeft()); return; } } }
+		 * } catch (Exception e){ System.out.println("Exception caught");
+		 * e.printStackTrace(); }
+		 */
+
 		try {
 			if (myRC.isMovementActive()) {
 				return;
@@ -41,25 +60,68 @@ public class BugNav extends Navigation {
 				if (myRC.canMove(dir)) {
 					if (myRC.getDirection() != dir) {
 						myRC.setDirection(dir);
+						myRC.setIndicatorString(1, "Turning ideal");
 						return;
 					}
 					myRC.moveForward();
+					myRC.setIndicatorString(1, "Moving ideal");
 					return;
 				} else {
+					// here we deal with *what* we hit
+					// by sensing and if we hit a friendly,
+					// back up rather than turn
+					// sense whats in front of us
+					GameObject obstruction = myRC.senseObjectAtLocation(myRC.getLocation().add(dir), RobotLevel.ON_GROUND);
+					if (obstruction != null && obstruction.getTeam() == myRC.getTeam() && !waited){
+						waited = true;
+						return;
+					}
+					waited = false;
 					tracing = true;
 					double num = Math.random();
-					if (num > 0.5) {
+					// this choice can be made with a heuristic such as
+					// dot product of new direction with direction to
+					// target
+					
+					// "pick direction to trace"
+					if (num > 2) {
 						myRC.setDirection(dir.rotateRight());
+						turnedLeft = false;
+						myRC.setIndicatorString(1, "Turning right to avoid obstacle");
+						return;
 					} else {
 						myRC.setDirection(dir.rotateLeft());
+						turnedLeft = true;
+						myRC.setIndicatorString(1, "Turning left to avoid obstacle");
+						return;
 					}
 				}
 			} else {
+				// tracing
 				if (myRC.canMove(myRC.getLocation().directionTo(target))) {
+					// robot clear of obstacle
+					// *** this is definitely not a sufficient "clear of obstacle" condition 
 					tracing = false;
-				} else {
-					myRC.moveForward();
+					myRC.setIndicatorString(1, "Clear of obstacle");
 					return;
+				} else {
+					if (myRC.canMove(myRC.getDirection())) {
+						myRC.moveForward();
+						myRC.setIndicatorString(1, "Walking around obstacle");
+						return;
+					} else {
+						// we have problems
+						if (turnedLeft) {
+							// System.out.println("Turning left!");
+							myRC.setDirection(myRC.getDirection().rotateLeft());
+							myRC.setIndicatorString(1, "Turning more left to avoid obstacle");
+							return;
+						} else {
+							myRC.setDirection(myRC.getDirection().rotateRight());
+							myRC.setIndicatorString(1, "Turning more right to avoid obstacle");
+							return;
+						}
+					}
 				}
 			}
 		} catch (Exception e) {
