@@ -62,7 +62,7 @@ public class ArchonPlayer extends BasePlayer {
 				if (enemyTower == true) {
 					myRC.setIndicatorString(1, "attempting destroy at: "
 							+ targetLoc.toString());
-					destroyTower();
+					destroyTower(targetLoc);
 				} else {
 					myRC.setIndicatorString(1, "attempting build at: "
 							+ targetLoc.toString());
@@ -141,11 +141,13 @@ public class ArchonPlayer extends BasePlayer {
 			 * true; }
 			 */
 
-			if (myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE)!= null
+			if (/*myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE) != null
 					&& !myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation(
-							target, RobotLevel.POWER_NODE))) {
+							target, RobotLevel.POWER_NODE))*/
+					myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)!= null &&
+					myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND).getTeam()!= myRC.getTeam()) {
 				System.out.println("enemy tower sensed");
-				return false;			//change this to true
+				return true;			//change this to true
 			} else {
 				System.out.println("no enemy tower");
 				return false;
@@ -173,15 +175,12 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public void destroyTower() {
+	public void destroyTower(MapLocation target) {
 		try {
-			if (myRC.canAttackSquare(targetLoc)) {
-
-				while (!myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation(
-						targetLoc, RobotLevel.POWER_NODE))
-						&& myRC.senseObjectAtLocation(targetLoc,
-								RobotLevel.POWER_NODE) != null) {
-					myRC.attackSquare(targetLoc, RobotLevel.POWER_NODE);
+			if (myRC.canAttackSquare(target)) {
+				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)!= null &&
+						myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND).getTeam()!= myRC.getTeam()) {
+					myRC.attackSquare(target, RobotLevel.ON_GROUND);
 					myRC.yield();
 				}
 			}
