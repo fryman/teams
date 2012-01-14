@@ -1,7 +1,9 @@
 package examplefuncsplayer;
 
 import battlecode.common.*;
+//ksadpofjasdk;lfjadsk;lfjdsk;lfjasd;lkfjsdk;lfj
 
+// taylor contribution!
 public class RobotPlayer {
 
     public static void run(RobotController myRC) {
