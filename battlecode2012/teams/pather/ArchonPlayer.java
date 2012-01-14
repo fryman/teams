@@ -57,17 +57,26 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.yield();
 				}
 				// Now we can build a fucking tower
-				boolean builtSuccess = false;
-				while (!builtSuccess) {
+				boolean enemyTower = enemyTowerPresent(targetLoc);
+
+				if (enemyTower == true) {
+					myRC.setIndicatorString(1, "attempting destroy at: "
+							+ targetLoc.toString());
+					destroyTower();
+				} else {
 					myRC.setIndicatorString(1, "attempting build at: "
 							+ targetLoc.toString());
-					builtSuccess = attemptTowerBuild();
-					if (!builtSuccess) {
-						myRC.setIndicatorString(1, "attempting destroy at: "
-								+ targetLoc.toString());
-						destroyTower();
-					}
+					buildTower();
 				}
+
+				/*
+				 * while (!builtSuccess) { myRC.setIndicatorString(1,
+				 * "attempting build at: " + targetLoc.toString()); builtSuccess
+				 * = attemptTowerBuild(); if (!builtSuccess) {
+				 * myRC.setIndicatorString(1, "attempting destroy at: " +
+				 * targetLoc.toString()); destroyTower(); } }
+				 */
+
 				myRC.yield();
 			} catch (Exception e) {
 				System.out.println("caught exception:");
@@ -121,28 +130,48 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean attemptTowerBuild() {
+	public boolean enemyTowerPresent(MapLocation target) {
 		try {
-			if (!myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation(
-					targetLoc, RobotLevel.POWER_NODE))) {
+
+			RobotLevel lev = myRC.senseObjectAtLocation(target,
+					RobotLevel.POWER_NODE).getRobotLevel();
+			if (lev.equals(null)) {
+				System.out.println("empty power node -- build tower");
 				return false;
+			} else {
+				System.out.println("enemy tower here");
+				return true;
 			}
-			if (myRC.senseObjectAtLocation(
-					myRC.getLocation().add(myRC.getDirection()),
-					RobotLevel.ON_GROUND) == null
-					&& myRC.getFlux() >= RobotType.TOWER.spawnCost) {
+
+			/*
+			 * if (myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE)
+			 * .getRobotLevel() == RobotLevel.POWER_NODE &&
+			 * myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation( target,
+			 * RobotLevel.POWER_NODE)) == false) {
+			 * System.out.println("enemy tower sensed"); return false; } else {
+			 * System.out.println("no enemy tower"); return false; }
+			 */
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void buildTower() {
+		try {
+			if (/*
+				 * myRC.senseObjectAtLocation(targetLoc, RobotLevel.POWER_NODE)
+				 * == null &&
+				 */myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				myRC.spawn(RobotType.TOWER);
 				PowerNode justBuilt = (PowerNode) myRC.senseObjectAtLocation(
 						targetLoc, RobotLevel.POWER_NODE);
 				targetLoc = null;
 				myRC.yield();
 				myRC.setIndicatorString(1, "null");
-				return true;
 			}
-			return false;
 		} catch (GameActionException e) {
 			e.printStackTrace();
-			return false;
 		}
 	}
 
