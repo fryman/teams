@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 import java.util.*;
 
+import pather.Nav.*;
+
 public class ArchonPlayer extends BasePlayer {
 
 	private PowerNode core = null;
@@ -12,9 +14,12 @@ public class ArchonPlayer extends BasePlayer {
 											// should be built
 	private MapLocation[] locsToBuild = myRC.senseCapturablePowerNodes();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
+	private Navigation nav = null;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
+		// Today Archons use BugNav
+		this.nav = new BugNav(rc);
 	}
 
 	public void run() {
@@ -30,7 +35,8 @@ public class ArchonPlayer extends BasePlayer {
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-					goCloser(targetLoc);
+					this.nav.getNextMove(targetLoc);
+					//this.goCloser(targetLoc);
 					myRC.yield();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();

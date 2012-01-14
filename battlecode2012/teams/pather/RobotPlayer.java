@@ -10,10 +10,12 @@ public class RobotPlayer {
 
 	public static void run(RobotController rc) {
 		StaticStuff.init(rc);// defines myRC and base location for later use
+		new RobotPlayer().nonStaticRun(rc);
+	}
+	public void nonStaticRun(RobotController rc){
 		switch (rc.getType()) {
 		case ARCHON:
 			new ArchonPlayer(rc).run();
-			break;
 		case SCOUT:
 			new ScoutPlayer(rc).run();
 		}
