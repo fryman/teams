@@ -98,13 +98,20 @@ public class BugNav extends Navigation {
 				}
 			} else {
 				// tracing
-				if (myRC.canMove(myRC.getLocation().directionTo(target))) {
+				if (clearOfObstacle(target)) {
 					// robot clear of obstacle
 					// *** this is definitely not a sufficient "clear of obstacle" condition 
 					tracing = false;
 					myRC.setIndicatorString(1, "Clear of obstacle");
 					return;
 				} else {
+					// follow the wall / obstacle boundary
+					// it is ALWAYS on our right side given the condition above
+					if (myRC.canMove(myRC.getDirection().rotateRight())){
+						myRC.setDirection(myRC.getDirection().rotateRight());
+						myRC.setIndicatorString(1, "Rotating right to follow obstacle border");
+						return;
+					}
 					if (myRC.canMove(myRC.getDirection())) {
 						myRC.moveForward();
 						myRC.setIndicatorString(1, "Walking around obstacle");
@@ -128,5 +135,9 @@ public class BugNav extends Navigation {
 			System.out.println("caught exception:");
 			e.printStackTrace();
 		}
+	}
+	public boolean clearOfObstacle(MapLocation target){
+		return myRC.getDirection().equals(myRC.getLocation().directionTo(target));
+		//return myRC.canMove(myRC.getLocation().directionTo(target));
 	}
 }
