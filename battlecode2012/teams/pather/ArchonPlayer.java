@@ -133,24 +133,24 @@ public class ArchonPlayer extends BasePlayer {
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
 
-			RobotLevel lev = myRC.senseObjectAtLocation(target,
-					RobotLevel.POWER_NODE).getRobotLevel();
-			if (lev.equals(null)) {
-				System.out.println("empty power node -- build tower");
-				return false;
+			/*
+			 * RobotLevel lev = myRC.senseObjectAtLocation(target,
+			 * RobotLevel.POWER_NODE).getRobotLevel(); if (lev.equals(null)) {
+			 * System.out.println("empty power node -- build tower"); return
+			 * false; } else { System.out.println("enemy tower here"); return
+			 * true; }
+			 */
+
+			if (myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE)!= null
+					&& !myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation(
+							target, RobotLevel.POWER_NODE))) {
+				System.out.println("enemy tower sensed");
+				return false;			//change this to true
 			} else {
-				System.out.println("enemy tower here");
-				return true;
+				System.out.println("no enemy tower");
+				return false;
 			}
 
-			/*
-			 * if (myRC.senseObjectAtLocation(target, RobotLevel.POWER_NODE)
-			 * .getRobotLevel() == RobotLevel.POWER_NODE &&
-			 * myRC.senseOwned((PowerNode) myRC.senseObjectAtLocation( target,
-			 * RobotLevel.POWER_NODE)) == false) {
-			 * System.out.println("enemy tower sensed"); return false; } else {
-			 * System.out.println("no enemy tower"); return false; }
-			 */
 		} catch (GameActionException e) {
 			e.printStackTrace();
 			return false;
@@ -164,8 +164,6 @@ public class ArchonPlayer extends BasePlayer {
 				 * == null &&
 				 */myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				myRC.spawn(RobotType.TOWER);
-				PowerNode justBuilt = (PowerNode) myRC.senseObjectAtLocation(
-						targetLoc, RobotLevel.POWER_NODE);
 				targetLoc = null;
 				myRC.yield();
 				myRC.setIndicatorString(1, "null");
