@@ -18,6 +18,8 @@ public class RobotPlayer {
 			new ArchonPlayer(rc).run();
 		case SCOUT:
 			new ScoutPlayer(rc).run();
+		case SOLDIER:
+			new SoldierPlayer(rc).run();
 		}
 	}
 

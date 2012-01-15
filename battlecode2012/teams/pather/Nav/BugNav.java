@@ -1,7 +1,5 @@
 package pather.Nav;
 
-import java.awt.Robot;
-
 import battlecode.common.Direction;
 import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
@@ -271,6 +269,7 @@ public class BugNav extends Navigation {
 
 	public void getNextMoveBug1(MapLocation target) {
 		try {
+			// TODO finish...
 			if (myRC.isMovementActive()) {
 				return;
 			}

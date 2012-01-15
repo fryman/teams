@@ -34,27 +34,29 @@ public class ArchonPlayer extends BasePlayer {
 				if (core == null) {
 					core = myRC.sensePowerCore();
 				}
-				
+
 				getNewTarget();
-				
+
 				while (Clock.getRoundNum() < 200) {
-					if (myRC.getFlux() > RobotType.SCOUT.spawnCost) {
-						myRC.spawn(RobotType.SCOUT);
+					if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
+							&& myRC.senseObjectAtLocation(myRC.getLocation()
+									.add(myRC.getDirection()),
+									RobotLevel.ON_GROUND) == null) {
+						myRC.spawn(RobotType.SOLDIER);
 						myRC.yield();
-						while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
+						while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
 							myRC.yield();
 						}
 						myRC.transferFlux(
 								myRC.getLocation().add(myRC.getDirection()),
-								RobotLevel.IN_AIR,
-								(RobotType.SCOUT.maxFlux));
+								RobotLevel.ON_GROUND,
+								(RobotType.SOLDIER.maxFlux / 2));
 					}
 				}
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 					this.nav.getNextMove(targetLoc);
-					// this.goCloser(targetLoc);
 					myRC.yield();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();
@@ -179,6 +181,9 @@ public class ArchonPlayer extends BasePlayer {
 				return;
 			}
 			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
+				while (myRC.isMovementActive()){
+					myRC.yield();
+				}
 				myRC.spawn(RobotType.TOWER);
 				myRC.yield();
 				getNewTarget();

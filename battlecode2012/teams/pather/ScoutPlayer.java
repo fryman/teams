@@ -4,6 +4,7 @@ import java.util.Random;
 
 import pather.Nav.BugNav;
 import pather.Nav.Navigation;
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
@@ -30,7 +31,6 @@ public class ScoutPlayer extends BasePlayer {
 		while (true) {
 			try {
 				weakestTar = senseWeakestEnemy();
-
 				if (weakestTar == null) {
 					try {
 						while (myRC.isMovementActive()) {
@@ -52,19 +52,24 @@ public class ScoutPlayer extends BasePlayer {
 						e.printStackTrace();
 					}
 				} else {
+					this.myRC.setIndicatorString(0, "Weakest Target: " + weakestTar.getID());
+					System.out.println(Clock.getBytecodeNum() + " before senseLocationOf(weakestTar)");
 					targetLoc = myRC.senseLocationOf(weakestTar);
-
-					while (myRC.isMovementActive()) {
-						myRC.yield();
-					}
-
-					while (targetLoc != null
+					System.out.println(Clock.getBytecodeNum() + " after senseLocationOf(weakestTar)");
+					this.myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
+//					while (myRC.isMovementActive()) {
+//						myRC.yield();
+//					}
+					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
+						System.out.println(Clock.getBytecodeNum() + " before attackWeakestEnemy");
 						attackWeakestEnemy();
+						System.out.println(Clock.getBytecodeNum() + " after attackWeakestEnemy");
 						this.nav.getNextMove(targetLoc);
-						// this.goCloser(targetLoc);
+						System.out.println(Clock.getBytecodeNum() + " after getNextMove");
 						myRC.yield();
 					}
+					myRC.yield();
 				}
 			} catch (Exception e) {
 				System.out.println("caught exception:");
@@ -95,9 +100,9 @@ public class ScoutPlayer extends BasePlayer {
 				return;
 			}
 			MapLocation attack = myRC.senseLocationOf(weakestTar);
-			if (myRC.canAttackSquare(attack)) {
+			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-				myRC.yield();
+				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
 			}
 		} catch (GameActionException e1) {
 			e1.printStackTrace();
