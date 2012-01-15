@@ -12,7 +12,10 @@ public class ArchonPlayer extends BasePlayer {
 	private Random r = new Random();
 	private MapLocation targetLoc = null; // the location at which the tower
 											// should be built
-	private MapLocation[] locsToBuild = myRC.senseCapturablePowerNodes();
+	private MapLocation[] powerNodes = myRC.senseCapturablePowerNodes();
+	private ArrayList<MapLocation> locsToBuild = new ArrayList<MapLocation>();
+	//need to remove from enemyTowerLocs if we destroy enemy towers
+	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
 	private Navigation nav = null;
 
@@ -36,7 +39,7 @@ public class ArchonPlayer extends BasePlayer {
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 					this.nav.getNextMove(targetLoc);
-					//this.goCloser(targetLoc);
+					// this.goCloser(targetLoc);
 					myRC.yield();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();
@@ -68,7 +71,9 @@ public class ArchonPlayer extends BasePlayer {
 				if (enemyTower == true) {
 					myRC.setIndicatorString(1, "attempting destroy at: "
 							+ targetLoc.toString());
-					destroyTower(targetLoc);
+					enemyTowerLocs.add(targetLoc);
+					getNewTarget();
+
 				} else {
 					myRC.setIndicatorString(1, "attempting build at: "
 							+ targetLoc.toString());
@@ -115,14 +120,20 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	public void updateUnownedNodes() {
-		locsToBuild = myRC.senseCapturablePowerNodes();
+		powerNodes = myRC.senseCapturablePowerNodes();
+		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(powerNodes));
 		powerNodesOwned = myRC.senseAlliedPowerNodes();
 	}
 
 	public void getNewTarget() {
-		updateUnownedNodes();
-		if (locsToBuild.length != 0) {
-			targetLoc = locsToBuild[0];
+		updateUnownedNodes();		
+		if (locsToBuild.size() != 0) {
+			for (MapLocation m : locsToBuild) {
+				if (!enemyTowerLocs.contains(m)) {
+					targetLoc = m;
+					return;
+				}
+			} //does not handle case where all nodes are enemy towers
 		} else {
 			targetLoc = myRC.sensePowerCore().getLocation();
 		}
@@ -162,6 +173,8 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
+
+	// archons can't actually attack ...
 
 	public void destroyTower(MapLocation target) {
 		try {
