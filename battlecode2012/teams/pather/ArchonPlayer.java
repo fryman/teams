@@ -14,7 +14,7 @@ public class ArchonPlayer extends BasePlayer {
 											// should be built
 	private MapLocation[] powerNodes = myRC.senseCapturablePowerNodes();
 	private ArrayList<MapLocation> locsToBuild = new ArrayList<MapLocation>();
-	//need to remove from enemyTowerLocs if we destroy enemy towers
+	// need to remove from enemyTowerLocs if we destroy enemy towers
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
 	private Navigation nav = null;
@@ -34,19 +34,22 @@ public class ArchonPlayer extends BasePlayer {
 				if (core == null) {
 					core = myRC.sensePowerCore();
 				}
-				while (Clock.getRoundNum() < 200){
-					if(myRC.getFlux()>RobotType.SCOUT.spawnCost ){
-						myRC.spawn(RobotType.SCOUT);
-						myRC.yield();
-						while((RobotType.SCOUT.maxFlux/2) > myRC.getFlux() ){
-							myRC.yield();
-						}
-						myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()), RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux/2));
-					}
-				}
-
 				
 				getNewTarget();
+				
+				while (Clock.getRoundNum() < 200) {
+					if (myRC.getFlux() > RobotType.SCOUT.spawnCost) {
+						myRC.spawn(RobotType.SCOUT);
+						myRC.yield();
+						while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
+							myRC.yield();
+						}
+						myRC.transferFlux(
+								myRC.getLocation().add(myRC.getDirection()),
+								RobotLevel.IN_AIR,
+								(RobotType.SCOUT.maxFlux));
+					}
+				}
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
@@ -138,14 +141,14 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	public void getNewTarget() {
-		updateUnownedNodes();		
+		updateUnownedNodes();
 		if (locsToBuild.size() != 0) {
 			for (MapLocation m : locsToBuild) {
 				if (!enemyTowerLocs.contains(m)) {
 					targetLoc = m;
 					return;
 				}
-			} //does not handle case where all nodes are enemy towers
+			} // does not handle case where all nodes are enemy towers
 		} else {
 			targetLoc = myRC.sensePowerCore().getLocation();
 		}
@@ -180,7 +183,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.yield();
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
-				
+
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
