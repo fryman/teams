@@ -24,6 +24,8 @@ public class ScoutPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
+	//go explore, follow spawned archon, transfer energon to archon
+	
 	public void run() {
 		while (true) {
 			try {

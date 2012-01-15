@@ -1,10 +1,13 @@
 package pather.Nav;
 
+import java.awt.Robot;
+
 import battlecode.common.Direction;
 import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotLevel;
+import battlecode.common.TerrainTile;
 
 public class BugNav extends Navigation {
 	/*
@@ -26,35 +29,36 @@ public class BugNav extends Navigation {
 	private boolean tracing = false;
 	private boolean turnedLeft = false;
 	private boolean waited = false;
+	private boolean justHitObstacleLastTurn = false; // this indicates if we've
+														// moved off the mline
+														// since hitting an
+														// obstacle
+	private MapLocation target;
+	private Line mline = null;
+	private int turnsPassedSinceLastMove = 0; // safety to prevent spinning in
+												// place when an obstacle moves
+												// out of the way
+	private MapLocation qStart = null;
+	private MapLocation qClosest = null;
+	private MapLocation qObstruction = null;
 
 	public BugNav(RobotController myRC) {
 		this.myRC = myRC;
 	}
-
+	
 	@Override
 	public void getNextMove(MapLocation target) {
-		/*
-		 * if (dir to target obstructed) trace around wall else go to target
-		 */
-		/*
-		 * if (myRC.isMovementActive()) { return; } try { Direction ideal =
-		 * myRC.getLocation().directionTo(target); if (myRC.canMove(ideal)){ //
-		 * if facing properly, go forward if
-		 * (myRC.getDirection().equals(ideal)){ myRC.moveForward(); return; }
-		 * else { // else turn move forward next round myRC.setDirection(ideal);
-		 * return; } } else { if (myRC.canMove(myRC.getDirection())){
-		 * myRC.moveForward(); return; } else { double num = Math.random(); //
-		 * this choice can be made with a heuristic such as // dot product of
-		 * new direction with direction to // target if (num > .5) {
-		 * myRC.setDirection(myRC.getDirection().rotateRight()); return; } else
-		 * { myRC.setDirection(myRC.getDirection().rotateLeft()); return; } } }
-		 * } catch (Exception e){ System.out.println("Exception caught");
-		 * e.printStackTrace(); }
-		 */
+		getNextMoveBug0(target);
+		return;
+	}
 
+	public void getNextMoveBug0(MapLocation target) {
 		try {
 			if (myRC.isMovementActive()) {
 				return;
+			}
+			if (!target.equals(this.target) || this.mline == null) {
+				setTargetBug2(target);
 			}
 			Direction dir = myRC.getLocation().directionTo(target);
 			if (!tracing) {
@@ -67,10 +71,9 @@ public class BugNav extends Navigation {
 					myRC.moveForward();
 					myRC.setIndicatorString(1, "Moving ideal");
 					return;
-				} else {
-					// here we deal with *what* we hit
-					// by sensing and if we hit a friendly,
-					// back up rather than turn
+				} else { // here we deal with *what* we hit
+					// by sensing and if we hit a friendly, // back up rather
+					// than turn
 					// sense whats in front of us
 					GameObject obstruction = myRC.senseObjectAtLocation(myRC
 							.getLocation().add(dir), RobotLevel.ON_GROUND);
@@ -83,9 +86,9 @@ public class BugNav extends Navigation {
 					waited = false;
 					tracing = true;
 					double num = Math.random();
-					// this choice can be made with a heuristic such as
-					// dot product of new direction with direction to
-					// target
+					// this choice can be made with a heuristic such as // dot
+					// product of
+					// new direction with direction to // target
 
 					// "pick direction to trace"
 					if (num > 1) {
@@ -102,16 +105,15 @@ public class BugNav extends Navigation {
 						return;
 					}
 				}
-			} else {
-				// tracing
-				if (clearOfObstacle(target)) {
-					// robot clear of obstacle
-					// *** this is definitely not a sufficient
+			} else { // tracing
+				if (clearOfObstacleBug0(target)) { //
+					// robot clear of obstacle // *** this is definitely not a
+					// sufficient //
 					// "clear of obstacle" condition
 					tracing = false;
 					myRC.setIndicatorString(1, "Clear of obstacle");
 					return;
-				} else {
+				} else { //
 					// follow the wall / obstacle boundary
 					if (turnedLeft) {
 						if (myRC.canMove(myRC.getDirection().rotateRight())) {
@@ -132,10 +134,8 @@ public class BugNav extends Navigation {
 						myRC.moveForward();
 						myRC.setIndicatorString(1, "Walking around obstacle");
 						return;
-					} else {
-						// we have problems
-						if (turnedLeft) {
-							// System.out.println("Turning left!");
+					} else { // we have problems
+						if (turnedLeft) { //
 							myRC.setDirection(myRC.getDirection().rotateLeft());
 							myRC.setIndicatorString(1,
 									"Turning more left to avoid obstacle");
@@ -155,9 +155,145 @@ public class BugNav extends Navigation {
 		}
 	}
 
-	public boolean clearOfObstacle(MapLocation target) {
+	public boolean clearOfObstacleBug0(MapLocation target) {
 		return myRC.getDirection().equals(
 				myRC.getLocation().directionTo(target));
-		// return myRC.canMove(myRC.getLocation().directionTo(target));
+	}
+
+	public boolean clearOfObstacleBug2(MapLocation target) {
+		// Bug2 model (using mline)
+		MapLocation currentLoc = myRC.getLocation();
+		return this.mline.onLine(new int[] { currentLoc.x, currentLoc.y });
+	}
+
+	public void setTargetBug2(MapLocation target) {
+		// used to set the M-line for Bug2 navigation
+		MapLocation start = myRC.getLocation();
+		this.target = target;
+		int[] init = { start.x, start.y };
+		int[] end = { target.x, target.y };
+		this.mline = new Line(init, end);
+		this.mline.setDirection(start.directionTo(target));
+	}
+
+	public void getNextMoveBug2(MapLocation target) {
+		try {
+			if (myRC.isMovementActive()) {
+				return;
+			}
+			this.myRC.setIndicatorString(1, Boolean.toString(tracing));
+			if (!target.equals(this.target) || this.mline == null) {
+				setTargetBug2(target);
+			}
+			if (this.myRC.getLocation().equals(this.target)) {
+				return;
+			}
+			if (!tracing) {
+				// this means we're on the mline
+				// if we are on the mline, then ideal direction should be equal
+				// to the direction of the mline
+				Direction ideal = this.myRC.getLocation().directionTo(target);
+				if (myRC.canMove(ideal)) {
+					// moving safely along mline
+					if (myRC.getDirection().equals(ideal)) {
+						this.myRC.moveForward();
+						this.myRC.setIndicatorString(2, "moving ideal");
+					} else {
+						this.myRC.setDirection(ideal);
+						this.myRC.setIndicatorString(2, "turning ideal");
+					}
+				} else {
+					// obstacle acquired
+					if (waited) {
+						waited = false;
+						tracing = true;
+						// turn left!
+						this.myRC.setDirection(this.myRC.getDirection()
+								.rotateLeft());
+						justHitObstacleLastTurn = true;
+					} else {
+						waited = true;
+						return;
+					}
+				}
+			} else {
+				this.myRC.setIndicatorString(0,
+						Boolean.toString(justHitObstacleLastTurn));
+				// following the side of an obstacle
+				MapLocation current = myRC.getLocation();
+				if (!justHitObstacleLastTurn) {
+					// check if we're back on the mline
+					if (this.mline.onLine(new int[] { current.x, current.y })) {
+						tracing = false;
+						return;
+					}
+				}
+				// check if can turn right to follow obstacle. if not, walk
+				// around it.
+				if (turnsPassedSinceLastMove == 8
+						&& this.myRC.canMove(this.myRC.getDirection())) {
+					this.myRC.moveForward();
+					justHitObstacleLastTurn = false;
+					this.myRC.setIndicatorString(2, "noted: spun in place");
+					turnsPassedSinceLastMove = 0;
+					tracing = false;
+					return;
+				}
+				if (turnsPassedSinceLastMove < 8
+						&& this.myRC.canMove(this.myRC.getDirection()
+								.rotateRight())) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+					this.myRC.setIndicatorString(2,
+							"turning right to follow obstacle border");
+					turnsPassedSinceLastMove++;
+					return;
+				} else if (this.myRC.canMove(this.myRC.getDirection())) {
+					this.myRC.moveForward();
+					justHitObstacleLastTurn = false;
+					this.myRC.setIndicatorString(2,
+							"moving along the outside of an obstacle");
+					turnsPassedSinceLastMove = 0;
+					return;
+				} else {
+					// obviously the obstruction is concave on our side
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateLeft());
+					this.myRC.setIndicatorString(2,
+							"obstacle is convex, turning left");
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("Caught Exception");
+			e.printStackTrace();
+		}
+	}
+
+	public void getNextMoveBug1(MapLocation target) {
+		try {
+			if (myRC.isMovementActive()) {
+				return;
+			}
+			if (qStart == null) {
+				this.qStart = this.myRC.getLocation();
+			}
+			if (!target.equals(this.target)) {
+				this.target = target;
+			}
+			if (this.myRC.getLocation().equals(this.target)) {
+				return;
+			}
+			Direction ideal = this.myRC.getLocation().directionTo(target);
+			if (myRC.canMove(ideal)) {
+				if (myRC.getDirection().equals(ideal)) {
+					myRC.moveForward();
+				} else {
+					myRC.setDirection(ideal);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("Caught Exception");
+			e.printStackTrace();
+		}
 	}
 }
