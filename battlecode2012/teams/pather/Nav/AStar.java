@@ -10,4 +10,5 @@ public class AStar extends Navigation{
 	public void getNextMove(MapLocation target) {
 		// TODO Auto-generated method stub
 	}
+
 }
