@@ -5,6 +5,7 @@ import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotLevel;
+import battlecode.common.TerrainTile;
 
 public class BugNav extends Navigation {
 	/*
@@ -156,8 +157,21 @@ public class BugNav extends Navigation {
 	}
 
 	public boolean clearOfObstacle(MapLocation target) {
-		return myRC.getDirection().equals(
-				myRC.getLocation().directionTo(target));
+		// When as far as can be sensed in the ideal direction is clear, then
+		// you are clear of the obstacle.
+		Direction ideal = myRC.getLocation().directionTo(target);
+		MapLocation lookingAt = myRC.getLocation().add(ideal);
+		TerrainTile t = myRC.senseTerrainTile(lookingAt);
+		while (t == TerrainTile.LAND) {
+			lookingAt = lookingAt.add(ideal);
+			t = myRC.senseTerrainTile(lookingAt);
+		}
+		if (t == null) {
+			return true;
+		}
+		return false;
+		// return myRC.getDirection().equals(
+		// myRC.getLocation().directionTo(target));
 		// return myRC.canMove(myRC.getLocation().directionTo(target));
 	}
 }
