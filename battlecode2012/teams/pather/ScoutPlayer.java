@@ -8,6 +8,8 @@ public class ScoutPlayer extends BasePlayer {
 		super(rc);
 	}
 
+	//go explore, follow spawned archon, transfer energon to archon
+	
 	public void run() {
 		while (true) {
 			try {

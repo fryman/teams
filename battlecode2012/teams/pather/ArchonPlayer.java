@@ -34,6 +34,18 @@ public class ArchonPlayer extends BasePlayer {
 				if (core == null) {
 					core = myRC.sensePowerCore();
 				}
+				while (Clock.getRoundNum() < 200){
+					if(myRC.getFlux()>RobotType.SCOUT.spawnCost ){
+						myRC.spawn(RobotType.SCOUT);
+						myRC.yield();
+						while((RobotType.SCOUT.maxFlux/2) > myRC.getFlux() ){
+							myRC.yield();
+						}
+						myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()), RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux/2));
+					}
+				}
+
+				
 				getNewTarget();
 
 				while (targetLoc != null
@@ -168,6 +180,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.yield();
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
+				
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
