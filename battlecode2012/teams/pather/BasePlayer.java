@@ -227,8 +227,40 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return false;
 	}
+	
+	public boolean enemyTowerPresent(MapLocation target) {
+		try {
+			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
+							.getTeam() != myRC.getTeam()) {
+				return true;
+			} else {
+				return false;
+			}
 
-	public Robot senseWeakestEnemy() {
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public void destroyTower(MapLocation target) {
+		try {
+			if (myRC.canAttackSquare(target)) {
+				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+						&& myRC.senseObjectAtLocation(target,
+								RobotLevel.ON_GROUND).getTeam() != myRC
+								.getTeam()) {
+					myRC.attackSquare(target, RobotLevel.ON_GROUND);
+					runAtEndOfTurn();
+				}
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Robot senseClosestEnemy() {
 		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 		Robot weakest = null;
 		if (enemies.length > 0) {
@@ -244,7 +276,7 @@ public abstract class BasePlayer extends StaticStuff {
 		return weakest;
 	}
 
-	public void attackWeakestEnemy(Robot weakestTar) {
+	public void attackClosestEnemy(Robot weakestTar) {
 		try {
 			if (weakestTar == null) {
 				return;
