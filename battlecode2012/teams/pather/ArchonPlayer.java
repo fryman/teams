@@ -29,8 +29,7 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				if (core == null) {
 					core = myRC.sensePowerCore();
@@ -40,15 +39,13 @@ public class ArchonPlayer extends BasePlayer {
 
 				while (Clock.getRoundNum() < 200) {
 					spawnScoutAndTransferFlux();
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 					this.nav.getNextMove(targetLoc);
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();
 					boolean quit = true;
@@ -68,12 +65,10 @@ public class ArchonPlayer extends BasePlayer {
 				if (myRC.getDirection() != myRC.getLocation().directionTo(
 						targetLoc)) {
 					while (myRC.isMovementActive()) {
-						runOncePerTurn();
-						myRC.yield();
+						runAtEndOfTurn();
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(targetLoc));
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				// Now we can build a fucking tower
 				boolean enemyTower = enemyTowerPresent(targetLoc);
@@ -89,13 +84,43 @@ public class ArchonPlayer extends BasePlayer {
 							+ targetLoc.toString());
 					buildTower(targetLoc);
 				}
-				runOncePerTurn();
-				myRC.yield();
+				runAtEndOfTurn();
 
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public void goCloser(MapLocation target) {
+		try {
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			Direction targetDir = myRC.getLocation().directionTo(target);
+
+			if (myRC.getDirection() != targetDir) {
+				myRC.setDirection(targetDir);
+				runAtEndOfTurn();
+			}
+			if (myRC.canMove(targetDir)) {
+				myRC.moveForward();
+			} else {
+				if (r.nextDouble() < 2) {
+					myRC.setDirection(myRC.getDirection().rotateLeft());
+				} else {
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
+				runAtEndOfTurn();
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+					runAtEndOfTurn();
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("caught exception:");
+			e.printStackTrace();
 		}
 	}
 
@@ -115,7 +140,7 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
 		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(powerNodes));
@@ -162,10 +187,10 @@ public class ArchonPlayer extends BasePlayer {
 			}
 			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				while (myRC.isMovementActive()) {
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				myRC.spawn(RobotType.TOWER);
-				myRC.yield();
+				runAtEndOfTurn();
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
@@ -184,7 +209,7 @@ public class ArchonPlayer extends BasePlayer {
 								RobotLevel.ON_GROUND).getTeam() != myRC
 								.getTeam()) {
 					myRC.attackSquare(target, RobotLevel.ON_GROUND);
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 			}
 		} catch (GameActionException e) {
@@ -207,11 +232,9 @@ public class ArchonPlayer extends BasePlayer {
 							myRC.getLocation().add(myRC.getDirection()),
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
-				runOncePerTurn();
-				myRC.yield();
+				runAtEndOfTurn();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
@@ -234,9 +257,9 @@ public class ArchonPlayer extends BasePlayer {
 							myRC.getLocation().add(myRC.getDirection()),
 							RobotLevel.ON_GROUND) == null) {
 				myRC.spawn(RobotType.SOLDIER);
-				myRC.yield();
+				runAtEndOfTurn();
 				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.ON_GROUND, (RobotType.SOLDIER.maxFlux / 2));

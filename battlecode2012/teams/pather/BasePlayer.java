@@ -10,8 +10,9 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Code to run once per turn.
 	 */
-	public void runOncePerTurn() {
+	public void runAtEndOfTurn() {
 		broadcastMessage();
+		myRC.yield();
 	}
 
 	/**
@@ -21,7 +22,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public void walkAimlessly() {
 		try {
 			while (myRC.isMovementActive()) {
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 			// if there's not enough flux to move, don't try
 			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
@@ -35,7 +36,7 @@ public abstract class BasePlayer extends StaticStuff {
 				} else {
 					myRC.setDirection(myRC.getDirection().rotateRight());
 				}
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 		} catch (Exception e) {
 			System.out.println("Exception caught");
@@ -216,13 +217,13 @@ public abstract class BasePlayer extends StaticStuff {
 	public void goCloser(MapLocation target) {
 		try {
 			while (myRC.isMovementActive()) {
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 			Direction targetDir = myRC.getLocation().directionTo(target);
 
 			if (myRC.getDirection() != targetDir) {
 				myRC.setDirection(targetDir);
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 			if (myRC.canMove(targetDir)) {
 				myRC.moveForward();
@@ -232,10 +233,10 @@ public abstract class BasePlayer extends StaticStuff {
 				} else {
 					myRC.setDirection(myRC.getDirection().rotateRight());
 				}
-				myRC.yield();
+				runAtEndOfTurn();
 				if (myRC.canMove(myRC.getDirection())) {
 					myRC.moveForward();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 			}
 		} catch (Exception e) {
