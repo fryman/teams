@@ -63,7 +63,6 @@ public class ScoutPlayer extends BasePlayer {
 					myRC.setIndicatorString(0, "friendly number: "
 							+ friendlyToFollow.getID());
 					runAtEndOfTurn();
-					myRC.yield();
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");

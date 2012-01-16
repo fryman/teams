@@ -6,7 +6,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public BasePlayer(RobotController rc) {
 
 	}
-	
+
 	/**
 	 * Code to run once per turn.
 	 */
@@ -14,6 +14,7 @@ public abstract class BasePlayer extends StaticStuff {
 		broadcastMessage();
 		myRC.yield();
 	}
+
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
@@ -50,6 +51,9 @@ public abstract class BasePlayer extends StaticStuff {
 	public void randomWalk() {
 		try {
 			while (myRC.isMovementActive()) {
+				return;
+			}
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
 				return;
 			}
 			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
@@ -91,7 +95,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 
 	}
-	
+
 	/**
 	 * Broadcast a random message.
 	 */
@@ -105,8 +109,7 @@ public abstract class BasePlayer extends StaticStuff {
 				message.ints = num;
 				myRC.broadcast(message);
 			}
-		}
-		 catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Exception caught");
 			e.printStackTrace();
 		}
@@ -134,6 +137,57 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Finds the friendly nearby that has the lowest flux and is not an archon.
+	 * This is useful for archons that need to resupply friendlies.
+	 * 
+	 * @return a robot that is friendly nearby with low flux count. null if
+	 *         there is no nearby robot.
+	 */
+	public Robot findAWeakFriendly() {
+		try {
+			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			Robot weakestFriend = null;
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON) {
+						continue;
+					}
+					if (weakestFriend == null
+							|| compareRobotFlux(e, weakestFriend)) {
+						weakestFriend = e;
+					}
+				}
+			}
+			return weakestFriend;
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            Robot to compare flux of
+	 * @param two
+	 *            Robot to compare flux of
+	 * @return truw when Robot one has a lower flux than Robot two
+	 */
+	public boolean compareRobotFlux(Robot one, Robot two) {
+		try {
+			double fluxOne = myRC.senseRobotInfo(one).flux;
+			double fluxTwo = myRC.senseRobotInfo(two).flux;
+			return fluxOne < fluxTwo;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
 	 * 
 	 * @param one
 	 *            Robot to compare distance between
@@ -152,5 +206,42 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	/**
+	 * This is an archaic navigation method that is superceeded by Navigation.
+	 * 
+	 * @param target
+	 *            Target location to got closer to
+	 */
+	public void goCloser(MapLocation target) {
+		try {
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			Direction targetDir = myRC.getLocation().directionTo(target);
+
+			if (myRC.getDirection() != targetDir) {
+				myRC.setDirection(targetDir);
+				runAtEndOfTurn();
+			}
+			if (myRC.canMove(targetDir)) {
+				myRC.moveForward();
+			} else {
+				if (Math.random() < 2) {
+					myRC.setDirection(myRC.getDirection().rotateLeft());
+				} else {
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
+				runAtEndOfTurn();
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+					runAtEndOfTurn();
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("caught exception:");
+			e.printStackTrace();
+		}
 	}
 }

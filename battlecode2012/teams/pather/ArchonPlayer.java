@@ -112,7 +112,7 @@ public class ArchonPlayer extends BasePlayer {
 				} else {
 					myRC.setDirection(myRC.getDirection().rotateRight());
 				}
-				myRC.yield();
+				runAtEndOfTurn();
 				if (myRC.canMove(myRC.getDirection())) {
 					myRC.moveForward();
 					runAtEndOfTurn();
@@ -123,6 +123,10 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
+	public void findWeakFriendsAndTransferFlux(){
+		
+	}
+	
 
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
