@@ -29,7 +29,7 @@ public class SoldierPlayer extends BasePlayer {
 	public void run() {
 		while (true) {
 			try {
-				weakestTar = senseWeakestEnemy();
+				weakestTar = senseClosestEnemy();
 				if (weakestTar == null) {
 					try {
 						Robot friend = findAFriendly();
@@ -63,7 +63,7 @@ public class SoldierPlayer extends BasePlayer {
 					this.myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						attackWeakestEnemy(weakestTar);
+						attackClosestEnemy(weakestTar);
 						this.nav.getNextMove(targetLoc);
 						runAtEndOfTurn();
 					}

@@ -149,22 +149,6 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean enemyTowerPresent(MapLocation target) {
-		try {
-			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
-					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
-							.getTeam() != myRC.getTeam()) {
-				return true;
-			} else {
-				return false;
-			}
-
-		} catch (GameActionException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
 	public void buildTower(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -182,23 +166,6 @@ public class ArchonPlayer extends BasePlayer {
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
-			}
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	// archons can't actually attack ...
-	public void destroyTower(MapLocation target) {
-		try {
-			if (myRC.canAttackSquare(target)) {
-				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
-						&& myRC.senseObjectAtLocation(target,
-								RobotLevel.ON_GROUND).getTeam() != myRC
-								.getTeam()) {
-					myRC.attackSquare(target, RobotLevel.ON_GROUND);
-					runAtEndOfTurn();
-				}
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();

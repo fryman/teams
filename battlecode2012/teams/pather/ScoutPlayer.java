@@ -71,7 +71,7 @@ public class ScoutPlayer extends BasePlayer {
 	public void runAttackMode() {
 		while (true) {
 			try {
-				weakestTar = senseWeakestEnemy();
+				weakestTar = senseClosestEnemy();
 				if (weakestTar == null) {
 					walkAimlessly();
 				} else {
@@ -82,7 +82,7 @@ public class ScoutPlayer extends BasePlayer {
 							"Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						attackWeakestEnemy(weakestTar);
+						attackClosestEnemy(weakestTar);
 						this.nav.getNextMove(targetLoc);
 						runAtEndOfTurn();
 					}
