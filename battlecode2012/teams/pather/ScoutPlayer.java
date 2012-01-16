@@ -18,7 +18,6 @@ public class ScoutPlayer extends BasePlayer {
 	private Navigation nav = null;
 	private MapLocation targetLoc;
 	private Robot weakestTar;
-	private Random r = new Random();
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
@@ -31,10 +30,20 @@ public class ScoutPlayer extends BasePlayer {
 		runAttackMode();
 	}
 
+	/**
+	 * Finds and follows around a friendly unit. If a friendly unit cannot be
+	 * found, walks aimlessly until finding a friendly unit.
+	 */
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
 				Robot friendlyToFollow = findAFriendly();
+				if (friendlyToFollow == null) {
+					walkAimlessly();
+				} else {
+					// we have a friend.
+
+				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
@@ -42,30 +51,17 @@ public class ScoutPlayer extends BasePlayer {
 		}
 	}
 
+	
+
+	/**
+	 * Walks around aimlessly until finding an enemy, then attacks that enemy.
+	 */
 	public void runAttackMode() {
 		while (true) {
 			try {
 				weakestTar = senseWeakestEnemy();
 				if (weakestTar == null) {
-					try {
-						while (myRC.isMovementActive()) {
-							myRC.yield();
-						}
-						if (myRC.canMove(myRC.getDirection())) {
-							myRC.moveForward();
-						} else {
-							if (r.nextDouble() < .5) {
-								myRC.setDirection(myRC.getDirection()
-										.rotateLeft());
-							} else {
-								myRC.setDirection(myRC.getDirection()
-										.rotateRight());
-							}
-							myRC.yield();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					walkAimlessly();
 				} else {
 					this.myRC.setIndicatorString(0, "Weakest Target: "
 							+ weakestTar.getID());
@@ -160,9 +156,5 @@ public class ScoutPlayer extends BasePlayer {
 		System.out.println();
 		System.out.println("Time elapsed: " + (end - start));
 	}
-
-	
-
-	
 
 }

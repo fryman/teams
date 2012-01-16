@@ -1,14 +1,49 @@
 package pather;
 
 import battlecode.common.*;
-public abstract class BasePlayer extends StaticStuff{
-	public BasePlayer(RobotController rc){
-		 
+
+public abstract class BasePlayer extends StaticStuff {
+	public BasePlayer(RobotController rc) {
+
 	}
-	public void TestMethod2(){
+
+	public void TestMethod2() {
 		myRC.setIndicatorString(1, "BasePlayer");
 	}
-	
+
+	/**
+	 * Causes this Robot to walk around without direction, turning left or right
+	 * at random when an obstacle is encountered.
+	 */
+	public void walkAimlessly() {
+		try {
+			while (myRC.isMovementActive()) {
+				myRC.yield();
+			}
+			if (myRC.canMove(myRC.getDirection())) {
+				myRC.moveForward();
+			} else {
+				if (Math.random() < .5) {
+					myRC.setDirection(myRC.getDirection().rotateLeft());
+				} else {
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
+				myRC.yield();
+			}
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Similar to walk aimlessly, except that this robot will perform a random
+	 * walk.
+	 */
+	public void randomWalk() {
+		
+	}
+
 	/**
 	 * 
 	 * @return the Robot closest to this Robot that is on the same team as this.
@@ -29,7 +64,7 @@ public abstract class BasePlayer extends StaticStuff{
 		}
 		return closestFriend;
 	}
-	
+
 	/**
 	 * 
 	 * @param one
