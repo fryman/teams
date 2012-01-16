@@ -18,6 +18,7 @@ public class ScoutPlayer extends BasePlayer {
 	private Navigation nav = null;
 	private MapLocation targetLoc;
 	private Robot weakestTar;
+	private Robot friendlyToFollow = null;
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
@@ -27,22 +28,32 @@ public class ScoutPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		runAttackMode();
+		runFollowFriendlyMode();
 	}
 
 	/**
 	 * Finds and follows around a friendly unit. If a friendly unit cannot be
-	 * found, walks aimlessly until finding a friendly unit.
+	 * found, walks aimlessly until finding a friendly unit. Stores the friendly
+	 * unit in instance variable: this.friendlyToFollow.
 	 */
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
-				Robot friendlyToFollow = findAFriendly();
+				// TODO Are both of these statements necessary ??
+				if (friendlyToFollow == null) {
+					friendlyToFollow = findAFriendly();
+				}
 				if (friendlyToFollow == null) {
 					walkAimlessly();
+					return;
 				} else {
 					// we have a friend.
-
+					// TODO ensure correctness here: friendlyToFollow should be
+					// in range of sensors because we were able to find them to
+					// begin with...
+					MapLocation friendLocation = myRC
+							.senseLocationOf(friendlyToFollow);
+					this.nav.getNextMove(friendLocation);
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
@@ -50,8 +61,6 @@ public class ScoutPlayer extends BasePlayer {
 			}
 		}
 	}
-
-	
 
 	/**
 	 * Walks around aimlessly until finding an enemy, then attacks that enemy.
