@@ -53,20 +53,17 @@ public class ScoutPlayer extends BasePlayer {
 					}
 				} else {
 					this.myRC.setIndicatorString(0, "Weakest Target: " + weakestTar.getID());
-					System.out.println(Clock.getBytecodeNum() + " before senseLocationOf(weakestTar)");
+					//System.out.println(Clock.getBytecodeNum() + " before senseLocationOf(weakestTar)");
 					targetLoc = myRC.senseLocationOf(weakestTar);
-					System.out.println(Clock.getBytecodeNum() + " after senseLocationOf(weakestTar)");
+					//System.out.println(Clock.getBytecodeNum() + " after senseLocationOf(weakestTar)");
 					this.myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
-//					while (myRC.isMovementActive()) {
-//						myRC.yield();
-//					}
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						System.out.println(Clock.getBytecodeNum() + " before attackWeakestEnemy");
+						//System.out.println(Clock.getBytecodeNum() + " before attackWeakestEnemy");
 						attackWeakestEnemy();
-						System.out.println(Clock.getBytecodeNum() + " after attackWeakestEnemy");
+						//System.out.println(Clock.getBytecodeNum() + " after attackWeakestEnemy");
 						this.nav.getNextMove(targetLoc);
-						System.out.println(Clock.getBytecodeNum() + " after getNextMove");
+						//System.out.println(Clock.getBytecodeNum() + " after getNextMove");
 						myRC.yield();
 					}
 					myRC.yield();

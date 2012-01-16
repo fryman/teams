@@ -59,6 +59,9 @@ public class BugNav extends Navigation {
 				setTargetBug2(target);
 			}
 			Direction dir = myRC.getLocation().directionTo(target);
+			if (dir == Direction.OMNI || dir == Direction.NONE){
+				return;
+			}
 			if (!tracing) {
 				if (myRC.canMove(dir)) {
 					if (myRC.getDirection() != dir) {
