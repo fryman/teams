@@ -127,6 +127,7 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
+					System.out.println("Just transferred flux");
 					return true;
 				}
 			}

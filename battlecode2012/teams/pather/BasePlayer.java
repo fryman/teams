@@ -184,13 +184,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 *         location
 	 */
 	public boolean acceptableFluxTransferLocation(MapLocation attempt) {
-		if (!attempt.isAdjacentTo(this.myRC.getLocation())) {
-			return false;
-		}
-		if (!attempt.equals(this.myRC.getLocation())) {
-			return false;
-		}
-		return true;
+		return this.myRC.getLocation().distanceSquaredTo(attempt) <= 1;
 	}
 
 	/**
