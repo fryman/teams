@@ -43,18 +43,24 @@ public class ScoutPlayer extends BasePlayer {
 				if (friendlyToFollow == null) {
 					friendlyToFollow = findAFriendly();
 				}
-				if (friendlyToFollow == null) {
+				if (friendlyToFollow == null
+						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
+						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
 					walkAimlessly();
-					return;
+					friendlyToFollow = null;
+					myRC.setIndicatorString(1, "walking aimlessly");
+					myRC.yield();
 				} else {
 					// we have a friend.
-					// TODO ensure correctness here: friendlyToFollow should be
-					// in range of sensors because we were able to find them to
-					// begin with...
+					if (!myRC.canSenseObject(friendlyToFollow)){
+						continue;
+					}
 					MapLocation friendLocation = myRC
 							.senseLocationOf(friendlyToFollow);
 					this.nav.getNextMove(friendLocation);
-					return;
+					myRC.setIndicatorString(1, "following a friendly");
+					myRC.setIndicatorString(0, "friendly number: " + friendlyToFollow.getID());
+					myRC.yield();
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
