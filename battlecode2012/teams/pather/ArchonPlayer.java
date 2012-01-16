@@ -25,6 +25,13 @@ public class ArchonPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
+	@Override
+	public void runAtEndOfTurn() {
+		broadcastMessage();
+		this.findWeakFriendsAndTransferFlux();
+		myRC.yield();
+	}
+
 	public void run() {
 		while (true) {
 			try {
@@ -115,7 +122,8 @@ public class ArchonPlayer extends BasePlayer {
 				if (weakFluxAmount / maxFluxAmount < 0.3) {
 					fluxAmountToTransfer = 0.3 * maxFluxAmount;
 				}
-				if (myRC.getFlux() > fluxAmountToTransfer) {
+				if (fluxAmountToTransfer > 0
+						&& myRC.getFlux() > fluxAmountToTransfer) {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
