@@ -93,54 +93,42 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public void goCloser(MapLocation target) {
-		try {
-			while (myRC.isMovementActive()) {
-				runAtEndOfTurn();
-			}
-			Direction targetDir = myRC.getLocation().directionTo(target);
-
-			if (myRC.getDirection() != targetDir) {
-				myRC.setDirection(targetDir);
-				runAtEndOfTurn();
-			}
-			if (myRC.canMove(targetDir)) {
-				myRC.moveForward();
-			} else {
-				if (r.nextDouble() < 2) {
-					myRC.setDirection(myRC.getDirection().rotateLeft());
-				} else {
-					myRC.setDirection(myRC.getDirection().rotateRight());
-				}
-				runAtEndOfTurn();
-				if (myRC.canMove(myRC.getDirection())) {
-					myRC.moveForward();
-					runAtEndOfTurn();
-				}
-			}
-		} catch (Exception e) {
-			System.out.println("caught exception:");
-			e.printStackTrace();
-		}
-	}
-
 	/**
 	 * Identifies a weak friendly unit nearby and transfers flux to it. Flux
 	 * amount depends on the weakness TODO find a suitable method of determining
 	 * amount of flux to transfer.
+	 * 
+	 * Currently the cutoff for flux transfer is if the friendly has 30% max
+	 * flux, transfer another 30% to it.
+	 * 
+	 * @return true when flux transfer was successful, false otherwise
 	 */
-	public void findWeakFriendsAndTransferFlux() {
+	public boolean findWeakFriendsAndTransferFlux() {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
 			if (weakFriendlyUnit != null) {
 				// figure out how much flux he needs.
-				myRC.senseRobotInfo(weakFriendlyUnit);
+				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
+				double weakFluxAmount = weakRobotInfo.flux;
+				double maxFluxAmount = weakRobotInfo.type.maxFlux;
+				double fluxAmountToTransfer = 0;
+				if (weakFluxAmount / maxFluxAmount < 0.3) {
+					fluxAmountToTransfer = 0.3 * maxFluxAmount;
+				}
+				if (myRC.getFlux() > fluxAmountToTransfer) {
+					myRC.transferFlux(weakRobotInfo.location,
+							weakRobotInfo.robot.getRobotLevel(),
+							fluxAmountToTransfer);
+					return true;
+				}
 			}
+			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return false;
 	}
-	
+
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
 		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(powerNodes));
