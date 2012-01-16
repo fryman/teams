@@ -39,11 +39,13 @@ public class BugNav extends Navigation {
 	private MapLocation qStart = null;
 	private MapLocation qClosest = null;
 	private MapLocation qObstruction = null;
+	private double moveCost;
 
 	public BugNav(RobotController myRC) {
 		this.myRC = myRC;
+		this.moveCost = this.myRC.getType().moveCost;
 	}
-	
+
 	@Override
 	public void getNextMove(MapLocation target) {
 		getNextMoveBug0(target);
@@ -59,7 +61,12 @@ public class BugNav extends Navigation {
 				setTargetBug2(target);
 			}
 			Direction dir = myRC.getLocation().directionTo(target);
-			if (dir == Direction.OMNI || dir == Direction.NONE){
+			if (dir == Direction.OMNI || dir == Direction.NONE) {
+				return;
+			}
+			// if this robot does not have enough flux to move, don't try to
+			// move.
+			if (this.myRC.getFlux() < this.moveCost) {
 				return;
 			}
 			if (!tracing) {
@@ -72,7 +79,8 @@ public class BugNav extends Navigation {
 					myRC.moveForward();
 					myRC.setIndicatorString(1, "Moving ideal");
 					return;
-				} else { // here we deal with *what* we hit
+				} else {
+					// here we deal with *what* we hit
 					// by sensing and if we hit a friendly, // back up rather
 					// than turn
 					// sense whats in front of us
