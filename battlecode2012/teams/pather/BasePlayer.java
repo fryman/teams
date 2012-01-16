@@ -6,13 +6,14 @@ public abstract class BasePlayer extends StaticStuff {
 	public BasePlayer(RobotController rc) {
 
 	}
-	
+
 	/**
 	 * Code to run once per turn.
 	 */
 	public void runOncePerTurn() {
 		broadcastMessage();
 	}
+
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
@@ -90,7 +91,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 
 	}
-	
+
 	/**
 	 * Broadcast a random message.
 	 */
@@ -104,8 +105,7 @@ public abstract class BasePlayer extends StaticStuff {
 				message.ints = num;
 				myRC.broadcast(message);
 			}
-		}
-		 catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Exception caught");
 			e.printStackTrace();
 		}
@@ -151,5 +151,42 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	/**
+	 * This is an archaic navigation method that is superceeded by Navigation.
+	 * 
+	 * @param target
+	 *            Target location to got closer to
+	 */
+	public void goCloser(MapLocation target) {
+		try {
+			while (myRC.isMovementActive()) {
+				myRC.yield();
+			}
+			Direction targetDir = myRC.getLocation().directionTo(target);
+
+			if (myRC.getDirection() != targetDir) {
+				myRC.setDirection(targetDir);
+				myRC.yield();
+			}
+			if (myRC.canMove(targetDir)) {
+				myRC.moveForward();
+			} else {
+				if (Math.random() < 2) {
+					myRC.setDirection(myRC.getDirection().rotateLeft());
+				} else {
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
+				myRC.yield();
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+					myRC.yield();
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("caught exception:");
+			e.printStackTrace();
+		}
 	}
 }

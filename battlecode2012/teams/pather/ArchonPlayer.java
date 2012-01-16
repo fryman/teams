@@ -99,37 +99,6 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public void goCloser(MapLocation target) {
-		try {
-			while (myRC.isMovementActive()) {
-				myRC.yield();
-			}
-			Direction targetDir = myRC.getLocation().directionTo(target);
-
-			if (myRC.getDirection() != targetDir) {
-				myRC.setDirection(targetDir);
-				myRC.yield();
-			}
-			if (myRC.canMove(targetDir)) {
-				myRC.moveForward();
-			} else {
-				if (r.nextDouble() < 2) {
-					myRC.setDirection(myRC.getDirection().rotateLeft());
-				} else {
-					myRC.setDirection(myRC.getDirection().rotateRight());
-				}
-				myRC.yield();
-				if (myRC.canMove(myRC.getDirection())) {
-					myRC.moveForward();
-					myRC.yield();
-				}
-			}
-		} catch (Exception e) {
-			System.out.println("caught exception:");
-			e.printStackTrace();
-		}
-	}
-
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
 		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(powerNodes));
