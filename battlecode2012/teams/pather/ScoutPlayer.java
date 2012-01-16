@@ -94,4 +94,24 @@ public class ScoutPlayer extends BasePlayer {
 			}
 		}
 	}
+
+	/**
+	 * 
+	 */
+	public void runFollowFriendlyModeWithHeal() {
+
+	}
+
+	/**
+	 * Determines when it is cost effective for a scout to heal his
+	 * surroundings. TODO determine a heuristic for when healing is useful.
+	 * 
+	 * @return true if it is a good time to heal the surroundings, false
+	 *         otherwise
+	 */
+	public boolean suitableTimeToHeal() {
+		// TODO
+		return false;
+	}
+
 }

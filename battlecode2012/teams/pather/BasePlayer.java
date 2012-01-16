@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	public BasePlayer(RobotController rc) {
-
 	}
 
 	/**
@@ -331,4 +330,5 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
+	
 }
