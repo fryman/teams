@@ -51,6 +51,9 @@ public abstract class BasePlayer extends StaticStuff {
 			while (myRC.isMovementActive()) {
 				return;
 			}
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
+				return;
+			}
 			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
 			// left, move forward
 			// weight moving forward more - 50% forward, 50% turn?
