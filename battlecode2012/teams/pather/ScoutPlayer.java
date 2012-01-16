@@ -54,6 +54,7 @@ public class ScoutPlayer extends BasePlayer {
 					MapLocation friendLocation = myRC
 							.senseLocationOf(friendlyToFollow);
 					this.nav.getNextMove(friendLocation);
+					return;
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
