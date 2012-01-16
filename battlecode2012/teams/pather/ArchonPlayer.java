@@ -38,20 +38,7 @@ public class ArchonPlayer extends BasePlayer {
 				getNewTarget();
 
 				while (Clock.getRoundNum() < 200) {
-					if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
-							&& myRC.senseObjectAtLocation(myRC.getLocation()
-									.add(myRC.getDirection()),
-									RobotLevel.ON_GROUND) == null) {
-						myRC.spawn(RobotType.SOLDIER);
-						myRC.yield();
-						while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
-							myRC.yield();
-						}
-						myRC.transferFlux(
-								myRC.getLocation().add(myRC.getDirection()),
-								RobotLevel.ON_GROUND,
-								(RobotType.SOLDIER.maxFlux / 2));
-					}
+					spawnSoldierAndTransferFlux();
 				}
 
 				while (targetLoc != null
@@ -181,7 +168,7 @@ public class ArchonPlayer extends BasePlayer {
 				return;
 			}
 			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
-				while (myRC.isMovementActive()){
+				while (myRC.isMovementActive()) {
 					myRC.yield();
 				}
 				myRC.spawn(RobotType.TOWER);
@@ -211,6 +198,34 @@ public class ArchonPlayer extends BasePlayer {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
+	}
 
+	public void spawnScoutAndTransferFlux() {
+
+	}
+
+	/**
+	 * Spawns a soldier and transfers flux to it. Causes this archon to wait
+	 * (yielding) until it has enough flux to create a soldier, and then waits
+	 * again until it has enough flux to give to the soldier.
+	 */
+	public void spawnSoldierAndTransferFlux() {
+		try {
+			while (myRC.getFlux() < RobotType.SOLDIER.spawnCost
+					&& myRC.senseObjectAtLocation(
+							myRC.getLocation().add(myRC.getDirection()),
+							RobotLevel.ON_GROUND) != null) {
+				myRC.spawn(RobotType.SOLDIER);
+				myRC.yield();
+				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
+					myRC.yield();
+				}
+				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
+						RobotLevel.ON_GROUND, (RobotType.SOLDIER.maxFlux / 2));
+			}
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
 	}
 }
