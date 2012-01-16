@@ -28,6 +28,10 @@ public abstract class BasePlayer extends StaticStuff {
 			while (myRC.isMovementActive()) {
 				myRC.yield();
 			}
+			// if there's not enough flux to move, don't try
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
+				return;
+			}
 			if (myRC.canMove(myRC.getDirection())) {
 				myRC.moveForward();
 			} else {
