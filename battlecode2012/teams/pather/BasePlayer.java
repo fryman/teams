@@ -6,11 +6,6 @@ public abstract class BasePlayer extends StaticStuff {
 	public BasePlayer(RobotController rc) {
 
 	}
-
-	public void TestMethod2() {
-		myRC.setIndicatorString(1, "BasePlayer");
-	}
-
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
