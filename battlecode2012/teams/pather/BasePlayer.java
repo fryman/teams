@@ -157,7 +157,7 @@ public abstract class BasePlayer extends StaticStuff {
 							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
 							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
 							|| !acceptableFluxTransferLocation(myRC
-									.senseLocationOf(weakestFriend))) {
+									.senseLocationOf(e))) {
 						continue;
 					}
 					if (weakestFriend == null
