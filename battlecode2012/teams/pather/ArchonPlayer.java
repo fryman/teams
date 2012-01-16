@@ -198,8 +198,8 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.spawn(RobotType.SCOUT);
 				runAtEndOfTurn();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
-					runAtEndOfTurn();
-				}
+					super.runAtEndOfTurn();
+				}  
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
 			}
@@ -223,7 +223,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.spawn(RobotType.SOLDIER);
 				runAtEndOfTurn();
 				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.ON_GROUND, (RobotType.SOLDIER.maxFlux / 2));
