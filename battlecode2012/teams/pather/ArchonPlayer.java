@@ -98,11 +98,23 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
-	public void findWeakFriendsAndTransferFlux(){
-		
+
+	/**
+	 * Identifies a weak friendly unit nearby and transfers flux to it. Flux
+	 * amount depends on the weakness TODO find a suitable method of determining
+	 * amount of flux to transfer.
+	 */
+	public void findWeakFriendsAndTransferFlux() {
+		try {
+			Robot weakFriendlyUnit = findAWeakFriendly();
+			if (weakFriendlyUnit != null) {
+				// figure out how much flux he needs.
+				myRC.senseRobotInfo(weakFriendlyUnit);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
-	
 
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
