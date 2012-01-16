@@ -136,6 +136,57 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Finds the friendly nearby that has the lowest flux and is not an archon.
+	 * This is useful for archons that need to resupply friendlies.
+	 * 
+	 * @return a robot that is friendly nearby with low flux count. null if
+	 *         there is no nearby robot.
+	 */
+	public Robot findAWeakFriendly() {
+		try {
+			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			Robot weakestFriend = null;
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON) {
+						continue;
+					}
+					if (weakestFriend == null
+							|| compareRobotFlux(e, weakestFriend)) {
+						weakestFriend = e;
+					}
+				}
+			}
+			return weakestFriend;
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            Robot to compare flux of
+	 * @param two
+	 *            Robot to compare flux of
+	 * @return truw when Robot one has a lower flux than Robot two
+	 */
+	public boolean compareRobotFlux(Robot one, Robot two) {
+		try {
+			double fluxOne = myRC.senseRobotInfo(one).flux;
+			double fluxTwo = myRC.senseRobotInfo(two).flux;
+			return fluxOne < fluxTwo;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
 	 * 
 	 * @param one
 	 *            Robot to compare distance between

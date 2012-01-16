@@ -98,6 +98,11 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	public void findWeakFriendsAndTransferFlux(){
+		
+	}
+	
 
 	public void updateUnownedNodes() {
 		powerNodes = myRC.senseCapturablePowerNodes();
