@@ -16,7 +16,7 @@ public class SoldierPlayer extends BasePlayer {
 
 	private Navigation nav = null;
 	private MapLocation targetLoc;
-	private Robot weakestTar;
+	private Robot closestTar;
 	private Random r = new Random();
 
 	public SoldierPlayer(RobotController rc) {
@@ -37,8 +37,8 @@ public class SoldierPlayer extends BasePlayer {
 	public void guardThenAttackMode() {
 		while (true) {
 			try {
-				weakestTar = senseClosestEnemy();
-				if (weakestTar == null) {
+				closestTar = senseClosestEnemy();
+				if (closestTar == null) {
 					try {
 						Robot friend = findAFriendly();
 						if (friend != null) {
@@ -53,14 +53,13 @@ public class SoldierPlayer extends BasePlayer {
 						e.printStackTrace();
 					}
 				} else {
-					this.myRC.setIndicatorString(0, "Weakest Target: "
-							+ weakestTar.getID());
-					targetLoc = myRC.senseLocationOf(weakestTar);
-					this.myRC.setIndicatorString(1,
-							"Target at: " + targetLoc.toString());
+					myRC.setIndicatorString(0, "Weakest Target: " + closestTar.getID());
+					targetLoc = myRC.senseLocationOf(closestTar);
+					myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
+					
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						attackClosestEnemy(weakestTar);
+						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
 						runAtEndOfTurn();
 					} else {

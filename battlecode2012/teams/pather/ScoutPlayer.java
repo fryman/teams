@@ -11,7 +11,7 @@ public class ScoutPlayer extends BasePlayer {
 
 	private Navigation nav = null;
 	private MapLocation targetLoc;
-	private Robot weakestTar;
+	private Robot closestTar;
 	private Robot friendlyToFollow = null;
 
 	public ScoutPlayer(RobotController rc) {
@@ -22,7 +22,7 @@ public class ScoutPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		runFollowFriendlyMode();
+		runAttackMode();
 	}
 
 	/**
@@ -71,18 +71,18 @@ public class ScoutPlayer extends BasePlayer {
 	public void runAttackMode() {
 		while (true) {
 			try {
-				weakestTar = senseClosestEnemy();
-				if (weakestTar == null) {
+				closestTar = senseClosestEnemy();
+				if (closestTar == null) {
 					walkAimlessly();
 				} else {
 					this.myRC.setIndicatorString(0, "Weakest Target: "
-							+ weakestTar.getID());
-					targetLoc = myRC.senseLocationOf(weakestTar);
+							+ closestTar.getID());
+					targetLoc = myRC.senseLocationOf(closestTar);
 					this.myRC.setIndicatorString(1,
 							"Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						attackClosestEnemy(weakestTar);
+						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
 						runAtEndOfTurn();
 					}
