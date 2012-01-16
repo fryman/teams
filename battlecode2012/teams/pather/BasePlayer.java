@@ -41,7 +41,48 @@ public abstract class BasePlayer extends StaticStuff {
 	 * walk.
 	 */
 	public void randomWalk() {
-		
+		try {
+			while (myRC.isMovementActive()) {
+				return;
+			}
+			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
+			// left, move forward
+			// weight moving forward more - 50% forward, 50% turn?
+			double num = Math.random();
+			if (num > 0.5 && myRC.canMove(myRC.getDirection())) {
+				myRC.moveForward();
+				return;
+			} else {
+				Direction dir;
+				if (num > 0.4375)
+					dir = battlecode.common.Direction.EAST;
+				else if (num > 0.375)
+					dir = battlecode.common.Direction.NORTH_EAST;
+				else if (num > 0.3125)
+					dir = battlecode.common.Direction.SOUTH_EAST;
+				else if (num > 0.25)
+					dir = battlecode.common.Direction.WEST;
+				else if (num > 0.1875)
+					dir = battlecode.common.Direction.NORTH_WEST;
+				else if (num > 0.125)
+					dir = battlecode.common.Direction.SOUTH_WEST;
+				else if (num > 0.0625)
+					dir = battlecode.common.Direction.NORTH;
+				else
+					dir = battlecode.common.Direction.SOUTH;
+				if (dir == myRC.getDirection()
+						&& myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+					return;
+				}
+				myRC.setDirection(dir);
+				return;
+			}
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+
 	}
 
 	/**
