@@ -24,54 +24,48 @@ public class SoldierPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
-	//go explore, follow spawned archon, transfer energon to archon
-	
+	// go explore, follow spawned archon, transfer energon to archon
+
 	public void run() {
 		guardThenAttackMode();
 	}
-	
-	public void guardThenAttackMode(){
+
+	/**
+	 * Finds an enemy, chases and attacks it. If there is no enemy, walks
+	 * aimlessly.
+	 */
+	public void guardThenAttackMode() {
 		while (true) {
 			try {
 				weakestTar = senseClosestEnemy();
 				if (weakestTar == null) {
 					try {
 						Robot friend = findAFriendly();
-						if (friend != null){
-							myRC.setIndicatorString(1, "Found friendly! " + friend.getID());
+						if (friend != null) {
+							myRC.setIndicatorString(1, "Found friendly! "
+									+ friend.getID());
 							nav.getNextMove(myRC.senseLocationOf(friend));
 							runAtEndOfTurn();
 							continue;
 						}
-						while (myRC.isMovementActive()) {
-							runAtEndOfTurn();
-						}
-						if (myRC.canMove(myRC.getDirection())) {
-							myRC.moveForward();
-						} else {
-							if (r.nextDouble() < .5) {
-								myRC.setDirection(myRC.getDirection()
-										.rotateLeft());
-							} else {
-								myRC.setDirection(myRC.getDirection()
-										.rotateRight());
-							}
-							runAtEndOfTurn();
-						}
+						walkAimlessly();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else {
-					this.myRC.setIndicatorString(0, "Weakest Target: " + weakestTar.getID());
+					this.myRC.setIndicatorString(0, "Weakest Target: "
+							+ weakestTar.getID());
 					targetLoc = myRC.senseLocationOf(weakestTar);
-					this.myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
+					this.myRC.setIndicatorString(1,
+							"Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(weakestTar);
 						this.nav.getNextMove(targetLoc);
 						runAtEndOfTurn();
+					} else {
+						runAtEndOfTurn();
 					}
-					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
 				System.out.println("caught exception:");
@@ -80,4 +74,3 @@ public class SoldierPlayer extends BasePlayer {
 		}
 	}
 }
-
