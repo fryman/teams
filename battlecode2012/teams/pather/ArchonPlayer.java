@@ -200,8 +200,29 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
+	/**
+	 * Spawns a scout and transfers flux to it. Causes this archon to wait
+	 * (yielding) until it has enough flux to create a scout, and then waits
+	 * again until it has enough flux to give to the scout.
+	 */
 	public void spawnScoutAndTransferFlux() {
-
+		try {
+			if (myRC.getFlux() > RobotType.SCOUT.spawnCost
+					&& myRC.senseObjectAtLocation(
+							myRC.getLocation().add(myRC.getDirection()),
+							RobotLevel.IN_AIR) == null) {
+				myRC.spawn(RobotType.SCOUT);
+				myRC.yield();
+				while ((RobotType.SCOUT.maxFlux / 2) > myRC.getFlux()) {
+					myRC.yield();
+				}
+				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
+						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux / 2));
+			}
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -211,10 +232,10 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void spawnSoldierAndTransferFlux() {
 		try {
-			while (myRC.getFlux() < RobotType.SOLDIER.spawnCost
+			if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
 					&& myRC.senseObjectAtLocation(
 							myRC.getLocation().add(myRC.getDirection()),
-							RobotLevel.ON_GROUND) != null) {
+							RobotLevel.ON_GROUND) == null) {
 				myRC.spawn(RobotType.SOLDIER);
 				myRC.yield();
 				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
