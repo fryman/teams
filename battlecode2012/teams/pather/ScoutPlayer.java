@@ -44,6 +44,7 @@ public class ScoutPlayer extends BasePlayer {
 					friendlyToFollow = findAFriendly();
 				}
 				if (friendlyToFollow == null
+						|| !myRC.canSenseObject(friendlyToFollow)
 						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
 						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
 					walkAimlessly();
@@ -52,14 +53,15 @@ public class ScoutPlayer extends BasePlayer {
 					myRC.yield();
 				} else {
 					// we have a friend.
-					if (!myRC.canSenseObject(friendlyToFollow)){
+					if (!myRC.canSenseObject(friendlyToFollow)) {
 						continue;
 					}
 					MapLocation friendLocation = myRC
 							.senseLocationOf(friendlyToFollow);
 					this.nav.getNextMove(friendLocation);
 					myRC.setIndicatorString(1, "following a friendly");
-					myRC.setIndicatorString(0, "friendly number: " + friendlyToFollow.getID());
+					myRC.setIndicatorString(0, "friendly number: "
+							+ friendlyToFollow.getID());
 					myRC.yield();
 				}
 			} catch (Exception e) {
