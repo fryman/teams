@@ -152,4 +152,35 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return false;
 	}
+	
+	public Robot senseWeakestEnemy() {
+		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		Robot weakest = null;
+		if (enemies.length > 0) {
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam()) {
+					continue;
+				}
+				if (weakest == null || compareRobotDistance(e, weakest)) {
+					weakest = e;
+				}
+			}
+		}
+		return weakest;
+	}
+
+	public void attackWeakestEnemy(Robot weakestTar) {
+		try {
+			if (weakestTar == null) {
+				return;
+			}
+			MapLocation attack = myRC.senseLocationOf(weakestTar);
+			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
 }
