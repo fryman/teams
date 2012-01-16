@@ -226,7 +226,7 @@ public abstract class BasePlayer extends StaticStuff {
 	
 	public void destroyTower(MapLocation target) {
 		try {
-			if (myRC.canAttackSquare(target)) {
+			if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
 				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 						&& myRC.senseObjectAtLocation(target,
 								RobotLevel.ON_GROUND).getTeam() != myRC
@@ -242,26 +242,26 @@ public abstract class BasePlayer extends StaticStuff {
 
 	public Robot senseClosestEnemy() {
 		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
-		Robot weakest = null;
+		Robot closest = null;
 		if (enemies.length > 0) {
 			for (Robot e : enemies) {
 				if (e.getTeam() == myRC.getTeam()) {
 					continue;
 				}
-				if (weakest == null || compareRobotDistance(e, weakest)) {
-					weakest = e;
+				if (closest == null || compareRobotDistance(e, closest)) {
+					closest = e;
 				}
 			}
 		}
-		return weakest;
+		return closest;
 	}
 
-	public void attackClosestEnemy(Robot weakestTar) {
+	public void attackClosestEnemy(Robot closestTar) {
 		try {
-			if (weakestTar == null) {
+			if (closestTar == null) {
 				return;
 			}
-			MapLocation attack = myRC.senseLocationOf(weakestTar);
+			MapLocation attack = myRC.senseLocationOf(closestTar);
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
