@@ -25,6 +25,13 @@ public class ArchonPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
+	@Override
+	public void runAtEndOfTurn() {
+		broadcastMessage();
+		this.findWeakFriendsAndTransferFlux();
+		myRC.yield();
+	}
+
 	public void run() {
 		while (true) {
 			try {
@@ -115,7 +122,8 @@ public class ArchonPlayer extends BasePlayer {
 				if (weakFluxAmount / maxFluxAmount < 0.3) {
 					fluxAmountToTransfer = 0.3 * maxFluxAmount;
 				}
-				if (myRC.getFlux() > fluxAmountToTransfer) {
+				if (fluxAmountToTransfer > 0
+						&& myRC.getFlux() > fluxAmountToTransfer) {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
@@ -189,8 +197,8 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.spawn(RobotType.SCOUT);
 				runAtEndOfTurn();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
-					runAtEndOfTurn();
-				}
+					super.runAtEndOfTurn();
+				}  
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
 			}
@@ -214,7 +222,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.spawn(RobotType.SOLDIER);
 				runAtEndOfTurn();
 				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.ON_GROUND, (RobotType.SOLDIER.maxFlux / 2));

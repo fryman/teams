@@ -8,7 +8,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Code to run once per turn.
+	 * Code to run once per turn, at the very end
 	 */
 	public void runAtEndOfTurn() {
 		broadcastMessage();
@@ -18,6 +18,8 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void walkAimlessly() {
 		try {
@@ -47,14 +49,16 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Similar to walk aimlessly, except that this robot will perform a random
 	 * walk.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void randomWalk() {
 		try {
 			while (myRC.isMovementActive()) {
-				return;
+				runAtEndOfTurn();
 			}
 			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
-				return;
+				runAtEndOfTurn();
 			}
 			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
 			// left, move forward
@@ -62,7 +66,7 @@ public abstract class BasePlayer extends StaticStuff {
 			double num = Math.random();
 			if (num > 0.5 && myRC.canMove(myRC.getDirection())) {
 				myRC.moveForward();
-				return;
+				runAtEndOfTurn();
 			} else {
 				Direction dir;
 				if (num > 0.4375)
@@ -84,10 +88,10 @@ public abstract class BasePlayer extends StaticStuff {
 				if (dir == myRC.getDirection()
 						&& myRC.canMove(myRC.getDirection())) {
 					myRC.moveForward();
-					return;
+					runAtEndOfTurn();
 				}
 				myRC.setDirection(dir);
-				return;
+				runAtEndOfTurn();
 			}
 		} catch (Exception e) {
 			System.out.println("Exception caught");
@@ -140,7 +144,11 @@ public abstract class BasePlayer extends StaticStuff {
 	 * Finds the friendly nearby that has the lowest flux and is not an archon.
 	 * This is useful for archons that need to resupply friendlies.
 	 * 
-	 * @return a robot that is friendly nearby with low flux count. null if
+	 * Since flux transfers can only occur with adjacent robots or robots on the
+	 * same location, this method will only return a robot in one of those
+	 * acceptable receiving locations.
+	 * 
+	 * @return a robot that is friendly adjacent with low flux count. null if
 	 *         there is no nearby robot.
 	 */
 	public Robot findAWeakFriendly() {
@@ -150,7 +158,10 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyObjects.length > 0) {
 				for (Robot e : nearbyObjects) {
 					if (e.getTeam() != myRC.getTeam()
-							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON) {
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
+							|| !acceptableFluxTransferLocation(myRC
+									.senseLocationOf(e))) {
 						continue;
 					}
 					if (weakestFriend == null
@@ -165,6 +176,19 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * Boolean valued function that determines whether a location is valid
+	 * (adjacent or equal to this location) for a flux transfer.
+	 * 
+	 * @param attempt
+	 *            MapLocation to test the validity of
+	 * @return true when attempt is equal to or adjacent to this robot's
+	 *         location
+	 */
+	public boolean acceptableFluxTransferLocation(MapLocation attempt) {
+		return this.myRC.getLocation().distanceSquaredTo(attempt) <= 1;
 	}
 
 	/**
@@ -207,7 +231,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return false;
 	}
-	
+
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -223,7 +247,7 @@ public abstract class BasePlayer extends StaticStuff {
 			return false;
 		}
 	}
-	
+
 	public void destroyTower(MapLocation target) {
 		try {
 			if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
