@@ -50,6 +50,7 @@ public class ScoutPlayer extends BasePlayer {
 					walkAimlessly();
 					friendlyToFollow = null;
 					myRC.setIndicatorString(1, "walking aimlessly");
+					runOncePerTurn();
 					myRC.yield();
 				} else {
 					// we have a friend.
@@ -62,6 +63,7 @@ public class ScoutPlayer extends BasePlayer {
 					myRC.setIndicatorString(1, "following a friendly");
 					myRC.setIndicatorString(0, "friendly number: "
 							+ friendlyToFollow.getID());
+					runOncePerTurn();
 					myRC.yield();
 				}
 			} catch (Exception e) {
@@ -90,8 +92,10 @@ public class ScoutPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackWeakestEnemy();
 						this.nav.getNextMove(targetLoc);
+						runOncePerTurn();
 						myRC.yield();
 					}
+					runOncePerTurn();
 					myRC.yield();
 				}
 			} catch (Exception e) {

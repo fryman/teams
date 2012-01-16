@@ -6,6 +6,13 @@ public abstract class BasePlayer extends StaticStuff {
 	public BasePlayer(RobotController rc) {
 
 	}
+	
+	/**
+	 * Code to run once per turn.
+	 */
+	public void runOncePerTurn() {
+		broadcastMessage();
+	}
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
@@ -41,6 +48,26 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void randomWalk() {
 		
+	}
+	
+	/**
+	 * Broadcast a random message.
+	 */
+	public void broadcastMessage() {
+		try {
+			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
+					+ 16
+					* battlecode.common.GameConstants.BROADCAST_COST_PER_BYTE) {
+				Message message = new Message();
+				int num[] = { 5 };
+				message.ints = num;
+				myRC.broadcast(message);
+			}
+		}
+		 catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
 	}
 
 	/**

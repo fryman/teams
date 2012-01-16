@@ -29,6 +29,7 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
+					runOncePerTurn();
 					myRC.yield();
 				}
 				if (core == null) {
@@ -39,11 +40,14 @@ public class ArchonPlayer extends BasePlayer {
 
 				while (Clock.getRoundNum() < 200) {
 					spawnScoutAndTransferFlux();
+					runOncePerTurn();
+					myRC.yield();
 				}
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 					this.nav.getNextMove(targetLoc);
+					runOncePerTurn();
 					myRC.yield();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();
@@ -64,9 +68,11 @@ public class ArchonPlayer extends BasePlayer {
 				if (myRC.getDirection() != myRC.getLocation().directionTo(
 						targetLoc)) {
 					while (myRC.isMovementActive()) {
+						runOncePerTurn();
 						myRC.yield();
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(targetLoc));
+					runOncePerTurn();
 					myRC.yield();
 				}
 				// Now we can build a fucking tower
@@ -83,6 +89,7 @@ public class ArchonPlayer extends BasePlayer {
 							+ targetLoc.toString());
 					buildTower(targetLoc);
 				}
+				runOncePerTurn();
 				myRC.yield();
 
 			} catch (Exception e) {
@@ -214,8 +221,10 @@ public class ArchonPlayer extends BasePlayer {
 							myRC.getLocation().add(myRC.getDirection()),
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
+				runOncePerTurn();
 				myRC.yield();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
+					runOncePerTurn();
 					myRC.yield();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
