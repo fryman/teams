@@ -8,7 +8,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Code to run once per turn.
+	 * Code to run once per turn, at the very end
 	 */
 	public void runAtEndOfTurn() {
 		broadcastMessage();
@@ -18,6 +18,8 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void walkAimlessly() {
 		try {
@@ -47,14 +49,16 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Similar to walk aimlessly, except that this robot will perform a random
 	 * walk.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void randomWalk() {
 		try {
 			while (myRC.isMovementActive()) {
-				return;
+				runAtEndOfTurn();
 			}
 			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
-				return;
+				runAtEndOfTurn();
 			}
 			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
 			// left, move forward
@@ -62,7 +66,7 @@ public abstract class BasePlayer extends StaticStuff {
 			double num = Math.random();
 			if (num > 0.5 && myRC.canMove(myRC.getDirection())) {
 				myRC.moveForward();
-				return;
+				runAtEndOfTurn();
 			} else {
 				Direction dir;
 				if (num > 0.4375)
@@ -84,10 +88,10 @@ public abstract class BasePlayer extends StaticStuff {
 				if (dir == myRC.getDirection()
 						&& myRC.canMove(myRC.getDirection())) {
 					myRC.moveForward();
-					return;
+					runAtEndOfTurn();
 				}
 				myRC.setDirection(dir);
-				return;
+				runAtEndOfTurn();
 			}
 		} catch (Exception e) {
 			System.out.println("Exception caught");
@@ -227,7 +231,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return false;
 	}
-	
+
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -243,7 +247,7 @@ public abstract class BasePlayer extends StaticStuff {
 			return false;
 		}
 	}
-	
+
 	public void destroyTower(MapLocation target) {
 		try {
 			if (myRC.canAttackSquare(target)) {
