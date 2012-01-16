@@ -183,7 +183,6 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	// archons can't actually attack ...
-
 	public void destroyTower(MapLocation target) {
 		try {
 			if (myRC.canAttackSquare(target)) {
@@ -204,6 +203,9 @@ public class ArchonPlayer extends BasePlayer {
 	 * Spawns a scout and transfers flux to it. Causes this archon to wait
 	 * (yielding) until it has enough flux to create a scout, and then waits
 	 * again until it has enough flux to give to the scout.
+	 * 
+	 * Currently the amount of flux transferred to the scout is the *full*
+	 * amount that the scout is allowed to carry.
 	 */
 	public void spawnScoutAndTransferFlux() {
 		try {
@@ -213,11 +215,11 @@ public class ArchonPlayer extends BasePlayer {
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
 				myRC.yield();
-				while ((RobotType.SCOUT.maxFlux / 2) > myRC.getFlux()) {
+				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
 					myRC.yield();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
-						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux / 2));
+						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
 			}
 		} catch (GameActionException e) {
 			System.out.println("Exception caught");
