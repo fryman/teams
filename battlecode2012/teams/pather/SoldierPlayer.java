@@ -37,10 +37,12 @@ public class SoldierPlayer extends BasePlayer {
 						if (friend != null){
 							myRC.setIndicatorString(1, "Found friendly! " + friend.getID());
 							nav.getNextMove(myRC.senseLocationOf(friend));
+							runOncePerTurn();
 							myRC.yield();
 							continue;
 						}
 						while (myRC.isMovementActive()) {
+							runOncePerTurn();
 							myRC.yield();
 						}
 						if (myRC.canMove(myRC.getDirection())) {
@@ -53,6 +55,7 @@ public class SoldierPlayer extends BasePlayer {
 								myRC.setDirection(myRC.getDirection()
 										.rotateRight());
 							}
+							runOncePerTurn();
 							myRC.yield();
 						}
 					} catch (Exception e) {
@@ -66,8 +69,10 @@ public class SoldierPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackWeakestEnemy();
 						this.nav.getNextMove(targetLoc);
+						runOncePerTurn();
 						myRC.yield();
 					}
+					runOncePerTurn();
 					myRC.yield();
 				}
 			} catch (Exception e) {
