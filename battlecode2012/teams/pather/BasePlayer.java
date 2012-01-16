@@ -140,7 +140,11 @@ public abstract class BasePlayer extends StaticStuff {
 	 * Finds the friendly nearby that has the lowest flux and is not an archon.
 	 * This is useful for archons that need to resupply friendlies.
 	 * 
-	 * @return a robot that is friendly nearby with low flux count. null if
+	 * Since flux transfers can only occur with adjacent robots or robots on the
+	 * same location, this method will only return a robot in one of those
+	 * acceptable receiving locations.
+	 * 
+	 * @return a robot that is friendly adjacent with low flux count. null if
 	 *         there is no nearby robot.
 	 */
 	public Robot findAWeakFriendly() {
@@ -150,7 +154,10 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyObjects.length > 0) {
 				for (Robot e : nearbyObjects) {
 					if (e.getTeam() != myRC.getTeam()
-							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON) {
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
+							|| !acceptableFluxTransferLocation(myRC
+									.senseLocationOf(weakestFriend))) {
 						continue;
 					}
 					if (weakestFriend == null
@@ -165,6 +172,25 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * Boolean valued function that determines whether a location is valid
+	 * (adjacent or equal to this location) for a flux transfer.
+	 * 
+	 * @param attempt
+	 *            MapLocation to test the validity of
+	 * @return true when attempt is equal to or adjacent to this robot's
+	 *         location
+	 */
+	public boolean acceptableFluxTransferLocation(MapLocation attempt) {
+		if (!attempt.isAdjacentTo(this.myRC.getLocation())) {
+			return false;
+		}
+		if (!attempt.equals(this.myRC.getLocation())) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
