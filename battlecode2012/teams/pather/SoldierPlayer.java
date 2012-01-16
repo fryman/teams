@@ -92,22 +92,6 @@ public class SoldierPlayer extends BasePlayer {
 		}
 		return weakest;
 	}
-	
-	public Robot findAFriendly() {
-		Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
-		Robot closestFriend = null;
-		if (nearbyObjects.length > 0) {
-			for (Robot e : nearbyObjects) {
-				if (e.getTeam() != myRC.getTeam()) {
-					continue;
-				}
-				if (closestFriend == null || compareRobotDistance(e, closestFriend)) {
-					closestFriend = e;
-				}
-			}
-		}
-		return closestFriend;
-	}
 
 	public void attackWeakestEnemy() {
 		try {
@@ -160,19 +144,6 @@ public class SoldierPlayer extends BasePlayer {
 		System.out.println("Time elapsed: " + (end - start));
 	}
 
-	public boolean compareRobotDistance(Robot one, Robot two) {
-		// returns true if one weaker than two
-		try {
-			int distToOne = myRC.getLocation().distanceSquaredTo(
-					myRC.senseLocationOf(one));
-			int distToTwo = myRC.getLocation().distanceSquaredTo(
-					myRC.senseLocationOf(two));
-			return distToOne < distToTwo;
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
 
 }
 

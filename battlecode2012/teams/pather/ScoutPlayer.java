@@ -25,9 +25,24 @@ public class ScoutPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
-	//go explore, follow spawned archon, transfer energon to archon
-	
+	// go explore, follow spawned archon, transfer energon to archon
+
 	public void run() {
+		runAttackMode();
+	}
+
+	public void runFollowFriendlyMode() {
+		while (true) {
+			try {
+				Robot friendlyToFollow = findAFriendly();
+			} catch (Exception e) {
+				System.out.println("Exception Caught");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void runAttackMode() {
 		while (true) {
 			try {
 				weakestTar = senseWeakestEnemy();
@@ -52,18 +67,15 @@ public class ScoutPlayer extends BasePlayer {
 						e.printStackTrace();
 					}
 				} else {
-					this.myRC.setIndicatorString(0, "Weakest Target: " + weakestTar.getID());
-					//System.out.println(Clock.getBytecodeNum() + " before senseLocationOf(weakestTar)");
+					this.myRC.setIndicatorString(0, "Weakest Target: "
+							+ weakestTar.getID());
 					targetLoc = myRC.senseLocationOf(weakestTar);
-					//System.out.println(Clock.getBytecodeNum() + " after senseLocationOf(weakestTar)");
-					this.myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
+					this.myRC.setIndicatorString(1,
+							"Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						//System.out.println(Clock.getBytecodeNum() + " before attackWeakestEnemy");
 						attackWeakestEnemy();
-						//System.out.println(Clock.getBytecodeNum() + " after attackWeakestEnemy");
 						this.nav.getNextMove(targetLoc);
-						//System.out.println(Clock.getBytecodeNum() + " after getNextMove");
 						myRC.yield();
 					}
 					myRC.yield();
@@ -106,6 +118,13 @@ public class ScoutPlayer extends BasePlayer {
 		}
 	}
 
+	/**
+	 * Not useful right now. Contains an example of an insertion sort. Remember:
+	 * insertion sort is O(n^2), but is in-place and stable. It is efficient for
+	 * short lists.
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		int[] enemies = { 2, 5, 3, 1, 6, 4 };
 		for (int i : enemies) {
@@ -142,18 +161,8 @@ public class ScoutPlayer extends BasePlayer {
 		System.out.println("Time elapsed: " + (end - start));
 	}
 
-	public boolean compareRobotDistance(Robot one, Robot two) {
-		// returns true if one weaker than two
-		try {
-			int distToOne = myRC.getLocation().distanceSquaredTo(
-					myRC.senseLocationOf(one));
-			int distToTwo = myRC.getLocation().distanceSquaredTo(
-					myRC.senseLocationOf(two));
-			return distToOne < distToTwo;
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
+	
+
+	
 
 }
