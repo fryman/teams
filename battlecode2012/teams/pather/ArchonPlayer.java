@@ -312,7 +312,8 @@ public class ArchonPlayer extends BasePlayer {
 				if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
 						&& myRC.senseObjectAtLocation(potentialLocation,
 								RobotLevel.ON_GROUND) == null
-						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND) {
+						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+						&& this.myRC.senseObjectAtLocation(potentialLocation, RobotLevel.POWER_NODE) == null) {
 					myRC.spawn(RobotType.SOLDIER);
 					myRC.setIndicatorString(2, "just spawned soldier: ");
 					runAtEndOfTurn();
