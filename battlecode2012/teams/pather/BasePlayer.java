@@ -1,6 +1,7 @@
 package pather;
 
 import pather.Nav.BugNav;
+import pather.Nav.DijkstraNav;
 import pather.Nav.Navigation;
 import pather.util.BoardModel;
 import battlecode.common.*;

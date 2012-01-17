@@ -23,7 +23,6 @@ public class ArchonPlayer extends BasePlayer {
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
 		// Today Archons use BugNav
-		this.nav = new BugNav(rc);
 	}
 
 	/**

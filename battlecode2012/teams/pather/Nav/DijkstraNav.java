@@ -12,12 +12,13 @@ import pather.Nav.*;
 import pather.util.*;
 
 /**
- * TODO This is incomplete. We can continue implementation if the current navigation
- * system is deemed inadequate.
+ * Too many bytecodes for reasonable usage.
  * 
  * @author saf
  * 
+ * @deprecated uses too many bytecodes for operation as implemented. use bugnav!
  */
+@Deprecated
 public class DijkstraNav extends Navigation {
 	private RobotController myRC;
 	private HashMap<MapLocation, Integer> distance;
@@ -28,6 +29,14 @@ public class DijkstraNav extends Navigation {
 
 	public DijkstraNav(RobotController myRC) {
 		this.myRC = myRC;
+		init();
+	}
+
+	/**
+	 * Resets all the queues and such. Should be called to reset dijkstra
+	 * computations
+	 */
+	public void init() {
 		this.distance = new HashMap<MapLocation, Integer>();
 		this.previous = new HashMap<MapLocation, MapLocation>();
 		this.mapLocationsRemovedFromQueue = new HashSet<MapLocation>();
@@ -76,7 +85,40 @@ public class DijkstraNav extends Navigation {
 
 	@Override
 	public void getNextMove(MapLocation target) {
-		dijkstra(target);
+		try {
+			// get the next location
+			MapLocation next = null;
+			while (next == null) {
+				System.out.println(Clock.getRoundNum());
+				dijkstra(target, this.myRC.getLocation());
+				next = this.previous.get(this.myRC.getLocation());
+
+			}
+			if (this.myRC.isMovementActive()) {
+				return;
+			}
+			Direction ideal = myRC.getLocation().directionTo(next);
+			if (ideal == Direction.OMNI || ideal == Direction.NONE) {
+				return;
+			}
+			// if this robot does not have enough flux to move, don't try to
+			// move.
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
+				return;
+			}
+			if (myRC.canMove(ideal)) {
+				if (myRC.getDirection() != ideal) {
+					myRC.setDirection(ideal);
+					myRC.setIndicatorString(1, "Turning ideal");
+					return;
+				}
+				myRC.moveForward();
+				myRC.setIndicatorString(1, "Moving ideal");
+				return;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -84,23 +126,59 @@ public class DijkstraNav extends Navigation {
 	 * 
 	 * Nontraversible locations are given distance infinity.
 	 * 
+	 * The completed path is stored in previous.
+	 * 
 	 * @param target
 	 */
-	public void dijkstra(MapLocation target) {
-		MapLocation currentLoc = this.myRC.getLocation();
-		this.distance.put(currentLoc, 0);
-		this.queue.add(currentLoc);
+	public void dijkstra(MapLocation start, MapLocation end) {
+		init();
+		this.distance.put(start, 0);
+		this.queue.add(start);
 		while (this.queue.size() != 0) {
 			MapLocation u = this.queue.peek();
+			System.out.println(Clock.getBytecodeNum());
+			// System.out.println("Considering: " + u);
 			if (this.distance.get(u) == INFINITY) {
 				break;
 			}
-			this.queue.remove();
+			if (u.equals(end)) {
+				// the path has been computed
+				System.out.println("the path has been computed");
+				return;
+			}
+			this.mapLocationsRemovedFromQueue.add(this.queue.remove());
 			for (MapLocation v : getMapLocationNeighbors(u)) {
 				if (this.mapLocationsRemovedFromQueue.contains(v)) {
 					continue;
 				} else {
-					double alt = this.distance.get(u) + u.distanceSquaredTo(v);
+					if (this.myRC.senseTerrainTile(v) != null) {
+						if (this.myRC.senseTerrainTile(v).equals(
+								TerrainTile.OFF_MAP)) {
+							this.distance.put(v, INFINITY);
+						} else if (this.myRC.senseTerrainTile(v).equals(
+								TerrainTile.VOID)
+								&& !this.myRC.getType().isAirborne()) {
+							this.distance.put(v, INFINITY);
+						} else {
+							double alt = this.distance.get(u)
+									+ u.distanceSquaredTo(v);
+							if (!this.distance.containsKey(v)
+									|| alt < this.distance.get(v)) {
+								this.distance.put(v, (int) alt);
+								this.previous.put(v, u);
+								this.queue.add(v);
+							}
+						}
+					} else {
+						double alt = this.distance.get(u)
+								+ u.distanceSquaredTo(v);
+						if (!this.distance.containsKey(v)
+								|| alt < this.distance.get(v)) {
+							this.distance.put(v, (int) alt);
+							this.previous.put(v, u);
+							this.queue.add(v);
+						}
+					}
 				}
 			}
 		}
