@@ -94,7 +94,6 @@ public class BugNav extends Navigation {
 					}
 					waited = false;
 					tracing = true;
-					double num = Math.random();
 					// this choice can be made with a heuristic such as // dot
 					// product of
 					// new direction with direction to // target
