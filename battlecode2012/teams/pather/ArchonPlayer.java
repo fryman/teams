@@ -17,7 +17,8 @@ public class ArchonPlayer extends BasePlayer {
 	// need to remove from enemyTowerLocs if we destroy enemy towers
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
-	private Navigation nav = null;
+	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
+											// this.
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -33,6 +34,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	@Override
 	public void runAtEndOfTurn() {
+		aboutToDie();
 		broadcastMessage();
 		this.findWeakFriendsAndTransferFlux();
 		myRC.yield();
@@ -119,7 +121,7 @@ public class ArchonPlayer extends BasePlayer {
 	 * If the convoy is deficient, creates scout or soldier to complete the
 	 * convoy.
 	 */
-	private void checkAndCreateConvoy() {
+	public void checkAndCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
 			boolean scoutPresent = false;
@@ -191,6 +193,10 @@ public class ArchonPlayer extends BasePlayer {
 		powerNodesOwned = myRC.senseAlliedPowerNodes();
 	}
 
+	/**
+	 * Finds a new PowerNode that we can build on. Sets targetLoc to this node's
+	 * location.
+	 */
 	public void getNewTarget() {
 		updateUnownedNodes();
 		if (locsToBuild.size() != 0) {
@@ -205,20 +211,28 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
+	/**
+	 * Spawns a tower at the current location
+	 * 
+	 * @param target
+	 *            MapLocation at which to build the tower
+	 */
 	public void buildTower(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() == myRC.getTeam()) {
-				getNewTarget();
 				return;
 			}
-			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
+			if (myRC.getFlux() >= RobotType.TOWER.spawnCost
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				myRC.spawn(RobotType.TOWER);
-				runAtEndOfTurn();
+				if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
+					myRC.spawn(RobotType.TOWER);
+					runAtEndOfTurn();
+				}
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
@@ -245,9 +259,9 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP){
+				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
 					// turn right
-					if (!myRC.isMovementActive()){
+					if (!myRC.isMovementActive()) {
 						myRC.setDirection(myRC.getDirection().rotateRight());
 					} 
 					continue;

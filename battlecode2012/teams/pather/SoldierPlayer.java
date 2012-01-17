@@ -14,7 +14,6 @@ import battlecode.common.RobotType;
 
 public class SoldierPlayer extends BasePlayer {
 
-	private Navigation nav = null;
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private Random r = new Random();

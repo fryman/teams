@@ -37,6 +37,7 @@ public class ScoutPlayer extends BasePlayer {
 			if (suitableTimeToHeal()) {
 				this.myRC.regenerate();
 			}
+			aboutToDie();
 			myRC.yield();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -44,7 +45,7 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runFollowFriendlyMode();
+		runAttackMode();
 	}
 
 	/**
