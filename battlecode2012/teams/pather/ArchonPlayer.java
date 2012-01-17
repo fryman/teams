@@ -225,8 +225,10 @@ public class ArchonPlayer extends BasePlayer {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				myRC.spawn(RobotType.TOWER);
-				runAtEndOfTurn();
+				if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
+					myRC.spawn(RobotType.TOWER);
+					runAtEndOfTurn();
+				}
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
