@@ -28,7 +28,7 @@ public class SoldierPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		runFollowFriendlyMode();
+		guardThenAttackMode();
 	}
 
 	/**

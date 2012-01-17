@@ -184,8 +184,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Finds the friendly nearby that has the lowest energon and is not a
-	 * tower. This is useful for scouts that need to heal neighbors.
+	 * Finds the friendly nearby that has the lowest energon and is not a tower.
+	 * This is useful for scouts that need to heal neighbors.
 	 * 
 	 * Since the heal range is exactly the attack range, only considers robots
 	 * within the attack range.
@@ -346,7 +346,18 @@ public abstract class BasePlayer extends StaticStuff {
 				return;
 			}
 			MapLocation attack = myRC.senseLocationOf(closestTar);
+
+			if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
+				if (ownAdjacentTower(closestTar)) {
+					myRC.setIndicatorString(7, "Attempting tower destroy");
+					destroyTower(attack);
+				} else {
+					return;
+				}
+			}
+
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+				myRC.setIndicatorString(7, "Attacking closest enemy");
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
 			}
@@ -355,7 +366,8 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
-	public boolean ownAdjacentTower(PowerNode p) {
+	public boolean ownAdjacentTower(Robot r) {
+		PowerNode p = (PowerNode) r;
 		MapLocation[] neighbors = p.neighbors();
 		PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
 		boolean ownAdjacent = false;
