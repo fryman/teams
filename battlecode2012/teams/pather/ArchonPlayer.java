@@ -18,6 +18,7 @@ public class ArchonPlayer extends BasePlayer {
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
 	private Navigation nav = null;
+	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for this.
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -364,6 +365,10 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public boolean spreadOutFromOtherArchons() {
 		try {
+			if (roundsUsedToMoveAway >= 20){
+				// stop moving - you're stuck.
+				return true;
+			}
 			int minimumDistance = GameConstants.PRODUCTION_PENALTY_R2;
 			MapLocation[] archons = myRC.senseAlliedArchons();
 			MapLocation currentLoc = this.myRC.getLocation();
@@ -386,9 +391,6 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			if (smallestDistance < minimumDistance && closest != null) {
-				// TODO currently can be stuck in a feedback loop where an
-				// archon tries to move away from another archon, but thinks it
-				// is stuck on a wall.
 				myRC.setIndicatorString(
 						0,
 						"closest archon: "
@@ -398,6 +400,7 @@ public class ArchonPlayer extends BasePlayer {
 						.directionTo(closest).opposite(), minimumDistance
 						- (int) smallestDistance);
 				this.nav.getNextMove(fartherAwayTarget);
+				roundsUsedToMoveAway ++;
 				return false;
 			}
 			return true;

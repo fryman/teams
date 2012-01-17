@@ -188,8 +188,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Finds the friendly nearby that has the lowest energon and is not a
-	 * tower. This is useful for scouts that need to heal neighbors.
+	 * Finds the friendly nearby that has the lowest energon and is not a tower.
+	 * This is useful for scouts that need to heal neighbors.
 	 * 
 	 * Since the heal range is exactly the attack range, only considers robots
 	 * within the attack range.
@@ -328,6 +328,12 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	/**
+	 * Determines nearby enemy robots and returns the closest of them.
+	 * 
+	 * @return Robot that is the closest, not on our team. Null if no enemy
+	 *         robots are nearby.
+	 */
 	public Robot senseClosestEnemy() {
 		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 		Robot closest = null;
@@ -415,6 +421,25 @@ public abstract class BasePlayer extends StaticStuff {
 			System.out.println("caught exception:");
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            MapLocation to compare distance between
+	 * @param two
+	 *            MapLocation to compare distance between
+	 * @return true when MapLocation one is closer than Robot two
+	 */
+	public boolean compareMapLocationDistance(MapLocation one, MapLocation two) {
+		try {
+			int distToOne = myRC.getLocation().distanceSquaredTo(one);
+			int distToTwo = myRC.getLocation().distanceSquaredTo(two);
+			return distToOne < distToTwo;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public void aboutToDie(){

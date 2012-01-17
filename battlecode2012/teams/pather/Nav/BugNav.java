@@ -84,6 +84,12 @@ public class BugNav extends Navigation {
 					// by sensing and if we hit a friendly, // back up rather
 					// than turn
 					// sense whats in front of us
+					if (!myRC.canSenseSquare(myRC
+							.getLocation().add(ideal))){
+						myRC.setIndicatorString(1,"I can't see whats in front of me");
+						myRC.setDirection(ideal);
+						return;
+					}
 					GameObject obstruction = myRC.senseObjectAtLocation(myRC
 							.getLocation().add(ideal), RobotLevel.ON_GROUND);
 					if (obstruction != null
