@@ -240,20 +240,47 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				myRC.setIndicatorString(0, "creating scout");
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP){
+					// turn right
+					if (!myRC.isMovementActive()){
+						myRC.setDirection(myRC.getDirection().rotateRight());
+					} 
+					continue;
+				}
 				if (myRC.getFlux() > RobotType.SCOUT.spawnCost
-						&& myRC.senseObjectAtLocation(
-								myRC.getLocation().add(myRC.getDirection()),
+						&& myRC.senseObjectAtLocation(potentialLocation,
 								RobotLevel.IN_AIR) == null) {
 					myRC.spawn(RobotType.SCOUT);
+					myRC.setIndicatorString(2, "just spawned scout: ");
 					runAtEndOfTurn();
-					while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
+					Robot recentScout = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, RobotLevel.IN_AIR);
+					myRC.setIndicatorString(2, "recent scout: " + recentScout);
+					if (recentScout == null) {
+						runAtEndOfTurn();
+						myRC.setIndicatorString(2, "recent scout null");
+						continue;
+					}
+					runAtEndOfTurn();
+					while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()
+							&& myRC.canSenseObject(recentScout)) {
 						super.runAtEndOfTurn();
 					}
-					myRC.transferFlux(
-							myRC.getLocation().add(myRC.getDirection()),
-							RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
+					if ( myRC.canSenseObject(recentScout)&&acceptableFluxTransferLocation(myRC.senseLocationOf(recentScout))
+							&& myRC.senseRobotInfo(recentScout).flux < RobotType.SCOUT.maxFlux) {
+						myRC.transferFlux(myRC.senseLocationOf(recentScout),
+								RobotLevel.IN_AIR,
+								RobotType.SCOUT.maxFlux);
+					}
 					return;
 				}
+				myRC.setIndicatorString(1, "did not attempt to create scout");
+				myRC.setIndicatorString(2, Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
 				runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");

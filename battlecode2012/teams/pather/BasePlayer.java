@@ -125,7 +125,6 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * 
 	 * @return the Robot closest to this Robot that is on the same team as this.
 	 */
 	public Robot findAFriendly() {

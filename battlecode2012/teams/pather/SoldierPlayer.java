@@ -19,6 +19,7 @@ public class SoldierPlayer extends BasePlayer {
 	private Robot closestTar;
 	private Random r = new Random();
 	private Robot friendlyToFollow = null;
+	private int numTurnsLookingForFriendly = 0;
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
@@ -90,11 +91,20 @@ public class SoldierPlayer extends BasePlayer {
 						|| !myRC.canSenseObject(friendlyToFollow)
 						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
 						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
+					if (numTurnsLookingForFriendly < 4) {
+						if (myRC.getFlux() > myRC.getType().moveCost && !myRC.isMovementActive()){
+							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
+							numTurnsLookingForFriendly ++;
+						}
+						runAtEndOfTurn();
+						continue;
+					}
 					walkAimlessly();
 					friendlyToFollow = null;
 					myRC.setIndicatorString(1, "walking aimlessly");
 					runAtEndOfTurn();
 				} else {
+					numTurnsLookingForFriendly = 0;
 					// we have a friend.
 					if (!myRC.canSenseObject(friendlyToFollow)) {
 						continue;
