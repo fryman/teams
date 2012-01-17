@@ -363,7 +363,7 @@ public abstract class BasePlayer extends StaticStuff {
 			MapLocation attack = myRC.senseLocationOf(closestTar);
 
 			if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
-				if (ownAdjacentTower(closestTar)) {
+				if (ownAdjacentTower(attack)) {
 					myRC.setIndicatorString(7, "Attempting tower destroy");
 					destroyTower(attack);
 				} else {
@@ -409,23 +409,30 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
-	public boolean ownAdjacentTower(Robot r) {
-		PowerNode p = (PowerNode) r;
-		MapLocation[] neighbors = p.neighbors();
-		PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
-		boolean ownAdjacent = false;
+	public boolean ownAdjacentTower(MapLocation m) {
+		PowerNode p;
+		try {
+			p = (PowerNode) myRC
+					.senseObjectAtLocation(m, RobotLevel.POWER_NODE);
 
-		search: {
-			for (MapLocation m : neighbors) {
-				for (PowerNode owned : ownedTowers) {
-					if (m.equals(owned.getLocation())) {
-						ownAdjacent = true;
-						break search;
+			MapLocation[] neighbors = p.neighbors();
+			PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
+			boolean ownAdjacent = false;
+
+			search: {
+				for (MapLocation neigh : neighbors) {
+					for (PowerNode owned : ownedTowers) {
+						if (neigh.equals(owned.getLocation())) {
+							ownAdjacent = true;
+							break search;
+						}
 					}
 				}
 			}
+			return ownAdjacent;
+		} catch (GameActionException e) {
+			return false;
 		}
-		return ownAdjacent;
 	}
 
 	/**
@@ -487,17 +494,18 @@ public abstract class BasePlayer extends StaticStuff {
 		return false;
 	}
 
-	public void aboutToDie(){
-		//if less than 5% health...
-		try {		
-			if (myRC.getEnergon() < 0.5*myRC.getMaxEnergon()
-					&& myRC.getType()!=battlecode.common.RobotType.ARCHON){
+	public void aboutToDie() {
+		// if less than 5% health...
+		try {
+			if (myRC.getEnergon() < 0.5 * myRC.getMaxEnergon()
+					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
 				Robot weak = findAWeakFriendly();
 				if (weak != null) {
-					//System.out.println("about to die, found weak");
-					while(!myRC.getLocation().isAdjacentTo(myRC.senseLocationOf(weak)) 
-							&& myRC.getLocation()!= myRC.senseLocationOf(weak)){
-						nav.getNextMove(myRC.senseLocationOf(weak));	
+					// System.out.println("about to die, found weak");
+					while (!myRC.getLocation().isAdjacentTo(
+							myRC.senseLocationOf(weak))
+							&& myRC.getLocation() != myRC.senseLocationOf(weak)) {
+						nav.getNextMove(myRC.senseLocationOf(weak));
 					}
 					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
 					double weakFlux = weakRobotInfo.flux;
@@ -505,13 +513,13 @@ public abstract class BasePlayer extends StaticStuff {
 					double fluxAmountToTransfer = Math.min(maxFlux - weakFlux,
 							myRC.getFlux());
 					if (fluxAmountToTransfer > 0) {
-						//System.out.println("transfer");
-						//System.out.println(maxFlux-weakFlux);
-						//System.out.println(myRC.getFlux());
+						// System.out.println("transfer");
+						// System.out.println(maxFlux-weakFlux);
+						// System.out.println(myRC.getFlux());
 						myRC.transferFlux(weakRobotInfo.location,
 								weakRobotInfo.robot.getRobotLevel(),
 								fluxAmountToTransfer);
-						//System.out.println(myRC.getFlux());
+						// System.out.println(myRC.getFlux());
 					}
 				}
 
