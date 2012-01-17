@@ -60,8 +60,8 @@ public class BugNav extends Navigation {
 			if (!target.equals(this.target) || this.mline == null) {
 				setTargetBug2(target);
 			}
-			Direction dir = myRC.getLocation().directionTo(target);
-			if (dir == Direction.OMNI || dir == Direction.NONE) {
+			Direction ideal = myRC.getLocation().directionTo(target);
+			if (ideal == Direction.OMNI || ideal == Direction.NONE) {
 				return;
 			}
 			// if this robot does not have enough flux to move, don't try to
@@ -70,9 +70,9 @@ public class BugNav extends Navigation {
 				return;
 			}
 			if (!tracing) {
-				if (myRC.canMove(dir)) {
-					if (myRC.getDirection() != dir) {
-						myRC.setDirection(dir);
+				if (myRC.canMove(ideal)) {
+					if (myRC.getDirection() != ideal) {
+						myRC.setDirection(ideal);
 						myRC.setIndicatorString(1, "Turning ideal");
 						return;
 					}
@@ -85,7 +85,7 @@ public class BugNav extends Navigation {
 					// than turn
 					// sense whats in front of us
 					GameObject obstruction = myRC.senseObjectAtLocation(myRC
-							.getLocation().add(dir), RobotLevel.ON_GROUND);
+							.getLocation().add(ideal), RobotLevel.ON_GROUND);
 					if (obstruction != null
 							&& obstruction.getTeam() == myRC.getTeam()
 							&& !waited) {
@@ -100,17 +100,43 @@ public class BugNav extends Navigation {
 					// new direction with direction to // target
 
 					// "pick direction to trace"
-					if (num > 1) {
-						myRC.setDirection(dir.rotateRight());
-						turnedLeft = false;
-						myRC.setIndicatorString(1,
-								"Turning right to avoid obstacle");
-						return;
-					} else {
-						myRC.setDirection(dir.rotateLeft());
+					MapLocation currentLoc = myRC.getLocation();
+					MapLocation left = currentLoc.add(myRC.getDirection()
+							.rotateLeft());
+					MapLocation right = currentLoc.add(myRC.getDirection()
+							.rotateRight());
+					int[] vectorLeft = { left.x - currentLoc.x,
+							left.y - currentLoc.y };
+					int[] vectorRight = { right.x - currentLoc.x,
+							right.y - currentLoc.y };
+					int[] vectorToGoal = { target.x - currentLoc.x,
+							target.y - currentLoc.y };
+
+					double leftCos = (vectorLeft[0] * vectorToGoal[0] + vectorLeft[1]
+							* vectorToGoal[1])
+							/ (Math.sqrt(vectorLeft[0] * vectorLeft[0]
+									+ vectorLeft[1] * vectorLeft[1]) * Math
+									.sqrt(vectorToGoal[0] * vectorToGoal[0]
+											+ vectorToGoal[1] * vectorToGoal[1]));
+
+					double rightCos = (vectorRight[0] * vectorToGoal[0] + vectorRight[1]
+							* vectorToGoal[1])
+							/ (Math.sqrt(vectorRight[0] * vectorRight[0]
+									+ vectorRight[1] * vectorRight[1]) * Math
+									.sqrt(vectorToGoal[0] * vectorToGoal[0]
+											+ vectorToGoal[1] * vectorToGoal[1]));
+
+					if (leftCos > rightCos) {
+						myRC.setDirection(ideal.rotateLeft());
 						turnedLeft = true;
 						myRC.setIndicatorString(1,
 								"Turning left to avoid obstacle");
+						return;
+					} else {
+						myRC.setDirection(ideal.rotateRight());
+						turnedLeft = false;
+						myRC.setIndicatorString(1,
+								"Turning right to avoid obstacle");
 						return;
 					}
 				}
