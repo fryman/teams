@@ -152,5 +152,4 @@ public class ScoutPlayer extends BasePlayer {
 		}
 		return false;
 	}
-
 }

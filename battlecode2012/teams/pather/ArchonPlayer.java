@@ -51,6 +51,11 @@ public class ArchonPlayer extends BasePlayer {
 				getNewTarget();
 
 				while (Clock.getRoundNum() < 200) {
+					while (!spreadOutFromOtherArchons()) {
+						while (myRC.isMovementActive()) {
+							runAtEndOfTurn();
+						}
+					}
 					spawnScoutAndTransferFlux();
 					runAtEndOfTurn();
 				}
@@ -204,7 +209,7 @@ public class ArchonPlayer extends BasePlayer {
 				runAtEndOfTurn();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
 					super.runAtEndOfTurn();
-				}  
+				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
 			}
@@ -218,6 +223,8 @@ public class ArchonPlayer extends BasePlayer {
 	 * Spawns a soldier and transfers flux to it. Causes this archon to wait
 	 * (yielding) until it has enough flux to create a soldier, and then waits
 	 * again until it has enough flux to give to the soldier.
+	 * 
+	 * TODO is this initial flux transfer the correct amount?
 	 */
 	public void spawnSoldierAndTransferFlux() {
 		try {
@@ -237,5 +244,49 @@ public class ArchonPlayer extends BasePlayer {
 			System.out.println("Exception caught");
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Causes this archon to move away from neighboring archons, allowing
+	 * greater flux regeneration. Useful for the beginning of the game.
+	 * 
+	 * 1) Sense neighboring archons.
+	 * 
+	 * 2) If distance^2 < X, move away TODO determine X
+	 * 
+	 * 3) Direction moving away is opposite the ray to the closest archon.
+	 * 
+	 * @return returns true when the nearest archon is greater than X away,
+	 *         false otherwise
+	 */
+	public boolean spreadOutFromOtherArchons() {
+		int minimumDistance = 10;
+		MapLocation[] archons = myRC.senseAlliedArchons();
+		MapLocation currentLoc = this.myRC.getLocation();
+		MapLocation closest = null;
+		double smallestDistance = 0; // this should be the distance from this
+										// robot to closest
+		double dist;
+		for (MapLocation m : archons) {
+			dist = m.distanceSquaredTo(currentLoc);
+			if (dist == 0) {
+				continue;
+			}
+			if (closest == null) {
+				closest = m;
+				smallestDistance = dist;
+			} else if (dist < smallestDistance) {
+				closest = m;
+				smallestDistance = dist;
+			}
+		}
+		if (smallestDistance < minimumDistance && closest != null) {
+			MapLocation fartherAwayTarget = currentLoc.add(currentLoc
+					.directionTo(closest).opposite(), minimumDistance
+					- (int) smallestDistance);
+			this.nav.getNextMove(fartherAwayTarget);
+			return false;
+		}
+		return true;
 	}
 }
