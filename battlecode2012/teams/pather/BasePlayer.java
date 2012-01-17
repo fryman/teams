@@ -354,10 +354,13 @@ public abstract class BasePlayer extends StaticStuff {
 
 	/**
 	 * This is an archaic navigation method that is superceeded by Navigation.
+
 	 * 
 	 * @param target
 	 *            Target location to got closer to
+	 * @deprecated This method is replaced by bugNav
 	 */
+	@Deprecated
 	public void goCloser(MapLocation target) {
 		try {
 			while (myRC.isMovementActive()) {
