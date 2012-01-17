@@ -12,7 +12,7 @@ import pather.Nav.*;
 import pather.util.*;
 
 /**
- * This is incomplete. We can continue implementation if the current navigation
+ * TODO This is incomplete. We can continue implementation if the current navigation
  * system is deemed inadequate.
  * 
  * @author saf
