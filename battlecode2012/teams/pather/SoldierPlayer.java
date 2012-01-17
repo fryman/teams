@@ -20,6 +20,7 @@ public class SoldierPlayer extends BasePlayer {
 	private Random r = new Random();
 	private Robot friendlyToFollow = null;
 	private int numTurnsLookingForFriendly = 0;
+	private MapLocation friendlyMapLocationToFollow = null;
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
@@ -83,44 +84,49 @@ public class SoldierPlayer extends BasePlayer {
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
-				// TODO Are both of these statements necessary ??
-				if (friendlyToFollow == null) {
-					friendlyToFollow = findAFriendly();
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
 				}
-				if (friendlyToFollow == null
-						|| !myRC.canSenseObject(friendlyToFollow)
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
-					if (numTurnsLookingForFriendly < 4) {
-						if (myRC.getFlux() > myRC.getType().moveCost && !myRC.isMovementActive()){
-							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
-							numTurnsLookingForFriendly ++;
-						}
-						runAtEndOfTurn();
-						continue;
-					}
-					walkAimlessly();
-					friendlyToFollow = null;
-					myRC.setIndicatorString(1, "walking aimlessly");
-					runAtEndOfTurn();
-				} else {
-					numTurnsLookingForFriendly = 0;
-					// we have a friend.
-					if (!myRC.canSenseObject(friendlyToFollow)) {
-						continue;
-					}
-					MapLocation friendLocation = myRC
-							.senseLocationOf(friendlyToFollow);
-					this.nav.getNextMove(friendLocation);
-					myRC.setIndicatorString(1, "following a friendly");
-					myRC.setIndicatorString(0, "friendly number: "
-							+ friendlyToFollow.getID());
-					runAtEndOfTurn();
-				}
+				this.nav.getNextMove(friendlyMapLocationToFollow);
+				myRC.setIndicatorString(1, "following a friendly");
+				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
 			}
 		}
 	}
+
+	/**
+	 * Returns the nearest friendly archon. Since many robots have a limited
+	 * field of view, this is necessary for when a nearby archon turns away and
+	 * out of the field of view.
+	 * 
+	 * @return nearest friendly archon. null if no archons remain on the board.
+	 */
+	public MapLocation reacquireNearestFriendlyArchonLocation() {
+		try {
+			MapLocation closestArchonLocation = null;
+			MapLocation[] alliedArchonsLocations = myRC.senseAlliedArchons();
+			if (alliedArchonsLocations.length > 0) {
+				for (MapLocation e : alliedArchonsLocations) {
+					if (closestArchonLocation == null
+							|| compareMapLocationDistance(e,
+									closestArchonLocation)) {
+						closestArchonLocation = e;
+					}
+				}
+			}
+			if (closestArchonLocation == null) {
+				return null;
+			}
+			return closestArchonLocation;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }
