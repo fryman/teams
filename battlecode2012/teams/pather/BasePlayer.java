@@ -20,6 +20,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 * called when the Robot is done with its turn.
 	 */
 	public void runAtEndOfTurn() {
+		aboutToDie();
 		broadcastMessage();
 		myRC.yield();
 	}
@@ -474,18 +475,17 @@ public abstract class BasePlayer extends StaticStuff {
 		return false;
 	}
 
-	public void aboutToDie() {
-		// if less than 5% health...
-		try {
-			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
-					&& myRC.getType() != battlecode.common.RobotType.ARCHON
-			/* && being attacked */) {
+	public void aboutToDie(){
+		//if less than 5% health...
+		try {		
+			if (myRC.getEnergon() < 0.5*myRC.getMaxEnergon()
+					&& myRC.getType()!=battlecode.common.RobotType.ARCHON){
 				Robot weak = findAWeakFriendly();
 				if (weak != null) {
-					while (!myRC.getLocation().isAdjacentTo(
-							myRC.senseLocationOf(weak))
-							&& myRC.getLocation() != myRC.senseLocationOf(weak)) {
-						nav.getNextMove(myRC.senseLocationOf(weak));
+					//System.out.println("about to die, found weak");
+					while(!myRC.getLocation().isAdjacentTo(myRC.senseLocationOf(weak)) 
+							&& myRC.getLocation()!= myRC.senseLocationOf(weak)){
+						nav.getNextMove(myRC.senseLocationOf(weak));	
 					}
 					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
 					double weakFlux = weakRobotInfo.flux;
@@ -493,9 +493,13 @@ public abstract class BasePlayer extends StaticStuff {
 					double fluxAmountToTransfer = Math.min(maxFlux - weakFlux,
 							myRC.getFlux());
 					if (fluxAmountToTransfer > 0) {
+						//System.out.println("transfer");
+						//System.out.println(maxFlux-weakFlux);
+						//System.out.println(myRC.getFlux());
 						myRC.transferFlux(weakRobotInfo.location,
 								weakRobotInfo.robot.getRobotLevel(),
 								fluxAmountToTransfer);
+						//System.out.println(myRC.getFlux());
 					}
 				}
 
