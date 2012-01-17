@@ -57,11 +57,11 @@ public class BugNav extends Navigation {
 			if (myRC.isMovementActive()) {
 				return;
 			}
-			if (!target.equals(this.target) || this.mline == null) {
-				setTargetBug2(target);
-			}
+
+			this.target = target;
 			Direction ideal = myRC.getLocation().directionTo(target);
 			if (ideal == Direction.OMNI || ideal == Direction.NONE) {
+
 				return;
 			}
 			// if this robot does not have enough flux to move, don't try to
