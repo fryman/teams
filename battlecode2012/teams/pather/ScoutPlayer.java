@@ -125,7 +125,7 @@ public class ScoutPlayer extends BasePlayer {
 	 * surroundings.
 	 * 
 	 * Returns true when any robot nearby is <95% energon. Returns false when
-	 * this robot's flux is less than 10% max.
+	 * this robot's flux is less than 10% max or if nearby weaklings are null.
 	 * 
 	 * @return true if it is a good time to heal the surroundings, false
 	 *         otherwise
@@ -136,6 +136,9 @@ public class ScoutPlayer extends BasePlayer {
 				return false;
 			}
 			Robot weakling = findALowEnergonFriendly();
+			if (weakling == null){
+				return false;
+			}
 			RobotInfo weakInfo = myRC.senseRobotInfo(weakling);
 			if (weakInfo.energon / weakInfo.type.maxEnergon < 0.95) {
 				return true;
