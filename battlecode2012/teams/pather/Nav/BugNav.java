@@ -48,7 +48,7 @@ public class BugNav extends Navigation {
 
 	@Override
 	public void getNextMove(MapLocation target) {
-		getNextMoveBug0(target);
+		getNextMoveBug2(target);
 		return;
 	}
 
