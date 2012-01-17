@@ -4,11 +4,11 @@ import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
-	
+
 	public BasePlayer(RobotController rc) {
-	
+
 	}
-	
+
 	/**
 	 * Code to run once per turn, at the very end
 	 */
@@ -16,7 +16,7 @@ public abstract class BasePlayer extends StaticStuff {
 		broadcastMessage();
 		myRC.yield();
 	}
-	
+
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
@@ -181,6 +181,41 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Finds the friendly nearby that has the lowest energon and is not an
+	 * archon. This is useful for scouts that need to heal neighbors.
+	 * 
+	 * Since the heal range is exactly the attack range, only considers robots
+	 * within the attack range.
+	 * 
+	 * @return a robot that is friendly nearby with low energon count. null if
+	 *         there is no nearby robot.
+	 */
+	public Robot findALowEnergonFriendly() {
+		try {
+			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			Robot weakestFriend = null;
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| !myRC.canAttackSquare((myRC.senseLocationOf(e)))) {
+						continue;
+					}
+					if (weakestFriend == null
+							|| compareRobotEnergon(e, weakestFriend)) {
+						weakestFriend = e;
+					}
+				}
+			}
+			return weakestFriend;
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
 	 * Boolean valued function that determines whether a location is valid
 	 * (adjacent or equal to this location) for a flux transfer.
 	 * 
@@ -206,6 +241,26 @@ public abstract class BasePlayer extends StaticStuff {
 			double fluxOne = myRC.senseRobotInfo(one).flux;
 			double fluxTwo = myRC.senseRobotInfo(two).flux;
 			return fluxOne < fluxTwo;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            Robot to compare energon of
+	 * @param two
+	 *            Robot to compare energon of
+	 * @return truw when Robot one has a lower energon than Robot two
+	 */
+	public boolean compareRobotEnergon(Robot one, Robot two) {
+		try {
+			double energonOne = myRC.senseRobotInfo(one).energon;
+			double energonTwo = myRC.senseRobotInfo(two).energon;
+			return energonOne < energonTwo;
 		} catch (GameActionException e) {
 			System.out.println("Exception caught");
 			e.printStackTrace();

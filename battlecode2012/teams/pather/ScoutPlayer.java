@@ -1,7 +1,9 @@
 package pather;
 
 import pather.Nav.BugNav;
+
 import pather.Nav.Navigation;
+import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
@@ -20,6 +22,22 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon
+
+	/**
+	 * Code to run once per turn, at the very end
+	 */
+	@Override
+	public void runAtEndOfTurn() {
+		try {
+			broadcastMessage();
+			if (suitableTimeToHeal()) {
+				this.myRC.regenerate();
+			}
+			myRC.yield();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void run() {
 		runAttackMode();
@@ -104,13 +122,28 @@ public class ScoutPlayer extends BasePlayer {
 
 	/**
 	 * Determines when it is cost effective for a scout to heal his
-	 * surroundings. TODO determine a heuristic for when healing is useful.
+	 * surroundings.
+	 * 
+	 * Returns true when any robot nearby is <95% energon. Returns false when
+	 * this robot's flux is less than 10% max.
 	 * 
 	 * @return true if it is a good time to heal the surroundings, false
 	 *         otherwise
 	 */
 	public boolean suitableTimeToHeal() {
-		// TODO implement suitable time to heal after determining a heuristic
+		try {
+			if (this.myRC.getFlux() < 0.1 * this.myRC.getType().maxFlux) {
+				return false;
+			}
+			Robot weakling = findALowEnergonFriendly();
+			RobotInfo weakInfo = myRC.senseRobotInfo(weakling);
+			if (weakInfo.energon / weakInfo.type.maxEnergon < 0.95) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
