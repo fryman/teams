@@ -33,6 +33,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	@Override
 	public void runAtEndOfTurn() {
+		aboutToDie();
 		broadcastMessage();
 		this.findWeakFriendsAndTransferFlux();
 		myRC.yield();
