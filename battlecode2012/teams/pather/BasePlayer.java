@@ -354,9 +354,27 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	public boolean ownAdjacentTower(PowerNode p) {
+		MapLocation[] neighbors = p.neighbors();
+		PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
+		boolean ownAdjacent = false;
+
+		search: {
+			for (MapLocation m : neighbors) {
+				for (PowerNode owned : ownedTowers) {
+					if (m.equals(owned.getLocation())) {
+						ownAdjacent = true;
+						break search;
+					}
+				}
+			}
+		}
+		return ownAdjacent;
+	}
+
 	/**
 	 * This is an archaic navigation method that is superceeded by Navigation.
-
+	 * 
 	 * 
 	 * @param target
 	 *            Target location to got closer to
