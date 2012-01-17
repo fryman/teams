@@ -57,11 +57,9 @@ public class BugNav extends Navigation {
 			if (myRC.isMovementActive()) {
 				return;
 			}
-
 			this.target = target;
 			Direction ideal = myRC.getLocation().directionTo(target);
 			if (ideal == Direction.OMNI || ideal == Direction.NONE) {
-
 				return;
 			}
 			// if this robot does not have enough flux to move, don't try to
@@ -86,7 +84,7 @@ public class BugNav extends Navigation {
 					// sense whats in front of us
 					if (!myRC.canSenseSquare(myRC
 							.getLocation().add(ideal))){
-						myRC.setIndicatorString(1,"I can't see whats in front of me");
+						myRC.setIndicatorString(2,"I can't see whats in front of me");
 						myRC.setDirection(ideal);
 						return;
 					}

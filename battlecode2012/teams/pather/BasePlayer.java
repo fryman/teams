@@ -55,6 +55,30 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * If on powernode get off of it.
+	 */
+	public void getOffPowerNode() {
+		try {
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			// if there's not enough flux to move, don't try
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
+				return;
+			}
+			if (myRC.canMove(myRC.getDirection())) {
+				myRC.moveForward();
+			} else {
+				myRC.setDirection(myRC.getDirection().rotateLeft());
+				runAtEndOfTurn();
+			}
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Similar to walk aimlessly, except that this robot will perform a random

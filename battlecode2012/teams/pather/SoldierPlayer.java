@@ -42,6 +42,10 @@ public class SoldierPlayer extends BasePlayer {
 	public void guardThenAttackMode() {
 		while (true) {
 			try {
+				//If it is on a power node get off of it so archons can build
+				if (this.myRC.senseObjectAtLocation(myRC.getLocation(), RobotLevel.POWER_NODE) != null) {
+					getOffPowerNode();
+				}
 				closestTar = senseClosestEnemy();
 				if (closestTar == null) {
 					try {
@@ -86,6 +90,14 @@ public class SoldierPlayer extends BasePlayer {
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
+				//If it is on a power node get off of it so archons can build
+				if (this.myRC.senseObjectAtLocation(myRC.getLocation(), RobotLevel.POWER_NODE) != null) {
+					getOffPowerNode();
+				}
+				// TODO Are both of these statements necessary ??
+				if (friendlyToFollow == null) {
+					friendlyToFollow = findAFriendly();
+				}
 				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
 				if (friendlyMapLocationToFollow == null) {
 					// game over...
