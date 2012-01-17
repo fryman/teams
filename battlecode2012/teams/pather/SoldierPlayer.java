@@ -18,6 +18,8 @@ public class SoldierPlayer extends BasePlayer {
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private Random r = new Random();
+	private Robot friendlyToFollow = null;
+	private int numTurnsLookingForFriendly = 0;
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
@@ -27,7 +29,7 @@ public class SoldierPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		guardThenAttackMode();
+		runFollowFriendlyMode();
 	}
 
 	/**
@@ -53,10 +55,12 @@ public class SoldierPlayer extends BasePlayer {
 						e.printStackTrace();
 					}
 				} else {
-					myRC.setIndicatorString(0, "Weakest Target: " + closestTar.getID());
+					myRC.setIndicatorString(0,
+							"Weakest Target: " + closestTar.getID());
 					targetLoc = myRC.senseLocationOf(closestTar);
-					myRC.setIndicatorString(1, "Target at: " + targetLoc.toString());
-					
+					myRC.setIndicatorString(1,
+							"Target at: " + targetLoc.toString());
+
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(closestTar);
@@ -68,6 +72,53 @@ public class SoldierPlayer extends BasePlayer {
 				}
 			} catch (Exception e) {
 				System.out.println("caught exception:");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Follows a friendly archon, does not attack other things.
+	 */
+	public void runFollowFriendlyMode() {
+		while (true) {
+			try {
+				// TODO Are both of these statements necessary ??
+				if (friendlyToFollow == null) {
+					friendlyToFollow = findAFriendly();
+				}
+				if (friendlyToFollow == null
+						|| !myRC.canSenseObject(friendlyToFollow)
+						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
+						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
+					if (numTurnsLookingForFriendly < 4) {
+						if (myRC.getFlux() > myRC.getType().moveCost && !myRC.isMovementActive()){
+							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
+							numTurnsLookingForFriendly ++;
+						}
+						runAtEndOfTurn();
+						continue;
+					}
+					walkAimlessly();
+					friendlyToFollow = null;
+					myRC.setIndicatorString(1, "walking aimlessly");
+					runAtEndOfTurn();
+				} else {
+					numTurnsLookingForFriendly = 0;
+					// we have a friend.
+					if (!myRC.canSenseObject(friendlyToFollow)) {
+						continue;
+					}
+					MapLocation friendLocation = myRC
+							.senseLocationOf(friendlyToFollow);
+					this.nav.getNextMove(friendLocation);
+					myRC.setIndicatorString(1, "following a friendly");
+					myRC.setIndicatorString(0, "friendly number: "
+							+ friendlyToFollow.getID());
+					runAtEndOfTurn();
+				}
+			} catch (Exception e) {
+				System.out.println("Exception Caught");
 				e.printStackTrace();
 			}
 		}

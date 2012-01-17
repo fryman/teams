@@ -129,7 +129,6 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * 
 	 * @return the Robot closest to this Robot that is on the same team as this.
 	 */
 	public Robot findAFriendly() {
@@ -188,8 +187,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Finds the friendly nearby that has the lowest energon and is not an
-	 * archon. This is useful for scouts that need to heal neighbors.
+	 * Finds the friendly nearby that has the lowest energon and is not a
+	 * tower. This is useful for scouts that need to heal neighbors.
 	 * 
 	 * Since the heal range is exactly the attack range, only considers robots
 	 * within the attack range.
@@ -204,7 +203,7 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyObjects.length > 0) {
 				for (Robot e : nearbyObjects) {
 					if (e.getTeam() != myRC.getTeam()
-							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
 							|| !myRC.canAttackSquare((myRC.senseLocationOf(e)))) {
 						continue;
 					}
@@ -359,9 +358,27 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	public boolean ownAdjacentTower(PowerNode p) {
+		MapLocation[] neighbors = p.neighbors();
+		PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
+		boolean ownAdjacent = false;
+
+		search: {
+			for (MapLocation m : neighbors) {
+				for (PowerNode owned : ownedTowers) {
+					if (m.equals(owned.getLocation())) {
+						ownAdjacent = true;
+						break search;
+					}
+				}
+			}
+		}
+		return ownAdjacent;
+	}
+
 	/**
 	 * This is an archaic navigation method that is superceeded by Navigation.
-
+	 * 
 	 * 
 	 * @param target
 	 *            Target location to got closer to
