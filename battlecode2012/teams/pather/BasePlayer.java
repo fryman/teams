@@ -7,7 +7,7 @@ import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	private Navigation nav = null;
-	
+
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
 		this.nav = new BugNav(rc);
@@ -211,8 +211,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Finds the friendly nearby that has the lowest energon and is not a
-	 * tower. This is useful for scouts that need to heal neighbors.
+	 * Finds the friendly nearby that has the lowest energon and is not a tower.
+	 * This is useful for scouts that need to heal neighbors.
 	 * 
 	 * Since the heal range is exactly the attack range, only considers robots
 	 * within the attack range.
@@ -308,6 +308,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public boolean compareRobotDistance(Robot one, Robot two) {
 		try {
+			if (!myRC.canSenseObject(one) || !myRC.canSenseObject(two)){
+				return false;
+			}
 			int distToOne = myRC.getLocation().distanceSquaredTo(
 					myRC.senseLocationOf(one));
 			int distToTwo = myRC.getLocation().distanceSquaredTo(
@@ -351,12 +354,18 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	/**
+	 * Determines nearby enemy robots and returns the closest of them.
+	 * 
+	 * @return Robot that is the closest, not on our team. Null if no enemy
+	 *         robots are nearby.
+	 */
 	public Robot senseClosestEnemy() {
 		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 		Robot closest = null;
 		if (enemies.length > 0) {
 			for (Robot e : enemies) {
-				if (e.getTeam() == myRC.getTeam()) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
 				if (closest == null || compareRobotDistance(e, closest)) {
@@ -376,6 +385,34 @@ public abstract class BasePlayer extends StaticStuff {
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	/**
+	 * Same as attackClosestEnemy, except causes this robot to chase the enemy
+	 * as well.
+	 * 
+	 * @param closestTar
+	 *            Target to seek and destroy.
+	 */
+	public void attackAndChaseClosestEnemy(Robot closestTar) {
+		try {
+			if (closestTar == null) {
+				return;
+			}
+			if (myRC.canSenseObject(closestTar)) {
+				MapLocation attack = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2,
+							"Attacking: " + attack.toString());
+				}
+				if (!myRC.isMovementActive()) {
+					this.nav.getNextMove(attack);
+				}
 			}
 		} catch (GameActionException e1) {
 			e1.printStackTrace();
@@ -440,33 +477,84 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
-	public void aboutToDie(){
-		//if less than 5% health...
-		try {		
-			if (myRC.getEnergon() < 0.05*myRC.getMaxEnergon()
-					&& myRC.getType()!=battlecode.common.RobotType.ARCHON 
-					/*&& being attacked*/){
+	/**
+	 * 
+	 * @param one
+	 *            MapLocation to compare distance between
+	 * @param two
+	 *            MapLocation to compare distance between
+	 * @return true when MapLocation one is closer than Robot two
+	 */
+	public boolean compareMapLocationDistance(MapLocation one, MapLocation two) {
+		try {
+			int distToOne = myRC.getLocation().distanceSquaredTo(one);
+			int distToTwo = myRC.getLocation().distanceSquaredTo(two);
+			return distToOne < distToTwo;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public void aboutToDie() {
+		// if less than 5% health...
+		try {
+			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
+					&& myRC.getType() != battlecode.common.RobotType.ARCHON
+			/* && being attacked */) {
 				Robot weak = findAWeakFriendly();
 				if (weak != null) {
-					while(!myRC.getLocation().isAdjacentTo(myRC.senseLocationOf(weak)) 
-							&& myRC.getLocation()!= myRC.senseLocationOf(weak)){
-						nav.getNextMove(myRC.senseLocationOf(weak));	
+					while (!myRC.getLocation().isAdjacentTo(
+							myRC.senseLocationOf(weak))
+							&& myRC.getLocation() != myRC.senseLocationOf(weak)) {
+						nav.getNextMove(myRC.senseLocationOf(weak));
 					}
 					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
 					double weakFlux = weakRobotInfo.flux;
 					double maxFlux = weakRobotInfo.type.maxFlux;
-					double fluxAmountToTransfer = Math.min(maxFlux-weakFlux,myRC.getFlux());
+					double fluxAmountToTransfer = Math.min(maxFlux - weakFlux,
+							myRC.getFlux());
 					if (fluxAmountToTransfer > 0) {
 						myRC.transferFlux(weakRobotInfo.location,
 								weakRobotInfo.robot.getRobotLevel(),
 								fluxAmountToTransfer);
 					}
 				}
-				
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	//
+
+	/**
+	 * Returns the nearest friendly archon. Since many robots have a limited
+	 * field of view, this is necessary for when a nearby archon turns away and
+	 * out of the field of view.
+	 * 
+	 * @return nearest friendly archon. null if no archons remain on the board.
+	 */
+	public MapLocation reacquireNearestFriendlyArchonLocation() {
+		try {
+			MapLocation closestArchonLocation = null;
+			MapLocation[] alliedArchonsLocations = myRC.senseAlliedArchons();
+			if (alliedArchonsLocations.length > 0) {
+				for (MapLocation e : alliedArchonsLocations) {
+					if (closestArchonLocation == null
+							|| compareMapLocationDistance(e,
+									closestArchonLocation)) {
+						closestArchonLocation = e;
+					}
+				}
+			}
+			if (closestArchonLocation == null) {
+				return null;
+			}
+			return closestArchonLocation;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }

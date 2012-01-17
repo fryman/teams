@@ -20,6 +20,10 @@ public class SoldierPlayer extends BasePlayer {
 	private Random r = new Random();
 	private Robot friendlyToFollow = null;
 	private int numTurnsLookingForFriendly = 0;
+	private MapLocation friendlyMapLocationToFollow = null;
+	private final double MAX_DEVIATION_DISTANCE_SQUARE = 10000; // TODO find a
+																// suitable
+																// distance
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
@@ -29,7 +33,7 @@ public class SoldierPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		runFollowFriendlyMode();
+		runFollowFriendlyAndGuardMode();
 	}
 
 	/**
@@ -95,36 +99,52 @@ public class SoldierPlayer extends BasePlayer {
 				if (friendlyToFollow == null) {
 					friendlyToFollow = findAFriendly();
 				}
-				if (friendlyToFollow == null
-						|| !myRC.canSenseObject(friendlyToFollow)
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
-					if (numTurnsLookingForFriendly < 4) {
-						if (myRC.getFlux() > myRC.getType().moveCost && !myRC.isMovementActive()){
-							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
-							numTurnsLookingForFriendly ++;
-						}
-						runAtEndOfTurn();
-						continue;
-					}
-					walkAimlessly();
-					friendlyToFollow = null;
-					myRC.setIndicatorString(1, "walking aimlessly");
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
+				}
+				this.nav.getNextMove(friendlyMapLocationToFollow);
+				myRC.setIndicatorString(1, "following a friendly");
+				runAtEndOfTurn();
+			} catch (Exception e) {
+				System.out.println("Exception Caught");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Follows a friendly archon, attacks other things.
+	 * 
+	 * Only attacks other things as long as it is within
+	 * MAX_DEVIATION_DISTANCE_SQUARE of nearest archon.
+	 */
+	public void runFollowFriendlyAndGuardMode() {
+		while (true) {
+			try {
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
+				}
+				Robot closeEnemy = senseClosestEnemy();
+				if (closeEnemy == null) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (!myRC.canSenseObject(closeEnemy)) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (myRC.senseLocationOf(closeEnemy).distanceSquaredTo(
+						myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
 					runAtEndOfTurn();
 				} else {
-					numTurnsLookingForFriendly = 0;
-					// we have a friend.
-					if (!myRC.canSenseObject(friendlyToFollow)) {
-						continue;
-					}
-					MapLocation friendLocation = myRC
-							.senseLocationOf(friendlyToFollow);
-					this.nav.getNextMove(friendLocation);
-					myRC.setIndicatorString(1, "following a friendly");
-					myRC.setIndicatorString(0, "friendly number: "
-							+ friendlyToFollow.getID());
-					runAtEndOfTurn();
+					// System.out.println("Ima attack now");
+					// attack the enemy as long as it's nearby
+					attackAndChaseClosestEnemy(closeEnemy);
 				}
+				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
