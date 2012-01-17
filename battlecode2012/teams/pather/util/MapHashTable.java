@@ -2,7 +2,6 @@ package pather.util;
 
 import battlecode.common.TerrainTile;
 import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
 
 public class MapHashTable {
 	private static final int SIZE = GameConstants.MAP_MAX_WIDTH
