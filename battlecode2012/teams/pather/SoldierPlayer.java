@@ -21,6 +21,9 @@ public class SoldierPlayer extends BasePlayer {
 	private Robot friendlyToFollow = null;
 	private int numTurnsLookingForFriendly = 0;
 	private MapLocation friendlyMapLocationToFollow = null;
+	private final double MAX_DEVIATION_DISTANCE_SQUARE = 10000; // TODO find a
+																// suitable
+																// distance
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
@@ -30,7 +33,7 @@ public class SoldierPlayer extends BasePlayer {
 	// go explore, follow spawned archon, transfer energon to archon
 
 	public void run() {
-		runFollowFriendlyMode();
+		runFollowFriendlyAndGuardMode();
 	}
 
 	/**
@@ -100,33 +103,40 @@ public class SoldierPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Returns the nearest friendly archon. Since many robots have a limited
-	 * field of view, this is necessary for when a nearby archon turns away and
-	 * out of the field of view.
+	 * Follows a friendly archon, attacks other things.
 	 * 
-	 * @return nearest friendly archon. null if no archons remain on the board.
+	 * Only attacks other things as long as it is within
+	 * MAX_DEVIATION_DISTANCE_SQUARE of nearest archon.
 	 */
-	public MapLocation reacquireNearestFriendlyArchonLocation() {
-		try {
-			MapLocation closestArchonLocation = null;
-			MapLocation[] alliedArchonsLocations = myRC.senseAlliedArchons();
-			if (alliedArchonsLocations.length > 0) {
-				for (MapLocation e : alliedArchonsLocations) {
-					if (closestArchonLocation == null
-							|| compareMapLocationDistance(e,
-									closestArchonLocation)) {
-						closestArchonLocation = e;
-					}
+	public void runFollowFriendlyAndGuardMode() {
+		while (true) {
+			try {
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
 				}
+				Robot closeEnemy = senseClosestEnemy();
+				if (closeEnemy == null) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (!myRC.canSenseObject(closeEnemy)) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (myRC.senseLocationOf(closeEnemy).distanceSquaredTo(
+						myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else {
+					// System.out.println("Ima attack now");
+					// attack the enemy as long as it's nearby
+					attackAndChaseClosestEnemy(closeEnemy);
+				}
+				runAtEndOfTurn();
+			} catch (Exception e) {
+				System.out.println("Exception Caught");
+				e.printStackTrace();
 			}
-			if (closestArchonLocation == null) {
-				return null;
-			}
-			return closestArchonLocation;
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
-		return null;
 	}
-
 }

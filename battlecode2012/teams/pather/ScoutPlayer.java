@@ -15,6 +15,7 @@ public class ScoutPlayer extends BasePlayer {
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private Robot friendlyToFollow = null;
+	private MapLocation friendlyMapLocationToFollow = null;
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
@@ -55,31 +56,14 @@ public class ScoutPlayer extends BasePlayer {
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
-				// TODO Are both of these statements necessary ??
-				if (friendlyToFollow == null) {
-					friendlyToFollow = findAFriendly();
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
 				}
-				if (friendlyToFollow == null
-						|| !myRC.canSenseObject(friendlyToFollow)
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.SCOUT
-						|| myRC.senseRobotInfo(friendlyToFollow).type == RobotType.TOWER) {
-					walkAimlessly();
-					friendlyToFollow = null;
-					myRC.setIndicatorString(1, "walking aimlessly");
-					runAtEndOfTurn();
-				} else {
-					// we have a friend.
-					if (!myRC.canSenseObject(friendlyToFollow)) {
-						continue;
-					}
-					MapLocation friendLocation = myRC
-							.senseLocationOf(friendlyToFollow);
-					this.nav.getNextMove(friendLocation);
-					myRC.setIndicatorString(1, "following a friendly");
-					myRC.setIndicatorString(0, "friendly number: "
-							+ friendlyToFollow.getID());
-					runAtEndOfTurn();
-				}
+				this.nav.getNextMove(friendlyMapLocationToFollow);
+				myRC.setIndicatorString(1, "following a friendly");
+				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();

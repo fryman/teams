@@ -18,7 +18,8 @@ public class ArchonPlayer extends BasePlayer {
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
 	private Navigation nav = null;
-	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for this.
+	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
+											// this.
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -207,20 +208,28 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
+	/**
+	 * Spawns a tower at the current location
+	 * 
+	 * @param target
+	 *            MapLocation at which to build the tower
+	 */
 	public void buildTower(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() == myRC.getTeam()) {
-				getNewTarget();
 				return;
 			}
-			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
+			if (myRC.getFlux() >= RobotType.TOWER.spawnCost
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				myRC.spawn(RobotType.TOWER);
-				runAtEndOfTurn();
+				if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
+					myRC.spawn(RobotType.TOWER);
+					runAtEndOfTurn();
+				}
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
@@ -247,11 +256,11 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP){
+				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
 					// turn right
-					if (!myRC.isMovementActive()){
+					if (!myRC.isMovementActive()) {
 						myRC.setDirection(myRC.getDirection().rotateRight());
-					} 
+					}
 					continue;
 				}
 				if (myRC.getFlux() > RobotType.SCOUT.spawnCost
@@ -273,16 +282,19 @@ public class ArchonPlayer extends BasePlayer {
 							&& myRC.canSenseObject(recentScout)) {
 						super.runAtEndOfTurn();
 					}
-					if ( myRC.canSenseObject(recentScout)&&acceptableFluxTransferLocation(myRC.senseLocationOf(recentScout))
+					if (myRC.canSenseObject(recentScout)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentScout))
 							&& myRC.senseRobotInfo(recentScout).flux < RobotType.SCOUT.maxFlux) {
 						myRC.transferFlux(myRC.senseLocationOf(recentScout),
-								RobotLevel.IN_AIR,
-								RobotType.SCOUT.maxFlux);
+								RobotLevel.IN_AIR, RobotType.SCOUT.maxFlux);
 					}
 					return;
 				}
 				myRC.setIndicatorString(1, "did not attempt to create scout");
-				myRC.setIndicatorString(2, Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
+				myRC.setIndicatorString(
+						2,
+						Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
 				runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
@@ -308,8 +320,9 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND){
-					this.myRC.setDirection(this.myRC.getDirection().rotateRight());
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
 				}
 				if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
 						&& myRC.senseObjectAtLocation(potentialLocation,
@@ -320,7 +333,8 @@ public class ArchonPlayer extends BasePlayer {
 					runAtEndOfTurn();
 					Robot recentSoldier = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, RobotLevel.ON_GROUND);
-					myRC.setIndicatorString(2, "recent soldier: " + recentSoldier);
+					myRC.setIndicatorString(2, "recent soldier: "
+							+ recentSoldier);
 					if (recentSoldier == null) {
 						runAtEndOfTurn();
 						myRC.setIndicatorString(2, "recent soldier null");
@@ -331,7 +345,9 @@ public class ArchonPlayer extends BasePlayer {
 							&& myRC.canSenseObject(recentSoldier)) {
 						super.runAtEndOfTurn();
 					}
-					if ( myRC.canSenseObject(recentSoldier)&&acceptableFluxTransferLocation(myRC.senseLocationOf(recentSoldier))
+					if (myRC.canSenseObject(recentSoldier)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentSoldier))
 							&& myRC.senseRobotInfo(recentSoldier).flux < RobotType.SOLDIER.maxFlux / 2) {
 						myRC.transferFlux(myRC.senseLocationOf(recentSoldier),
 								RobotLevel.ON_GROUND,
@@ -340,7 +356,9 @@ public class ArchonPlayer extends BasePlayer {
 					return;
 				}
 				myRC.setIndicatorString(1, "did not attempt to create soldier");
-				myRC.setIndicatorString(2, Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
+				myRC.setIndicatorString(
+						2,
+						Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
 				runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
@@ -365,7 +383,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public boolean spreadOutFromOtherArchons() {
 		try {
-			if (roundsUsedToMoveAway >= 20){
+			if (roundsUsedToMoveAway >= 20) {
 				// stop moving - you're stuck.
 				return true;
 			}
@@ -400,7 +418,7 @@ public class ArchonPlayer extends BasePlayer {
 						.directionTo(closest).opposite(), minimumDistance
 						- (int) smallestDistance);
 				this.nav.getNextMove(fartherAwayTarget);
-				roundsUsedToMoveAway ++;
+				roundsUsedToMoveAway++;
 				return false;
 			}
 			return true;
