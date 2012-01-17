@@ -1,26 +1,35 @@
 package pather;
 
+import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
+
 	public BasePlayer(RobotController rc) {
 
 	}
-	
+
 	/**
-	 * Code to run once per turn.
+	 * Code to run once per turn, at the very end
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
 	 */
-	public void runOncePerTurn() {
+	public void runAtEndOfTurn() {
 		broadcastMessage();
+		myRC.yield();
 	}
+
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void walkAimlessly() {
 		try {
 			while (myRC.isMovementActive()) {
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 			// if there's not enough flux to move, don't try
 			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
@@ -34,7 +43,7 @@ public abstract class BasePlayer extends StaticStuff {
 				} else {
 					myRC.setDirection(myRC.getDirection().rotateRight());
 				}
-				myRC.yield();
+				runAtEndOfTurn();
 			}
 		} catch (Exception e) {
 			System.out.println("Exception caught");
@@ -45,14 +54,16 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Similar to walk aimlessly, except that this robot will perform a random
 	 * walk.
+	 * 
+	 * runAtEndOfTurn is called after the move is chosen.
 	 */
 	public void randomWalk() {
 		try {
 			while (myRC.isMovementActive()) {
-				return;
+				runAtEndOfTurn();
 			}
 			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
-				return;
+				runAtEndOfTurn();
 			}
 			// choices: rotate 45, 90, 135, or 180 deg right or 45, 90, 135 deg
 			// left, move forward
@@ -60,7 +71,7 @@ public abstract class BasePlayer extends StaticStuff {
 			double num = Math.random();
 			if (num > 0.5 && myRC.canMove(myRC.getDirection())) {
 				myRC.moveForward();
-				return;
+				runAtEndOfTurn();
 			} else {
 				Direction dir;
 				if (num > 0.4375)
@@ -82,10 +93,10 @@ public abstract class BasePlayer extends StaticStuff {
 				if (dir == myRC.getDirection()
 						&& myRC.canMove(myRC.getDirection())) {
 					myRC.moveForward();
-					return;
+					runAtEndOfTurn();
 				}
 				myRC.setDirection(dir);
-				return;
+				runAtEndOfTurn();
 			}
 		} catch (Exception e) {
 			System.out.println("Exception caught");
@@ -93,7 +104,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 
 	}
-	
+
 	/**
 	 * Broadcast a random message.
 	 */
@@ -107,8 +118,7 @@ public abstract class BasePlayer extends StaticStuff {
 				message.ints = num;
 				myRC.broadcast(message);
 			}
-		}
-		 catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Exception caught");
 			e.printStackTrace();
 		}
@@ -136,6 +146,132 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Finds the friendly nearby that has the lowest flux and is not an archon.
+	 * This is useful for archons that need to resupply friendlies.
+	 * 
+	 * Since flux transfers can only occur with adjacent robots or robots on the
+	 * same location, this method will only return a robot in one of those
+	 * acceptable receiving locations.
+	 * 
+	 * @return a robot that is friendly adjacent with low flux count. null if
+	 *         there is no nearby robot.
+	 */
+	public Robot findAWeakFriendly() {
+		try {
+			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			Robot weakestFriend = null;
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
+							|| !acceptableFluxTransferLocation(myRC
+									.senseLocationOf(e))) {
+						continue;
+					}
+					if (weakestFriend == null
+							|| compareRobotFlux(e, weakestFriend)) {
+						weakestFriend = e;
+					}
+				}
+			}
+			return weakestFriend;
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * Finds the friendly nearby that has the lowest energon and is not an
+	 * archon. This is useful for scouts that need to heal neighbors.
+	 * 
+	 * Since the heal range is exactly the attack range, only considers robots
+	 * within the attack range.
+	 * 
+	 * @return a robot that is friendly nearby with low energon count. null if
+	 *         there is no nearby robot.
+	 */
+	public Robot findALowEnergonFriendly() {
+		try {
+			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			Robot weakestFriend = null;
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| !myRC.canAttackSquare((myRC.senseLocationOf(e)))) {
+						continue;
+					}
+					if (weakestFriend == null
+							|| compareRobotEnergon(e, weakestFriend)) {
+						weakestFriend = e;
+					}
+				}
+			}
+			return weakestFriend;
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * Boolean valued function that determines whether a location is valid
+	 * (adjacent or equal to this location) for a flux transfer.
+	 * 
+	 * @param attempt
+	 *            MapLocation to test the validity of
+	 * @return true when attempt is equal to or adjacent to this robot's
+	 *         location
+	 */
+	public boolean acceptableFluxTransferLocation(MapLocation attempt) {
+		return this.myRC.getLocation().distanceSquaredTo(attempt) <= 1;
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            Robot to compare flux of
+	 * @param two
+	 *            Robot to compare flux of
+	 * @return truw when Robot one has a lower flux than Robot two
+	 */
+	public boolean compareRobotFlux(Robot one, Robot two) {
+		try {
+			double fluxOne = myRC.senseRobotInfo(one).flux;
+			double fluxTwo = myRC.senseRobotInfo(two).flux;
+			return fluxOne < fluxTwo;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            Robot to compare energon of
+	 * @param two
+	 *            Robot to compare energon of
+	 * @return truw when Robot one has a lower energon than Robot two
+	 */
+	public boolean compareRobotEnergon(Robot one, Robot two) {
+		try {
+			double energonOne = myRC.senseRobotInfo(one).energon;
+			double energonTwo = myRC.senseRobotInfo(two).energon;
+			return energonOne < energonTwo;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
 	 * 
 	 * @param one
 	 *            Robot to compare distance between
@@ -155,4 +291,108 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return false;
 	}
+
+	public boolean enemyTowerPresent(MapLocation target) {
+		try {
+			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
+							.getTeam() != myRC.getTeam()) {
+				return true;
+			} else {
+				return false;
+			}
+
+		} catch (GameActionException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void destroyTower(MapLocation target) {
+		try {
+			if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
+				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+						&& myRC.senseObjectAtLocation(target,
+								RobotLevel.ON_GROUND).getTeam() != myRC
+								.getTeam()) {
+					myRC.attackSquare(target, RobotLevel.ON_GROUND);
+					runAtEndOfTurn();
+				}
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Robot senseClosestEnemy() {
+		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		Robot closest = null;
+		if (enemies.length > 0) {
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam()) {
+					continue;
+				}
+				if (closest == null || compareRobotDistance(e, closest)) {
+					closest = e;
+				}
+			}
+		}
+		return closest;
+	}
+
+	public void attackClosestEnemy(Robot closestTar) {
+		try {
+			if (closestTar == null) {
+				return;
+			}
+			MapLocation attack = myRC.senseLocationOf(closestTar);
+			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	/**
+	 * This is an archaic navigation method that is superceeded by Navigation.
+
+	 * 
+	 * @param target
+	 *            Target location to got closer to
+	 * @deprecated This method is replaced by bugNav
+	 */
+	@Deprecated
+	public void goCloser(MapLocation target) {
+		try {
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			Direction targetDir = myRC.getLocation().directionTo(target);
+
+			if (myRC.getDirection() != targetDir) {
+				myRC.setDirection(targetDir);
+				runAtEndOfTurn();
+			}
+			if (myRC.canMove(targetDir)) {
+				myRC.moveForward();
+			} else {
+				if (Math.random() < 2) {
+					myRC.setDirection(myRC.getDirection().rotateLeft());
+				} else {
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
+				runAtEndOfTurn();
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+					runAtEndOfTurn();
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("caught exception:");
+			e.printStackTrace();
+		}
+	}
+
 }

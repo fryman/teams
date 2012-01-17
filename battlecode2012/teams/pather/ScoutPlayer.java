@@ -1,23 +1,19 @@
 package pather;
 
-import java.util.Random;
-
 import pather.Nav.BugNav;
+
 import pather.Nav.Navigation;
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
+import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
-import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
 
 public class ScoutPlayer extends BasePlayer {
 
-	private Robot[] enemies;
 	private Navigation nav = null;
 	private MapLocation targetLoc;
-	private Robot weakestTar;
+	private Robot closestTar;
 	private Robot friendlyToFollow = null;
 
 	public ScoutPlayer(RobotController rc) {
@@ -26,6 +22,25 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon
+
+	/**
+	 * Code to run once per turn, at the very end.
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
+	 */
+	@Override
+	public void runAtEndOfTurn() {
+		try {
+			broadcastMessage();
+			if (suitableTimeToHeal()) {
+				this.myRC.regenerate();
+			}
+			myRC.yield();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void run() {
 		runFollowFriendlyMode();
@@ -50,8 +65,7 @@ public class ScoutPlayer extends BasePlayer {
 					walkAimlessly();
 					friendlyToFollow = null;
 					myRC.setIndicatorString(1, "walking aimlessly");
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				} else {
 					// we have a friend.
 					if (!myRC.canSenseObject(friendlyToFollow)) {
@@ -63,8 +77,7 @@ public class ScoutPlayer extends BasePlayer {
 					myRC.setIndicatorString(1, "following a friendly");
 					myRC.setIndicatorString(0, "friendly number: "
 							+ friendlyToFollow.getID());
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
@@ -79,24 +92,22 @@ public class ScoutPlayer extends BasePlayer {
 	public void runAttackMode() {
 		while (true) {
 			try {
-				weakestTar = senseWeakestEnemy();
-				if (weakestTar == null) {
+				closestTar = senseClosestEnemy();
+				if (closestTar == null) {
 					walkAimlessly();
 				} else {
 					this.myRC.setIndicatorString(0, "Weakest Target: "
-							+ weakestTar.getID());
-					targetLoc = myRC.senseLocationOf(weakestTar);
+							+ closestTar.getID());
+					targetLoc = myRC.senseLocationOf(closestTar);
 					this.myRC.setIndicatorString(1,
 							"Target at: " + targetLoc.toString());
 					if (targetLoc != null
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-						attackWeakestEnemy();
+						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
-						runOncePerTurn();
-						myRC.yield();
+						runAtEndOfTurn();
 					}
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
 				System.out.println("caught exception:");
@@ -105,78 +116,41 @@ public class ScoutPlayer extends BasePlayer {
 		}
 	}
 
-	public Robot senseWeakestEnemy() {
-		enemies = myRC.senseNearbyGameObjects(Robot.class);
-		Robot weakest = null;
-		if (enemies.length > 0) {
-			for (Robot e : enemies) {
-				if (e.getTeam() == myRC.getTeam()) {
-					continue;
-				}
-				if (weakest == null || compareRobotDistance(e, weakest)) {
-					weakest = e;
-				}
-			}
-		}
-		return weakest;
-	}
+	/**
+	 * 
+	 */
+	public void runFollowFriendlyModeWithHeal() {
 
-	public void attackWeakestEnemy() {
-		try {
-			if (weakestTar == null) {
-				return;
-			}
-			MapLocation attack = myRC.senseLocationOf(weakestTar);
-			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
-			}
-		} catch (GameActionException e1) {
-			e1.printStackTrace();
-		}
 	}
 
 	/**
-	 * Not useful right now. Contains an example of an insertion sort. Remember:
-	 * insertion sort is O(n^2), but is in-place and stable. It is efficient for
-	 * short lists.
+	 * Determines when it is cost effective for a scout to heal his
+	 * surroundings.
 	 * 
-	 * @param args
+	 * Returns true when any robot nearby is <95% energon. Returns false when
+	 * this robot's flux is less than 10% max or if nearby weaklings are null.
+	 * 
+	 * @return true if it is a good time to heal the surroundings, false
+	 *         otherwise
 	 */
-	public static void main(String[] args) {
-		int[] enemies = { 2, 5, 3, 1, 6, 4 };
-		for (int i : enemies) {
-			System.out.print(i + " ");
-		}
-		long start = System.currentTimeMillis();
-		int sortedLength = 1;
-		int length = enemies.length;
-		while (sortedLength < length) {
-			int test = enemies[sortedLength];
-			int compareTo = sortedLength - 1;
-			while (true) {
-				if (compareTo < 0) {
-					sortedLength++;
-					break;
-				}
-				if (test < enemies[compareTo]) {
-					int temp = enemies[compareTo];
-					enemies[compareTo] = test;
-					enemies[compareTo + 1] = temp;
-					compareTo--;
-				} else {
-					sortedLength++;
-					break;
-				}
+	public boolean suitableTimeToHeal() {
+		try {
+			if (this.myRC.getFlux() < 0.1 * this.myRC.getType().maxFlux) {
+				return false;
 			}
+			Robot weakling = findALowEnergonFriendly();
+			if (weakling == null) {
+				return false;
+			}
+			RobotInfo weakInfo = myRC.senseRobotInfo(weakling);
+			if (weakInfo.energon / weakInfo.type.maxEnergon < 0.95) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		long end = System.currentTimeMillis();
-		System.out.println();
-		for (int i : enemies) {
-			System.out.print(i + " ");
-		}
-		System.out.println();
-		System.out.println("Time elapsed: " + (end - start));
+		return false;
 	}
 
 }

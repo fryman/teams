@@ -25,12 +25,24 @@ public class ArchonPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
+	/**
+	 * Code to run once per turn, at the very end.
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
+	 */
+	@Override
+	public void runAtEndOfTurn() {
+		broadcastMessage();
+		this.findWeakFriendsAndTransferFlux();
+		myRC.yield();
+	}
+
 	public void run() {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				if (core == null) {
 					core = myRC.sensePowerCore();
@@ -40,15 +52,13 @@ public class ArchonPlayer extends BasePlayer {
 
 				while (Clock.getRoundNum() < 200) {
 					spawnScoutAndTransferFlux();
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 
 				while (targetLoc != null
 						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 					this.nav.getNextMove(targetLoc);
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 					// check if we're going to a loc with a tower already
 					updateUnownedNodes();
 					boolean quit = true;
@@ -68,12 +78,10 @@ public class ArchonPlayer extends BasePlayer {
 				if (myRC.getDirection() != myRC.getLocation().directionTo(
 						targetLoc)) {
 					while (myRC.isMovementActive()) {
-						runOncePerTurn();
-						myRC.yield();
+						runAtEndOfTurn();
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(targetLoc));
-					runOncePerTurn();
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				// Now we can build a fucking tower
 				boolean enemyTower = enemyTowerPresent(targetLoc);
@@ -89,8 +97,7 @@ public class ArchonPlayer extends BasePlayer {
 							+ targetLoc.toString());
 					buildTower(targetLoc);
 				}
-				runOncePerTurn();
-				myRC.yield();
+				runAtEndOfTurn();
 
 			} catch (Exception e) {
 				System.out.println("caught exception:");
@@ -99,35 +106,41 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public void goCloser(MapLocation target) {
+	/**
+	 * Identifies a weak friendly unit nearby and transfers flux to it. Flux
+	 * amount depends on the weakness TODO find a suitable method of determining
+	 * amount of flux to transfer.
+	 * 
+	 * Currently the cutoff for flux transfer is if the friendly has 30% max
+	 * flux, transfer another 30% to it.
+	 * 
+	 * @return true when flux transfer was successful, false otherwise
+	 */
+	public boolean findWeakFriendsAndTransferFlux() {
 		try {
-			while (myRC.isMovementActive()) {
-				myRC.yield();
-			}
-			Direction targetDir = myRC.getLocation().directionTo(target);
-
-			if (myRC.getDirection() != targetDir) {
-				myRC.setDirection(targetDir);
-				myRC.yield();
-			}
-			if (myRC.canMove(targetDir)) {
-				myRC.moveForward();
-			} else {
-				if (r.nextDouble() < 2) {
-					myRC.setDirection(myRC.getDirection().rotateLeft());
-				} else {
-					myRC.setDirection(myRC.getDirection().rotateRight());
+			Robot weakFriendlyUnit = findAWeakFriendly();
+			if (weakFriendlyUnit != null) {
+				// figure out how much flux he needs.
+				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
+				double weakFluxAmount = weakRobotInfo.flux;
+				double maxFluxAmount = weakRobotInfo.type.maxFlux;
+				double fluxAmountToTransfer = 0;
+				if (weakFluxAmount / maxFluxAmount < 0.3) {
+					fluxAmountToTransfer = 0.3 * maxFluxAmount;
 				}
-				myRC.yield();
-				if (myRC.canMove(myRC.getDirection())) {
-					myRC.moveForward();
-					myRC.yield();
+				if (fluxAmountToTransfer > 0
+						&& myRC.getFlux() > fluxAmountToTransfer) {
+					myRC.transferFlux(weakRobotInfo.location,
+							weakRobotInfo.robot.getRobotLevel(),
+							fluxAmountToTransfer);
+					return true;
 				}
 			}
+			return false;
 		} catch (Exception e) {
-			System.out.println("caught exception:");
 			e.printStackTrace();
 		}
+		return false;
 	}
 
 	public void updateUnownedNodes() {
@@ -150,22 +163,6 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean enemyTowerPresent(MapLocation target) {
-		try {
-			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
-					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
-							.getTeam() != myRC.getTeam()) {
-				return true;
-			} else {
-				return false;
-			}
-
-		} catch (GameActionException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
 	public void buildTower(MapLocation target) {
 		try {
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -176,30 +173,13 @@ public class ArchonPlayer extends BasePlayer {
 			}
 			if (myRC.getFlux() >= RobotType.TOWER.spawnCost) {
 				while (myRC.isMovementActive()) {
-					myRC.yield();
+					runAtEndOfTurn();
 				}
 				myRC.spawn(RobotType.TOWER);
-				myRC.yield();
+				runAtEndOfTurn();
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
 
-			}
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	// archons can't actually attack ...
-	public void destroyTower(MapLocation target) {
-		try {
-			if (myRC.canAttackSquare(target)) {
-				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
-						&& myRC.senseObjectAtLocation(target,
-								RobotLevel.ON_GROUND).getTeam() != myRC
-								.getTeam()) {
-					myRC.attackSquare(target, RobotLevel.ON_GROUND);
-					myRC.yield();
-				}
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
@@ -221,12 +201,10 @@ public class ArchonPlayer extends BasePlayer {
 							myRC.getLocation().add(myRC.getDirection()),
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
-				runOncePerTurn();
-				myRC.yield();
+				runAtEndOfTurn();
 				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()) {
-					runOncePerTurn();
-					myRC.yield();
-				}
+					super.runAtEndOfTurn();
+				}  
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.IN_AIR, (RobotType.SCOUT.maxFlux));
 			}
@@ -248,9 +226,9 @@ public class ArchonPlayer extends BasePlayer {
 							myRC.getLocation().add(myRC.getDirection()),
 							RobotLevel.ON_GROUND) == null) {
 				myRC.spawn(RobotType.SOLDIER);
-				myRC.yield();
+				runAtEndOfTurn();
 				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()) {
-					myRC.yield();
+					super.runAtEndOfTurn();
 				}
 				myRC.transferFlux(myRC.getLocation().add(myRC.getDirection()),
 						RobotLevel.ON_GROUND, (RobotType.SOLDIER.maxFlux / 2));
