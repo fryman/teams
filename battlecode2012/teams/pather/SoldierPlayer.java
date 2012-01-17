@@ -42,8 +42,9 @@ public class SoldierPlayer extends BasePlayer {
 	public void guardThenAttackMode() {
 		while (true) {
 			try {
-				//If it is on a power node get off of it so archons can build
-				if (this.myRC.senseObjectAtLocation(myRC.getLocation(), RobotLevel.POWER_NODE) != null) {
+				// If it is on a power node get off of it so archons can build
+				if (this.myRC.senseObjectAtLocation(myRC.getLocation(),
+						RobotLevel.POWER_NODE) != null) {
 					getOffPowerNode();
 				}
 				closestTar = senseClosestEnemy();
@@ -90,8 +91,9 @@ public class SoldierPlayer extends BasePlayer {
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
-				//If it is on a power node get off of it so archons can build
-				if (this.myRC.senseObjectAtLocation(myRC.getLocation(), RobotLevel.POWER_NODE) != null) {
+				// If it is on a power node get off of it so archons can build
+				if (this.myRC.senseObjectAtLocation(myRC.getLocation(),
+						RobotLevel.POWER_NODE) != null) {
 					getOffPowerNode();
 				}
 				// TODO Are both of these statements necessary ??

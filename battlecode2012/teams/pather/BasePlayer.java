@@ -55,7 +55,7 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * If on powernode get off of it.
 	 */
@@ -341,16 +341,26 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	/**
+	 * Causes this robot to destroy a tower given at MapLocation target.
+	 * 
+	 * Takes all of this robots time (yields in a while) as long as the target
+	 * is still shootable.
+	 * 
+	 * @param target
+	 *            MapLocation to shoot at
+	 */
 	public void destroyTower(MapLocation target) {
 		try {
-			if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
-				while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
-						&& myRC.senseObjectAtLocation(target,
-								RobotLevel.ON_GROUND).getTeam() != myRC
-								.getTeam()) {
+			while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
+							.getTeam() != myRC.getTeam()) {
+				if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
 					myRC.attackSquare(target, RobotLevel.ON_GROUND);
-					runAtEndOfTurn();
+				} else if (!myRC.isAttackActive()) {
+					nav.getNextMove(target);
 				}
+				runAtEndOfTurn();
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
@@ -388,7 +398,7 @@ public abstract class BasePlayer extends StaticStuff {
 
 			if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
 				if (ownAdjacentTower(attack)) {
-					myRC.setIndicatorString(7, "Attempting tower destroy");
+					myRC.setIndicatorString(0, "Attempting tower destroy");
 					destroyTower(attack);
 				} else {
 					return;
@@ -419,6 +429,14 @@ public abstract class BasePlayer extends StaticStuff {
 			}
 			if (myRC.canSenseObject(closestTar)) {
 				MapLocation attack = myRC.senseLocationOf(closestTar);
+				if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
+					if (ownAdjacentTower(attack)) {
+						myRC.setIndicatorString(0, "Attempting tower destroy");
+						destroyTower(attack);
+					} else {
+						return;
+					}
+				}
 				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 					myRC.setIndicatorString(2,
@@ -433,6 +451,13 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	/**
+	 * Determines if an adjacent tower is owned. Returns true if yes.
+	 * 
+	 * @param m
+	 *            Location to examine neighbors of
+	 * @return true if a tower adjacent to m is owned, false otherwise
+	 */
 	public boolean ownAdjacentTower(MapLocation m) {
 		PowerNode p;
 		try {
