@@ -57,9 +57,7 @@ public class BugNav extends Navigation {
 			if (myRC.isMovementActive()) {
 				return;
 			}
-			if (!target.equals(this.target) || this.mline == null) {
-				setTargetBug2(target);
-			}
+			this.target = target;
 			Direction dir = myRC.getLocation().directionTo(target);
 			if (dir == Direction.OMNI || dir == Direction.NONE) {
 				return;
