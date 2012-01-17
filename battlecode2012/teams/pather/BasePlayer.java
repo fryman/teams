@@ -1,12 +1,16 @@
 package pather;
 
+import pather.Nav.BugNav;
+import pather.Nav.Navigation;
 import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
+	protected Navigation nav = null;
 
 	public BasePlayer(RobotController rc) {
-
+		// Today use BugNav
+		this.nav = new BugNav(rc);
 	}
 
 	/**
@@ -16,6 +20,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 * called when the Robot is done with its turn.
 	 */
 	public void runAtEndOfTurn() {
+		aboutToDie();
 		broadcastMessage();
 		myRC.yield();
 	}
@@ -125,7 +130,6 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * 
 	 * @return the Robot closest to this Robot that is on the same team as this.
 	 */
 	public Robot findAFriendly() {
@@ -232,6 +236,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Compares the flux of two robots, returns true if one is lower than two
 	 * 
 	 * @param one
 	 *            Robot to compare flux of
@@ -252,6 +257,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Compares the energon of two robots, returns true if one is lower than two
 	 * 
 	 * @param one
 	 *            Robot to compare energon of
@@ -281,6 +287,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public boolean compareRobotDistance(Robot one, Robot two) {
 		try {
+			if (!myRC.canSenseObject(one) || !myRC.canSenseObject(two)) {
+				return false;
+			}
 			int distToOne = myRC.getLocation().distanceSquaredTo(
 					myRC.senseLocationOf(one));
 			int distToTwo = myRC.getLocation().distanceSquaredTo(
@@ -324,12 +333,18 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	/**
+	 * Determines nearby enemy robots and returns the closest of them.
+	 * 
+	 * @return Robot that is the closest, not on our team. Null if no enemy
+	 *         robots are nearby.
+	 */
 	public Robot senseClosestEnemy() {
 		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 		Robot closest = null;
 		if (enemies.length > 0) {
 			for (Robot e : enemies) {
-				if (e.getTeam() == myRC.getTeam()) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
 				if (closest == null || compareRobotDistance(e, closest)) {
@@ -360,6 +375,34 @@ public abstract class BasePlayer extends StaticStuff {
 				myRC.setIndicatorString(7, "Attacking closest enemy");
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	/**
+	 * Same as attackClosestEnemy, except causes this robot to chase the enemy
+	 * as well.
+	 * 
+	 * @param closestTar
+	 *            Target to seek and destroy.
+	 */
+	public void attackAndChaseClosestEnemy(Robot closestTar) {
+		try {
+			if (closestTar == null) {
+				return;
+			}
+			if (myRC.canSenseObject(closestTar)) {
+				MapLocation attack = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2,
+							"Attacking: " + attack.toString());
+				}
+				if (!myRC.isMovementActive()) {
+					this.nav.getNextMove(attack);
+				}
 			}
 		} catch (GameActionException e1) {
 			e1.printStackTrace();
@@ -423,6 +466,89 @@ public abstract class BasePlayer extends StaticStuff {
 			System.out.println("caught exception:");
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * 
+	 * @param one
+	 *            MapLocation to compare distance between
+	 * @param two
+	 *            MapLocation to compare distance between
+	 * @return true when MapLocation one is closer than Robot two
+	 */
+	public boolean compareMapLocationDistance(MapLocation one, MapLocation two) {
+		try {
+			int distToOne = myRC.getLocation().distanceSquaredTo(one);
+			int distToTwo = myRC.getLocation().distanceSquaredTo(two);
+			return distToOne < distToTwo;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public void aboutToDie(){
+		//if less than 5% health...
+		try {		
+			if (myRC.getEnergon() < 0.5*myRC.getMaxEnergon()
+					&& myRC.getType()!=battlecode.common.RobotType.ARCHON){
+				Robot weak = findAWeakFriendly();
+				if (weak != null) {
+					//System.out.println("about to die, found weak");
+					while(!myRC.getLocation().isAdjacentTo(myRC.senseLocationOf(weak)) 
+							&& myRC.getLocation()!= myRC.senseLocationOf(weak)){
+						nav.getNextMove(myRC.senseLocationOf(weak));	
+					}
+					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
+					double weakFlux = weakRobotInfo.flux;
+					double maxFlux = weakRobotInfo.type.maxFlux;
+					double fluxAmountToTransfer = Math.min(maxFlux - weakFlux,
+							myRC.getFlux());
+					if (fluxAmountToTransfer > 0) {
+						//System.out.println("transfer");
+						//System.out.println(maxFlux-weakFlux);
+						//System.out.println(myRC.getFlux());
+						myRC.transferFlux(weakRobotInfo.location,
+								weakRobotInfo.robot.getRobotLevel(),
+								fluxAmountToTransfer);
+						//System.out.println(myRC.getFlux());
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Returns the nearest friendly archon. Since many robots have a limited
+	 * field of view, this is necessary for when a nearby archon turns away and
+	 * out of the field of view.
+	 * 
+	 * @return nearest friendly archon. null if no archons remain on the board.
+	 */
+	public MapLocation reacquireNearestFriendlyArchonLocation() {
+		try {
+			MapLocation closestArchonLocation = null;
+			MapLocation[] alliedArchonsLocations = myRC.senseAlliedArchons();
+			if (alliedArchonsLocations.length > 0) {
+				for (MapLocation e : alliedArchonsLocations) {
+					if (closestArchonLocation == null
+							|| compareMapLocationDistance(e,
+									closestArchonLocation)) {
+						closestArchonLocation = e;
+					}
+				}
+			}
+			if (closestArchonLocation == null) {
+				return null;
+			}
+			return closestArchonLocation;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }
