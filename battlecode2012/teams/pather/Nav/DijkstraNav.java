@@ -70,7 +70,6 @@ public class DijkstraNav extends Navigation {
 				return 0;
 			}
 		}
-
 		this.queue = new PriorityQueue<MapLocation>(100,
 				new MapLocationComparer(this.myRC));
 	}
@@ -120,7 +119,6 @@ public class DijkstraNav extends Navigation {
 				m.add(Direction.SOUTH_EAST), m.add(Direction.SOUTH_WEST),
 				m.add(Direction.WEST) };
 		return neighbors;
-
 	}
 
 }
