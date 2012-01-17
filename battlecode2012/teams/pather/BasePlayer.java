@@ -1,12 +1,16 @@
 package pather;
 
+import pather.Nav.BugNav;
+import pather.Nav.Navigation;
 import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
-
+	private Navigation nav = null;
+	
 	public BasePlayer(RobotController rc) {
-
+		// Today use BugNav
+		this.nav = new BugNav(rc);
 	}
 
 	/**
@@ -395,4 +399,33 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	public void aboutToDie(){
+		//if less than 5% health...
+		try {		
+			if (myRC.getEnergon() < 0.05*myRC.getMaxEnergon()
+					&& myRC.getType()!=battlecode.common.RobotType.ARCHON 
+					/*&& being attacked*/){
+				Robot weak = findAWeakFriendly();
+				if (weak != null) {
+					while(!myRC.getLocation().isAdjacentTo(myRC.senseLocationOf(weak)) 
+							&& myRC.getLocation()!= myRC.senseLocationOf(weak)){
+						nav.getNextMove(myRC.senseLocationOf(weak));	
+					}
+					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
+					double weakFlux = weakRobotInfo.flux;
+					double maxFlux = weakRobotInfo.type.maxFlux;
+					double fluxAmountToTransfer = Math.min(maxFlux-weakFlux,myRC.getFlux());
+					if (fluxAmountToTransfer > 0) {
+						myRC.transferFlux(weakRobotInfo.location,
+								weakRobotInfo.robot.getRobotLevel(),
+								fluxAmountToTransfer);
+					}
+				}
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	//
 }
