@@ -62,7 +62,7 @@ public class ScoutPlayer extends BasePlayer {
 					myRC.suicide();
 				}
 				this.nav.getNextMove(friendlyMapLocationToFollow);
-				myRC.setIndicatorString(1, "following a friendly");
+				myRC.setIndicatorString(0, "following a friendly");
 				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
