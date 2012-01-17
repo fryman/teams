@@ -184,8 +184,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Finds the friendly nearby that has the lowest energon and is not an
-	 * archon. This is useful for scouts that need to heal neighbors.
+	 * Finds the friendly nearby that has the lowest energon and is not a
+	 * tower. This is useful for scouts that need to heal neighbors.
 	 * 
 	 * Since the heal range is exactly the attack range, only considers robots
 	 * within the attack range.
@@ -200,7 +200,7 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyObjects.length > 0) {
 				for (Robot e : nearbyObjects) {
 					if (e.getTeam() != myRC.getTeam()
-							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
 							|| !myRC.canAttackSquare((myRC.senseLocationOf(e)))) {
 						continue;
 					}
