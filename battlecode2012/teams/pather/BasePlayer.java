@@ -11,6 +11,9 @@ public abstract class BasePlayer extends StaticStuff {
 
 	/**
 	 * Code to run once per turn, at the very end
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
 	 */
 	public void runAtEndOfTurn() {
 		broadcastMessage();

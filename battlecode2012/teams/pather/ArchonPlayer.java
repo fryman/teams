@@ -25,6 +25,12 @@ public class ArchonPlayer extends BasePlayer {
 		this.nav = new BugNav(rc);
 	}
 
+	/**
+	 * Code to run once per turn, at the very end.
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
+	 */
 	@Override
 	public void runAtEndOfTurn() {
 		broadcastMessage();
