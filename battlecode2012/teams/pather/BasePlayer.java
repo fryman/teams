@@ -6,7 +6,7 @@ import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
-	private Navigation nav = null;
+	protected Navigation nav = null;
 
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
@@ -235,6 +235,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Compares the flux of two robots, returns true if one is lower than two
 	 * 
 	 * @param one
 	 *            Robot to compare flux of
@@ -255,6 +256,7 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
+	 * Compares the energon of two robots, returns true if one is lower than two
 	 * 
 	 * @param one
 	 *            Robot to compare energon of
@@ -284,7 +286,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public boolean compareRobotDistance(Robot one, Robot two) {
 		try {
-			if (!myRC.canSenseObject(one) || !myRC.canSenseObject(two)){
+			if (!myRC.canSenseObject(one) || !myRC.canSenseObject(two)) {
 				return false;
 			}
 			int distToOne = myRC.getLocation().distanceSquaredTo(

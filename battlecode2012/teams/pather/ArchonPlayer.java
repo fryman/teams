@@ -17,7 +17,6 @@ public class ArchonPlayer extends BasePlayer {
 	// need to remove from enemyTowerLocs if we destroy enemy towers
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
-	private Navigation nav = null;
 	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
 											// this.
 
