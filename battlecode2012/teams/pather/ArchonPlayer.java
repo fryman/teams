@@ -51,7 +51,7 @@ public class ArchonPlayer extends BasePlayer {
 				getNewTarget();
 
 				while (Clock.getRoundNum() < 200) {
-					spawnSoldierAndTransferFlux();
+					spawnScoutAndTransferFlux();
 					runAtEndOfTurn();
 				}
 
