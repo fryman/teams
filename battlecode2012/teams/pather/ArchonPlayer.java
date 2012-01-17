@@ -120,7 +120,7 @@ public class ArchonPlayer extends BasePlayer {
 	 * If the convoy is deficient, creates scout or soldier to complete the
 	 * convoy.
 	 */
-	private void checkAndCreateConvoy() {
+	public void checkAndCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
 			boolean scoutPresent = false;
@@ -192,6 +192,10 @@ public class ArchonPlayer extends BasePlayer {
 		powerNodesOwned = myRC.senseAlliedPowerNodes();
 	}
 
+	/**
+	 * Finds a new PowerNode that we can build on. Sets targetLoc to this node's
+	 * location.
+	 */
 	public void getNewTarget() {
 		updateUnownedNodes();
 		if (locsToBuild.size() != 0) {
