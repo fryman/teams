@@ -40,7 +40,7 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runAttackMode();
+		runFollowFriendlyMode();
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class ScoutPlayer extends BasePlayer {
 				return false;
 			}
 			Robot weakling = findALowEnergonFriendly();
-			if (weakling == null){
+			if (weakling == null) {
 				return false;
 			}
 			RobotInfo weakInfo = myRC.senseRobotInfo(weakling);
