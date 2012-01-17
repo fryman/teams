@@ -55,6 +55,30 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * If on powernode get off of it.
+	 */
+	public void getOffPowerNode() {
+		try {
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			// if there's not enough flux to move, don't try
+			if (this.myRC.getFlux() < this.myRC.getType().moveCost) {
+				return;
+			}
+			if (myRC.canMove(myRC.getDirection())) {
+				myRC.moveForward();
+			} else {
+				myRC.setDirection(myRC.getDirection().rotateLeft());
+				runAtEndOfTurn();
+			}
+		} catch (Exception e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Similar to walk aimlessly, except that this robot will perform a random
@@ -361,7 +385,18 @@ public abstract class BasePlayer extends StaticStuff {
 				return;
 			}
 			MapLocation attack = myRC.senseLocationOf(closestTar);
+
+			if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
+				if (ownAdjacentTower(closestTar)) {
+					myRC.setIndicatorString(7, "Attempting tower destroy");
+					destroyTower(attack);
+				} else {
+					return;
+				}
+			}
+
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+				myRC.setIndicatorString(7, "Attacking closest enemy");
 				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
 			}
@@ -398,7 +433,8 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
-	public boolean ownAdjacentTower(PowerNode p) {
+	public boolean ownAdjacentTower(Robot r) {
+		PowerNode p = (PowerNode) r;
 		MapLocation[] neighbors = p.neighbors();
 		PowerNode[] ownedTowers = myRC.senseAlliedPowerNodes();
 		boolean ownAdjacent = false;

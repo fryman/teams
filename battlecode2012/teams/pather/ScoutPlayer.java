@@ -45,7 +45,7 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runFollowFriendlyMode();
+		runAttackMode();
 	}
 
 	/**
