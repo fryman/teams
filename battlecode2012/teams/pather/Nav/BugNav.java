@@ -280,7 +280,7 @@ public class BugNav extends Navigation {
 
 	public void getNextMoveBug1(MapLocation target) {
 		try {
-			// TODO finish...
+			// TODO finish getNextMoveBug1 ? Maybe?
 			if (myRC.isMovementActive()) {
 				return;
 			}

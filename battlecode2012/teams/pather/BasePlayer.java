@@ -1,11 +1,14 @@
 package pather;
 
+import pather.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
+	
 	public BasePlayer(RobotController rc) {
+	
 	}
-
+	
 	/**
 	 * Code to run once per turn, at the very end
 	 */
@@ -13,7 +16,7 @@ public abstract class BasePlayer extends StaticStuff {
 		broadcastMessage();
 		myRC.yield();
 	}
-
+	
 	/**
 	 * Causes this Robot to walk around without direction, turning left or right
 	 * at random when an obstacle is encountered.
@@ -330,5 +333,5 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

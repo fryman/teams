@@ -1,7 +1,8 @@
 package pather.util;
 
 import java.util.HashMap;
-import battlecode.common.*;
+import battlecode.common.MapLocation;
+import battlecode.common.TerrainTile;
 
 /**
  * Represents a model of the game board. This stores the TerrainTiles that a

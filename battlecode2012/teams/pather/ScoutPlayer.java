@@ -110,7 +110,7 @@ public class ScoutPlayer extends BasePlayer {
 	 *         otherwise
 	 */
 	public boolean suitableTimeToHeal() {
-		// TODO
+		// TODO implement suitable time to heal after determining a heuristic
 		return false;
 	}
 

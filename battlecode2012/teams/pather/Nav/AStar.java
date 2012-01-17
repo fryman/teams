@@ -8,7 +8,7 @@ public class AStar extends Navigation{
  */
 	@Override
 	public void getNextMove(MapLocation target) {
-		// TODO Auto-generated method stub
+		//TODO consider implementing A*
 	}
 
 }
