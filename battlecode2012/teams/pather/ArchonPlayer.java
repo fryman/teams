@@ -49,7 +49,8 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 20 && !spreadOutFromOtherArchons()) {
+				while (Clock.getRoundNum() < 20
+						&& !spreadOutFromOtherArchons()) {
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
@@ -60,6 +61,7 @@ public class ArchonPlayer extends BasePlayer {
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
+				
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -674,6 +676,7 @@ public class ArchonPlayer extends BasePlayer {
 	
 	/**
 	 * Archons sense each other and determine who has the lowest robot number. He executes special code.
+	 * @TODO Find a way to sense objects out of range.
 	 */
 	
 	public int checkLowestArchonNumber() {
