@@ -328,6 +328,9 @@ public abstract class BasePlayer extends StaticStuff {
 
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
+			if (!myRC.canSenseSquare(target)){
+				return true;
+			}
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() != myRC.getTeam()) {
@@ -544,10 +547,14 @@ public abstract class BasePlayer extends StaticStuff {
 		return false;
 	}
 
+	/**
+	 * If this robot has < 0.05*getMaxEnergon(), finds a weak neighbor, moves
+	 * toward it, and transfers flux to it.
+	 */
 	public void aboutToDie() {
 		// if less than 5% health...
 		try {
-			if (myRC.getEnergon() < 0.5 * myRC.getMaxEnergon()
+			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
 				Robot weak = findAWeakFriendly();
 				if (weak != null) {

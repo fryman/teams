@@ -8,11 +8,11 @@ import pather.Nav.*;
 
 public class ArchonPlayer extends BasePlayer {
 
-	private PowerNode core = null;
 	private Random r = new Random();
 	private MapLocation targetLoc = null; // the location at which the tower
 											// should be built
-	private MapLocation[] capturablePowerNodes = myRC.senseCapturablePowerNodes();
+	private MapLocation[] capturablePowerNodes = myRC
+			.senseCapturablePowerNodes();
 	private ArrayList<MapLocation> locsToBuild = new ArrayList<MapLocation>();
 	// need to remove from enemyTowerLocs if we destroy enemy towers
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
@@ -33,6 +33,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	@Override
 	public void runAtEndOfTurn() {
+		checkAndAttemptCreateConvoy();
 		aboutToDie();
 		broadcastMessage();
 		this.findWeakFriendsAndTransferFlux();
@@ -45,10 +46,9 @@ public class ArchonPlayer extends BasePlayer {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				if (core == null) {
-					core = myRC.sensePowerCore();
-				}
-
+				// This causes the archons to spread out quickly, and limits
+				// spreading to 200 rounds. Realistically spreading out is
+				// limited to 20 rounds in spreadOutFromOtherArchons()
 				if (Clock.getRoundNum() < 200) {
 					while (!spreadOutFromOtherArchons()) {
 						while (myRC.isMovementActive()) {
@@ -57,59 +57,87 @@ public class ArchonPlayer extends BasePlayer {
 					}
 				}
 				checkAndCreateConvoy();
-				myRC.setIndicatorString(0, "convoy created");
-
-				getNewTarget();
-
-				while (targetLoc != null
-						&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
-					this.nav.getNextMove(targetLoc);
-					runAtEndOfTurn();
-					// check if we're going to a loc with a tower already
-					updateUnownedNodes();
-					boolean quit = true;
-					for (MapLocation i : locsToBuild) {
-						if (i.equals(targetLoc)) {
-							quit = false;
-						}
-					}
-					if (quit) {
-						getNewTarget();
-					}
-				}
-				if (targetLoc == null) {
-					continue;
-				}
-				// NOW we are guaranteed to be at the targetLoc adjacency
-				if (myRC.getDirection() != myRC.getLocation().directionTo(
-						targetLoc)) {
-					while (myRC.isMovementActive()) {
-						runAtEndOfTurn();
-					}
-					myRC.setDirection(myRC.getLocation().directionTo(targetLoc));
-					runAtEndOfTurn();
-				}
-				// Now we can build a fucking tower
-				boolean enemyTower = enemyTowerPresent(targetLoc);
-
-				if (enemyTower == true) {
-					myRC.setIndicatorString(1, "attempting destroy at: "
-							+ targetLoc.toString());
-					enemyTowerLocs.add(targetLoc);
-					// TODO this can be modified to create an army here.
-					checkAndCreateConvoy();
-				} else {
-					myRC.setIndicatorString(1, "attempting build at: "
-							+ targetLoc.toString());
-					buildTower(targetLoc);
-				}
+				MapLocation capturing = getNewTarget();
+				goToPowerNodeForBuild(capturing);
+				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
-
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Attempts to build a tower on a given location, or destroy it if there's
+	 * an enemy tower present.
+	 * 
+	 * @param capturing
+	 *            MapLocation on which to build a tower, or destroy an enemy
+	 *            tower. Destroy occurs simply because this archon has a convoy
+	 *            which should automatically attack the tower.
+	 */
+	public void buildOrDestroyTower(MapLocation capturing) {
+		try {
+			if (myRC.getDirection() != myRC.getLocation()
+					.directionTo(capturing)) {
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				myRC.setDirection(myRC.getLocation().directionTo(capturing));
+				runAtEndOfTurn();
+			}
+			// Now we can build a fucking tower
+			boolean enemyTower = enemyTowerPresent(capturing);
+
+			if (enemyTower == true) {
+				myRC.setIndicatorString(1, "attempting destroy at: "
+						+ targetLoc.toString());
+				enemyTowerLocs.add(targetLoc);
+				// TODO this can be modified to create an army here.
+			} else {
+				myRC.setIndicatorString(1,
+						"attempting build at: " + targetLoc.toString());
+				buildTower(targetLoc);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Causes this archon to go to a MapLocation. Does not attempt to build at
+	 * that mapLocation. If another archon builds a tower at the given
+	 * mapLocation, this method finds another MapLocation on which a tower
+	 * should be built.
+	 * 
+	 * This method exits when there is no possible node to capture or we are
+	 * adjacent to the capturable node.
+	 * 
+	 * @param capturing
+	 *            The MapLocation on which the tower should be built.
+	 * @return a MapLocation that this archon can immediately build on (we are
+	 *         adjacent and the location is not null)
+	 */
+	public MapLocation goToPowerNodeForBuild(MapLocation capturing) {
+		MapLocation locationToCapture = capturing;
+		while (locationToCapture != null
+				&& !myRC.getLocation().isAdjacentTo(locationToCapture)) {
+			this.nav.getNextMove(locationToCapture);
+			runAtEndOfTurn();
+			// check if we're going to a loc with a tower already
+			updateUnownedNodes();
+			boolean quit = true;
+			for (MapLocation possibleToCapture : capturablePowerNodes) {
+				if (possibleToCapture.equals(locationToCapture)) {
+					quit = false;
+				}
+			}
+			if (quit) {
+				locationToCapture = getNewTarget();
+			}
+		}
+		return locationToCapture;
 	}
 
 	/**
@@ -194,30 +222,45 @@ public class ArchonPlayer extends BasePlayer {
 	public void updateUnownedNodes() {
 		capturablePowerNodes = myRC.senseCapturablePowerNodes();
 		// TODO this line takes 98 bytecodes. is this necessary??
-		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(capturablePowerNodes));
+		locsToBuild = new ArrayList<MapLocation>(
+				Arrays.asList(capturablePowerNodes));
 		powerNodesOwned = myRC.senseAlliedPowerNodes();
 	}
 
 	/**
 	 * Finds a new PowerNode that we can build on. Sets targetLoc to this node's
 	 * location.
+	 * 
+	 * If there is no powernode that we can build on, sets targetLoc to this
+	 * team's powercore.
+	 * 
+	 * @return a MapLocation that we can build a tower on. Note: this may be an
+	 *         enemy tower. Null if no such tower exists.
 	 */
-	public void getNewTarget() {
+	public MapLocation getNewTarget() {
 		updateUnownedNodes();
-		if (locsToBuild.size() != 0) {
-			for (MapLocation m : locsToBuild) {
-//				if (!enemyTowerLocs.contains(m)) {
-					targetLoc = m;
-					return;
-//				}
-			} // does not handle case where all nodes are enemy towers
+		if (capturablePowerNodes.length != 0) {
+			targetLoc = capturablePowerNodes[0]; // to conform to the method
+													// signature.
+			return capturablePowerNodes[0];
+			/*
+			 * The commented code here is archaic. It is saved for safety.
+			 * 
+			 * for (MapLocation m : capturablePowerNodes) { // if
+			 * (!enemyTowerLocs.contains(m)) { targetLoc = m; return m; // } }
+			 * // does not handle case where all nodes are enemy towers
+			 */
 		} else {
-			targetLoc = myRC.sensePowerCore().getLocation();
+			targetLoc = myRC.sensePowerCore().getLocation(); // to conform to
+																// the method
+																// signature.
+			return null;
 		}
 	}
 
 	/**
-	 * Spawns a tower at the current location
+	 * Spawns a tower at the current location if this robot has enough flux to
+	 * do so.
 	 * 
 	 * @param target
 	 *            MapLocation at which to build the tower
@@ -240,7 +283,6 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
-
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
@@ -438,5 +480,168 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 		return true;
+	}
+
+	/**
+	 * ATTEMPTS to spawns a scout and transfers flux to it. Causes this archon
+	 * to wait (yielding) until it has enough flux to transfer to a scout. Does
+	 * NOT cause the archon to wait until it has enough flux to spawn a scout.
+	 * 
+	 * Currently the amount of flux transferred to the scout is the *full*
+	 * amount that the scout is allowed to carry.
+	 */
+	public void attemptSpawnScoutAndTransferFlux() {
+		try {
+			myRC.setIndicatorString(0, "creating scout");
+			// TODO are these three lines necessary?
+			while (myRC.isMovementActive()) {
+				super.runAtEndOfTurn();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
+				return;
+			}
+			if (myRC.getFlux() > RobotType.SCOUT.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.IN_AIR) == null) {
+				myRC.spawn(RobotType.SCOUT);
+				myRC.setIndicatorString(2, "just spawned scout: ");
+				runAtEndOfTurn();
+				Robot recentScout = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, RobotLevel.IN_AIR);
+				myRC.setIndicatorString(2, "recent scout: " + recentScout);
+				if (recentScout == null) {
+					myRC.setIndicatorString(2,
+							"recent scout null: " + Clock.getRoundNum());
+					return;
+				}
+				runAtEndOfTurn();
+				while ((RobotType.SCOUT.maxFlux) > myRC.getFlux()
+						&& myRC.canSenseObject(recentScout)) {
+					super.runAtEndOfTurn();
+				}
+				if (myRC.canSenseObject(recentScout)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentScout))
+						&& myRC.senseRobotInfo(recentScout).flux < RobotType.SCOUT.maxFlux) {
+					myRC.transferFlux(myRC.senseLocationOf(recentScout),
+							RobotLevel.IN_AIR, RobotType.SCOUT.maxFlux);
+				}
+				return;
+			}
+			myRC.setIndicatorString(1, "did not attempt to create scout");
+			myRC.setIndicatorString(
+					2,
+					Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
+			return;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	/**
+	 * ATTEMPTS to spawns a soldier and transfers flux to it. Causes this archon
+	 * to wait (yielding) until it has enough flux to transfer to a soldier.
+	 * Does NOT cause the archon to wait until it has enough flux to spawn a
+	 * soldier.
+	 * 
+	 * TODO is this initial flux transfer the correct amount?
+	 */
+	public void attemptSpawnSoldierAndTransferFlux() {
+		try {
+			myRC.setIndicatorString(0,
+					"creating soldier: " + Clock.getRoundNum());
+			while (myRC.isMovementActive()) {
+				super.runAtEndOfTurn();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+				return;
+			}
+			if (myRC.getFlux() > RobotType.SOLDIER.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.ON_GROUND) == null
+					&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+					&& this.myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.POWER_NODE) == null) {
+				myRC.spawn(RobotType.SOLDIER);
+				myRC.setIndicatorString(2, "just spawned soldier: ");
+				super.runAtEndOfTurn();
+				Robot recentSoldier = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "recent soldier: " + recentSoldier);
+				if (recentSoldier == null) {
+					myRC.setIndicatorString(2, "recent soldier null");
+					return;
+				}
+				runAtEndOfTurn();
+				while ((RobotType.SOLDIER.maxFlux / 2) > myRC.getFlux()
+						&& myRC.canSenseObject(recentSoldier)) {
+					super.runAtEndOfTurn();
+				}
+				if (myRC.canSenseObject(recentSoldier)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentSoldier))
+						&& myRC.senseRobotInfo(recentSoldier).flux < RobotType.SOLDIER.maxFlux / 2) {
+					myRC.transferFlux(myRC.senseLocationOf(recentSoldier),
+							RobotLevel.ON_GROUND, RobotType.SOLDIER.maxFlux / 2);
+				}
+				return;
+			}
+			myRC.setIndicatorString(1, "did not attempt to create soldier");
+			myRC.setIndicatorString(
+					2,
+					Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
+			return;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	/**
+	 * Checks to see if there's a scout and a soldier in the convoy around this
+	 * archon (in the convoy means in sensor range).
+	 * 
+	 * If the convoy is deficient, attempts to create scout or soldier to
+	 * complete the convoy.
+	 * 
+	 * The attempts rely on attemptSpawnScoutAndTransferFlux and
+	 * attemptSpawnSoldierAndTransferFlux. Note: this method will still cause
+	 * the archon to wait until it has enough flux to transfer to the robots it
+	 * spawns, but will not cause the archon to stop and wait until it has
+	 * enough flux to spawn the robots.
+	 */
+	public void checkAndAttemptCreateConvoy() {
+		try {
+			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
+			boolean scoutPresent = false;
+			boolean soldierPresent = false;
+			for (Robot n : neighbors) {
+				if (n.getTeam() == this.myRC.getTeam()) {
+					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
+						scoutPresent = true;
+					}
+					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
+						soldierPresent = true;
+					}
+				}
+			}
+			// if cannot see scout, spawn one.
+			if (!scoutPresent) {
+				attemptSpawnScoutAndTransferFlux();
+			}
+			// if cannot see soldier, spawn one.
+			if (!soldierPresent) {
+				attemptSpawnSoldierAndTransferFlux();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
