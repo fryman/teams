@@ -115,7 +115,8 @@ public class SoldierPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Follows a friendly archon, attacks other things.
+	 * Follows a friendly archon, attacks other things using
+	 * attackAndChaseClosestEnemy.
 	 * 
 	 * Only attacks other things as long as it is within
 	 * MAX_DEVIATION_DISTANCE_SQUARE of nearest archon.
@@ -140,8 +141,6 @@ public class SoldierPlayer extends BasePlayer {
 					this.nav.getNextMove(friendlyMapLocationToFollow);
 					runAtEndOfTurn();
 				} else {
-					// System.out.println("Ima attack now");
-					// attack the enemy as long as it's nearby
 					attackAndChaseClosestEnemy(closeEnemy);
 				}
 				runAtEndOfTurn();
