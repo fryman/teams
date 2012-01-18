@@ -17,6 +17,7 @@ public class ScorcherPlayer extends BasePlayer {
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private boolean set = false;
+	private int moves = 2;
 
 	// private Robot friendlyToFollow = null;
 	// private MapLocation friendlyMapLocationToFollow = null;
@@ -58,10 +59,15 @@ public class ScorcherPlayer extends BasePlayer {
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(core)
 							.opposite());
+					if(myRC.getDirection().isDiagonal()){
+						moves = 1;
+					}else{
+						moves = 2;
+					}
 					runAtEndOfTurn();
 					int countMove = 0;
 					int count = 0;
-					while (countMove < 2 && count < 20) {
+					while (countMove < moves && count < 10) {
 						if (myRC.canMove(myRC.getDirection())
 								&& !myRC.isMovementActive()) {
 							myRC.moveForward();
