@@ -45,6 +45,8 @@ public class ScorcherPlayer extends BasePlayer {
 	// scorchers??
 
 	public void runDefendCore() {
+		//fix - if myRC.getFlux()<move cost - to check if can move
+		//fix
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
@@ -54,6 +56,8 @@ public class ScorcherPlayer extends BasePlayer {
 						runAtEndOfTurn();
 					}
 					myRC.setIndicatorString(0, "at powercore");
+					myRC.setIndicatorString(1, "");
+					myRC.setIndicatorString(2, "");
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
