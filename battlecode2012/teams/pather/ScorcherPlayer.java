@@ -51,6 +51,9 @@ public class ScorcherPlayer extends BasePlayer {
 					runAtEndOfTurn();
 				}
 				myRC.setIndicatorString(0,"at powercore");
+				while(myRC.isMovementActive()){
+					runAtEndOfTurn();
+				}
 				myRC.setDirection(myRC.getLocation().directionTo(core).opposite());
 				runAtEndOfTurn();
 				int countMove = 0;
