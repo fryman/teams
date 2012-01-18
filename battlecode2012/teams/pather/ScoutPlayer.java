@@ -8,6 +8,7 @@ import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
+import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
 
 public class ScoutPlayer extends BasePlayer {
@@ -35,6 +36,18 @@ public class ScoutPlayer extends BasePlayer {
 	public void runAtEndOfTurn() {
 		try {
 			broadcastMessage();
+			Robot closestTar = senseClosestEnemy();
+			if (closestTar != null && !closestTar.equals(RobotType.TOWER)) {
+				MapLocation Location = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
+					myRC.setIndicatorString(0, "Attacking at the end of the turn.");
+					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
+					} else {
+						myRC.attackSquare(Location, RobotLevel.IN_AIR);
+					}
+				}
+			}
 			if (suitableTimeToHeal()) {
 				myRC.setIndicatorString(2, "healing: "+ Clock.getRoundNum());
 				this.myRC.regenerate();
