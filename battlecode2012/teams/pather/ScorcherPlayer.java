@@ -71,14 +71,19 @@ public class ScorcherPlayer extends BasePlayer {
 						count++;
 					}
 					if (countMove != 2) {
-						while (!myRC.getLocation().isAdjacentTo(core)) {
-							this.nav.getNextMove(core);
-							runAtEndOfTurn();
-						}
+							while (!myRC.getLocation().isAdjacentTo(core)) {
+								this.nav.getNextMove(core);
+								runAtEndOfTurn();
+							}
 						while (myRC.isMovementActive()) {
 							runAtEndOfTurn();
 						}
-						myRC.setDirection(myRC.getDirection().rotateLeft());
+						if(myRC.getDirection().isDiagonal()){
+							myRC.setDirection(myRC.getDirection().rotateLeft());
+						}
+						else{
+							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
+						}
 						int count3 = 0;
 						while (count3 < 1) {
 							if (myRC.canMove(myRC.getDirection())
@@ -95,7 +100,8 @@ public class ScorcherPlayer extends BasePlayer {
 				} else {
 					myRC.setIndicatorString(0, "should be two away facing out");
 					if (senseClosestGroundEnemy() != null
-							&& !myRC.isAttackActive()) {
+							&& !myRC.isAttackActive()
+							&& !canSenseArchon()) {
 						myRC.setIndicatorString(0, "about to attack");
 						myRC.attackSquare(myRC.getLocation(),
 								battlecode.common.RobotLevel.ON_GROUND);
