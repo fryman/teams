@@ -55,8 +55,8 @@ public class ScorcherPlayer extends BasePlayer {
 				runAtEndOfTurn();
 				int countMove = 0;
 				int count = 0;
-				while (countMove<2 && count<20){
-					if(myRC.canMove(myRC.getDirection())){
+				while (countMove<2 && count<50){
+					if(myRC.canMove(myRC.getDirection())&&!myRC.isMovementActive()){
 						myRC.moveForward();
 						countMove++;
 					}
