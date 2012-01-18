@@ -46,7 +46,7 @@ public class ScorcherPlayer extends BasePlayer {
 
 	public void runDefendCore() {
 		//fix - if myRC.getFlux()<move cost - to check if can move
-		//fix
+		//fix - navigation?
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
@@ -63,13 +63,13 @@ public class ScorcherPlayer extends BasePlayer {
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(core)
 							.opposite());
+					runAtEndOfTurn();
 					if(myRC.getDirection().isDiagonal()){
 						moves = 1;
 					}else{
 						moves = 2;
 					}
 					myRC.setIndicatorString(1, "moves "+moves);
-					runAtEndOfTurn();
 					int countMove = 0;
 					int count = 0;
 					while (countMove < moves && count < 10) {
