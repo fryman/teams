@@ -63,6 +63,8 @@ public class ScorcherPlayer extends BasePlayer {
 					}
 					myRC.setDirection(myRC.getLocation().directionTo(core)
 							.opposite());
+					runAtEndOfTurn();
+
 					if(myRC.getDirection().isDiagonal()){
 						moves = 1;
 					}else{
