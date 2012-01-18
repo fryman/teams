@@ -22,7 +22,7 @@ public class ScorcherPlayer extends BasePlayer {
 
 	public ScorcherPlayer(RobotController rc) {
 		super(rc);
-		// TODO Auto-generated constructor stub
+		this.nav = new BugNav(rc);
 	}
 
 	@Override
