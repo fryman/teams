@@ -76,7 +76,7 @@ public class ScorcherPlayer extends BasePlayer {
 						runAtEndOfTurn();
 						count++;
 					}
-					if (countMove != 2) {
+					if (countMove != moves) {
 							while (!myRC.getLocation().isAdjacentTo(core)) {
 								this.nav.getNextMove(core);
 								runAtEndOfTurn();
