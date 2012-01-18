@@ -439,7 +439,12 @@ public abstract class BasePlayer extends StaticStuff {
 
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.setIndicatorString(7, "Attacking closest enemy");
-				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				}
+				else {
+					myRC.attackSquare(attack, RobotLevel.IN_AIR);
+				}
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
 			}
 		} catch (GameActionException e1) {
@@ -470,7 +475,12 @@ public abstract class BasePlayer extends StaticStuff {
 					}
 				}
 				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+						myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					}
+					else {
+						myRC.attackSquare(attack, RobotLevel.IN_AIR);
+					}
 					myRC.setIndicatorString(2,
 							"Attacking: " + attack.toString());
 				}

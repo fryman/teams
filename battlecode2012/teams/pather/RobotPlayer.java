@@ -20,6 +20,10 @@ public class RobotPlayer {
 			new ScoutPlayer(rc).run();
 		case SOLDIER:
 			new SoldierPlayer(rc).run();
+		case SCORCHER:
+			new ScorcherPlayer(rc).run();
+		case DISRUPTER:
+			new DisrupterPlayer(rc).run();
 		}
 	}
 
