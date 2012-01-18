@@ -264,7 +264,7 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Finds a new PowerNode that we can build on. Sets targetLoc to this node's
+	 * Finds closest PowerNode that we can build on. Sets targetLoc to this node's
 	 * location.
 	 * 
 	 * If there is no powernode that we can build on, sets targetLoc to this
