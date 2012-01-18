@@ -17,12 +17,14 @@ public class ScorcherPlayer extends BasePlayer {
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private boolean set = false;
-	//private Robot friendlyToFollow = null;
-	//private MapLocation friendlyMapLocationToFollow = null;
+	private int moves = 2;
+
+	// private Robot friendlyToFollow = null;
+	// private MapLocation friendlyMapLocationToFollow = null;
 
 	public ScorcherPlayer(RobotController rc) {
 		super(rc);
-		// TODO Auto-generated constructor stub
+		this.nav = new BugNav(rc);
 	}
 
 	@Override
@@ -38,72 +40,91 @@ public class ScorcherPlayer extends BasePlayer {
 	public void run() {
 		runDefendCore();
 	}
-	
-	//archon - if can sense power core and not two scorchers - build scorchers??
-	
+
+	// archon - if can sense power core and not two scorchers - build
+	// scorchers??
+
 	public void runDefendCore() {
+		//fix - if myRC.getFlux()<move cost - to check if can move
+		//fix - navigation?
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
-				if(set ==false){
-				while(!myRC.getLocation().isAdjacentTo(core)){
-					this.nav.getNextMove(core);
-					runAtEndOfTurn();
-				}
-				myRC.setIndicatorString(0,"at powercore");
-				myRC.setDirection(myRC.getLocation().directionTo(core).opposite());
-				runAtEndOfTurn();
-				int countMove = 0;
-				int count = 0;
-				while (countMove<2 && count<20){
-					if(myRC.canMove(myRC.getDirection())){
-						myRC.moveForward();
-						countMove++;
+				if (set == false) {
+					while (!myRC.getLocation().isAdjacentTo(core)) {
+						this.nav.getNextMove(core);
+						runAtEndOfTurn();
 					}
-					runAtEndOfTurn();
-					count++;
-				}
-				set = true;
-				}
-				myRC.setIndicatorString(0,"should be two away facing out");
-				if(senseClosestGroundEnemy() != null){
-					myRC.setIndicatorString(0,"about to attack");
-					myRC.attackSquare(myRC.getLocation(), battlecode.common.RobotLevel.ON_GROUND);
-					runAtEndOfTurn();
+					myRC.setIndicatorString(0, "at powercore");
+					myRC.setIndicatorString(1, "");
+					myRC.setIndicatorString(2, "");
+					while (myRC.isMovementActive()) {
+						runAtEndOfTurn();
 					}
-				else runAtEndOfTurn();
-//				if (myRC.getLocation().directionTo(core)== battlecode.common.Direction.NORTH_EAST ||
-//					myRC.getLocation().directionTo(core)== battlecode.common.Direction.NORTH_WEST ||
-//					myRC.getLocation().directionTo(core)== battlecode.common.Direction.SOUTH_WEST ||
-//					myRC.getLocation().directionTo(core)== battlecode.common.Direction.SOUTH_EAST){
-//					myRC.setDirection(myRC.getLocation().directionTo(core));
-//					
-//				}
-				//face power core, back up until don't sense scorcher
-				//have them orthogonal to powercore
-				
-				//if see other scorcher - move away one - check again
-				//if in front of power node turn opposite
-				//if sense enemy and no friendly fire
-				
-//				Robot[] robots = myRC.senseNearbyGameObjects(battlecode.common.Robot.class);
-//				if( robots !=null){
-//					for(int i=0; i< robots.length; i++){
-//						
-//					}
-//				}
-//				if(myRC.getLocation().isAdjacentTo(myRC.sensePowerCore().getLocation())){
-//					
-//				}
-//				
-//				this.nav.getNextMove();
-//				//myRC.setIndicatorString(0, "following a friendly");
-//				runAtEndOfTurn();
+					myRC.setDirection(myRC.getLocation().directionTo(core)
+							.opposite());
+					runAtEndOfTurn();
+					if(myRC.getDirection().isDiagonal()){
+						moves = 1;
+					}else{
+						moves = 2;
+					}
+					myRC.setIndicatorString(1, "moves "+moves);
+					int countMove = 0;
+					int count = 0;
+					while (countMove < moves && count < 10) {
+						if (myRC.canMove(myRC.getDirection())
+								&& !myRC.isMovementActive()) {
+							myRC.moveForward();
+							countMove++;
+						}
+						runAtEndOfTurn();
+						count++;
+					}
+					if (countMove != moves) {
+							while (!myRC.getLocation().isAdjacentTo(core)) {
+								this.nav.getNextMove(core);
+								runAtEndOfTurn();
+							}
+						while (myRC.isMovementActive()) {
+							runAtEndOfTurn();
+						}
+						if(myRC.getDirection().isDiagonal()){
+							myRC.setDirection(myRC.getDirection().rotateLeft());
+						}
+						else{
+							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
+						}
+						int count3 = 0;
+						while (count3 < 1) {
+							if (myRC.canMove(myRC.getDirection())
+									&& !myRC.isMovementActive()) {
+								myRC.moveForward();
+								count3++;
+							}
+							runAtEndOfTurn();
+						}
+						set = false;
+					} else {
+						set = true;
+					}
+				} else {
+					myRC.setIndicatorString(0, "should be "+moves+" away facing out");
+					if (senseClosestGroundEnemy() != null
+							&& !myRC.isAttackActive()
+							&& !canSenseArchon()) {
+						myRC.setIndicatorString(0, "about to attack");
+						myRC.attackSquare(myRC.getLocation(),
+								battlecode.common.RobotLevel.ON_GROUND);
+						runAtEndOfTurn();
+					} else
+						runAtEndOfTurn();
+				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 }
