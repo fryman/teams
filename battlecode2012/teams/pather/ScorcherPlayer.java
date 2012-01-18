@@ -16,6 +16,7 @@ public class ScorcherPlayer extends BasePlayer {
 	private Navigation nav = null;
 	private MapLocation targetLoc;
 	private Robot closestTar;
+	private boolean set = false;
 	//private Robot friendlyToFollow = null;
 	//private MapLocation friendlyMapLocationToFollow = null;
 
@@ -44,6 +45,7 @@ public class ScorcherPlayer extends BasePlayer {
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
+				if(set ==false){
 				while(!myRC.getLocation().isAdjacentTo(core)){
 					this.nav.getNextMove(core);
 					runAtEndOfTurn();
@@ -51,12 +53,20 @@ public class ScorcherPlayer extends BasePlayer {
 				myRC.setIndicatorString(0,"at powercore");
 				myRC.setDirection(myRC.getLocation().directionTo(core).opposite());
 				runAtEndOfTurn();
-				myRC.moveForward();
-				runAtEndOfTurn();
-				myRC.moveForward();
-				runAtEndOfTurn();
+				int countMove = 0;
+				int count = 0;
+				while (countMove<2 && count<20){
+					if(myRC.canMove(myRC.getDirection())){
+						myRC.moveForward();
+						countMove++;
+					}
+					runAtEndOfTurn();
+					count++;
+				}
+				set = true;
+				}
 				myRC.setIndicatorString(0,"should be two away facing out");
-				if(senseClosestEnemy() != null){
+				if(senseClosestGroundEnemy() != null){
 					myRC.setIndicatorString(0,"about to attack");
 					myRC.attackSquare(myRC.getLocation(), battlecode.common.RobotLevel.ON_GROUND);
 					runAtEndOfTurn();

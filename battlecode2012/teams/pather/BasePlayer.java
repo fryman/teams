@@ -398,6 +398,29 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return closest;
 	}
+	
+	/**
+	 * Determines nearby ground enemy robots and returns the closest of them.
+	 * 
+	 * @return Robot that is the closest, not on our team. Null if no enemy
+	 *         robots are nearby.
+	 */
+	public Robot senseClosestGroundEnemy() {
+		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		Robot closest = null;
+		if (enemies.length > 0) {
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e) 
+						|| e.getRobotLevel() == battlecode.common.RobotLevel.IN_AIR) {
+					continue;
+				}
+				if (closest == null || compareRobotDistance(e, closest)) {
+					closest = e;
+				}
+			}
+		}
+		return closest;
+	}
 
 	public void attackClosestEnemy(Robot closestTar) {
 		try {
@@ -417,7 +440,12 @@ public abstract class BasePlayer extends StaticStuff {
 
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.setIndicatorString(7, "Attacking closest enemy");
-				myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+				}
+				else {
+					myRC.attackSquare(attack, RobotLevel.IN_AIR);
+				}
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
 			}
 		} catch (GameActionException e1) {
@@ -448,7 +476,12 @@ public abstract class BasePlayer extends StaticStuff {
 					}
 				}
 				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+						myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					}
+					else {
+						myRC.attackSquare(attack, RobotLevel.IN_AIR);
+					}
 					myRC.setIndicatorString(2,
 							"Attacking: " + attack.toString());
 				}
@@ -565,8 +598,7 @@ public abstract class BasePlayer extends StaticStuff {
 				if (weak != null) {
 					// System.out.println("about to die, found weak");
 					while (!myRC.getLocation().isAdjacentTo(
-							myRC.senseLocationOf(weak))
-							&& myRC.getLocation() != myRC.senseLocationOf(weak)) {
+							myRC.senseLocationOf(weak))) {
 						nav.getNextMove(myRC.senseLocationOf(weak));
 						myRC.yield();
 					}

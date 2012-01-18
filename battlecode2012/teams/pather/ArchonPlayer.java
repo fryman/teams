@@ -49,7 +49,8 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 20 && !spreadOutFromOtherArchons()) {
+				while (Clock.getRoundNum() < 20
+						&& !spreadOutFromOtherArchons()) {
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
@@ -60,6 +61,7 @@ public class ArchonPlayer extends BasePlayer {
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
+				
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -482,6 +484,65 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	public void spawnScorcherAndTransferFlux() {
+		while (true) {
+			try {
+				myRC.setIndicatorString(0, "creating scorcher");
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+				}
+				if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.ON_GROUND) == null
+						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+						&& this.myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.POWER_NODE) == null) {
+					myRC.spawn(RobotType.SCORCHER);
+					myRC.setIndicatorString(2, "just spawned scorcher: ");
+					runAtEndOfTurn();
+					Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2, "recent scorcher: "
+							+ recentScorcher);
+					if (recentScorcher == null) {
+						runAtEndOfTurn();
+						myRC.setIndicatorString(2, "recent scorcher null");
+						continue;
+					}
+					runAtEndOfTurn();
+					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
+							&& myRC.canSenseObject(recentScorcher)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentScorcher)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentScorcher))
+							&& myRC.senseRobotInfo(recentScorcher).flux < RobotType.SOLDIER.maxFlux / 2) {
+						myRC.transferFlux(myRC.senseLocationOf(recentScorcher),
+								RobotLevel.ON_GROUND,
+								RobotType.SCORCHER.maxFlux / 2);
+					}
+					return;
+				}
+				myRC.setIndicatorString(1, "did not attempt to create scorcher");
+				myRC.setIndicatorString(
+						2,
+						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
+				runAtEndOfTurn();
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
+		}
+	}
 
 	/**
 	 * Causes this archon to move away from neighboring archons, allowing
@@ -669,6 +730,28 @@ public class ArchonPlayer extends BasePlayer {
 			System.out.println("Exception caught");
 			e.printStackTrace();
 			return;
+		}
+	}
+	
+	/**
+	 * Archons sense each other and determine who has the lowest robot number. He executes special code.
+	 * @TODO Find a way to sense objects out of range.
+	 */
+	
+	public int checkLowestArchonNumber() {
+		try {
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int LowestID=1000;
+			for (MapLocation m : archons) {
+				Robot r=(Robot) myRC.senseObjectAtLocation(m, RobotLevel.ON_GROUND);
+				if (r.getID()<LowestID) {
+					LowestID=r.getID();
+				}
+			}
+			return LowestID;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
 		}
 	}
 
