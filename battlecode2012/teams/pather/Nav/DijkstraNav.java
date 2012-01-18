@@ -29,14 +29,13 @@ public class DijkstraNav extends Navigation {
 
 	public DijkstraNav(RobotController myRC) {
 		this.myRC = myRC;
-		init();
 	}
 
 	/**
 	 * Resets all the queues and such. Should be called to reset dijkstra
 	 * computations
 	 */
-	public void init() {
+	public void init(MapLocation goalLocation) {
 		this.distance = new HashMap<MapLocation, Integer>();
 		this.previous = new HashMap<MapLocation, MapLocation>();
 		this.mapLocationsRemovedFromQueue = new HashSet<MapLocation>();
@@ -48,10 +47,13 @@ public class DijkstraNav extends Navigation {
 		 */
 		class MapLocationComparer implements Comparator {
 
-			private RobotController myRC;
+			private MapLocation startLocation;
+			private MapLocation goalLocation;
 
-			public MapLocationComparer(RobotController rc) {
-				this.myRC = rc;
+			public MapLocationComparer(MapLocation startLocation,
+					MapLocation goalLocation) {
+				this.startLocation = startLocation;
+				this.goalLocation = goalLocation;
 			}
 
 			/**
@@ -67,10 +69,14 @@ public class DijkstraNav extends Navigation {
 						throw new RuntimeException(
 								"This is intended to compare maplocations");
 					} else {
-						double dist0 = this.myRC.getLocation()
-								.distanceSquaredTo((MapLocation) arg0);
-						double dist1 = this.myRC.getLocation()
-								.distanceSquaredTo((MapLocation) arg1);
+						double dist0 = this.startLocation
+								.distanceSquaredTo((MapLocation) arg0)
+								+ ((MapLocation) arg0)
+										.distanceSquaredTo(goalLocation);
+						double dist1 = this.startLocation
+								.distanceSquaredTo((MapLocation) arg1)
+								+ ((MapLocation) arg0)
+										.distanceSquaredTo(goalLocation);
 						return (int) (dist1 - dist0);
 					}
 				} catch (Exception e) {
@@ -80,7 +86,7 @@ public class DijkstraNav extends Navigation {
 			}
 		}
 		this.queue = new PriorityQueue<MapLocation>(100,
-				new MapLocationComparer(this.myRC));
+				new MapLocationComparer(this.myRC.getLocation(), goalLocation));
 	}
 
 	@Override
@@ -89,10 +95,9 @@ public class DijkstraNav extends Navigation {
 			// get the next location
 			MapLocation next = null;
 			while (next == null) {
-				System.out.println(Clock.getRoundNum());
+				// System.out.println(Clock.getRoundNum());
 				dijkstra(target, this.myRC.getLocation());
 				next = this.previous.get(this.myRC.getLocation());
-
 			}
 			if (this.myRC.isMovementActive()) {
 				return;
@@ -131,13 +136,11 @@ public class DijkstraNav extends Navigation {
 	 * @param target
 	 */
 	public void dijkstra(MapLocation start, MapLocation end) {
-		init();
+		init(end);
 		this.distance.put(start, 0);
 		this.queue.add(start);
 		while (this.queue.size() != 0) {
 			MapLocation u = this.queue.peek();
-			System.out.println(Clock.getBytecodeNum());
-			// System.out.println("Considering: " + u);
 			if (this.distance.get(u) == INFINITY) {
 				break;
 			}
@@ -146,6 +149,7 @@ public class DijkstraNav extends Navigation {
 				System.out.println("the path has been computed");
 				return;
 			}
+			System.out.println(start.distanceSquaredTo(u));
 			this.mapLocationsRemovedFromQueue.add(this.queue.remove());
 			for (MapLocation v : getMapLocationNeighbors(u)) {
 				if (this.mapLocationsRemovedFromQueue.contains(v)) {
@@ -166,7 +170,8 @@ public class DijkstraNav extends Navigation {
 									|| alt < this.distance.get(v)) {
 								this.distance.put(v, (int) alt);
 								this.previous.put(v, u);
-								this.queue.add(v);
+								this.queue.remove(v);
+								this.queue.add(v); // *****
 							}
 						}
 					} else {
@@ -176,6 +181,7 @@ public class DijkstraNav extends Navigation {
 								|| alt < this.distance.get(v)) {
 							this.distance.put(v, (int) alt);
 							this.previous.put(v, u);
+							this.queue.remove(v);
 							this.queue.add(v);
 						}
 					}
