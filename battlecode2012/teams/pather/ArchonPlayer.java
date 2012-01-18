@@ -671,6 +671,27 @@ public class ArchonPlayer extends BasePlayer {
 			return;
 		}
 	}
+	
+	/**
+	 * Archons sense each other and determine who has the lowest robot number. He executes special code.
+	 */
+	
+	public int checkLowestArchonNumber() {
+		try {
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int LowestID=1000;
+			for (MapLocation m : archons) {
+				Robot r=(Robot) myRC.senseObjectAtLocation(m, RobotLevel.ON_GROUND);
+				if (r.getID()<LowestID) {
+					LowestID=r.getID();
+				}
+			}
+			return LowestID;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
 
 	/**
 	 * Checks to see if there's a scout and a soldier in the convoy around this
