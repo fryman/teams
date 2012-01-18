@@ -575,8 +575,7 @@ public abstract class BasePlayer extends StaticStuff {
 				if (weak != null) {
 					// System.out.println("about to die, found weak");
 					while (!myRC.getLocation().isAdjacentTo(
-							myRC.senseLocationOf(weak))
-							&& myRC.getLocation() != myRC.senseLocationOf(weak)) {
+							myRC.senseLocationOf(weak))) {
 						nav.getNextMove(myRC.senseLocationOf(weak));
 					}
 					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
