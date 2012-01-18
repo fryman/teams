@@ -398,7 +398,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return closest;
 	}
-	
+
 	/**
 	 * Determines nearby ground enemy robots and returns the closest of them.
 	 * 
@@ -410,7 +410,8 @@ public abstract class BasePlayer extends StaticStuff {
 		Robot closest = null;
 		if (enemies.length > 0) {
 			for (Robot e : enemies) {
-				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e) 
+				if (e.getTeam() == myRC.getTeam()
+						|| !myRC.canSenseObject(e)
 						|| e.getRobotLevel() == battlecode.common.RobotLevel.IN_AIR) {
 					continue;
 				}
@@ -440,10 +441,9 @@ public abstract class BasePlayer extends StaticStuff {
 
 			if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
 				myRC.setIndicatorString(7, "Attacking closest enemy");
-				if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+				if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
 					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-				}
-				else {
+				} else {
 					myRC.attackSquare(attack, RobotLevel.IN_AIR);
 				}
 				myRC.setIndicatorString(2, "Attacking: " + attack.toString());
@@ -476,10 +476,9 @@ public abstract class BasePlayer extends StaticStuff {
 					}
 				}
 				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-					if (closestTar.getRobotLevel()==RobotLevel.ON_GROUND) {
+					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
 						myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-					}
-					else {
+					} else {
 						myRC.attackSquare(attack, RobotLevel.IN_AIR);
 					}
 					myRC.setIndicatorString(2,
@@ -651,6 +650,37 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * Note that this method depends on sensor range
+	 * 
+	 * @param rt
+	 * @return returns MapLocation of closest robot of type rt
+	 */
+	public MapLocation findNearestFriendlyRobotType(RobotType rt) {
+		MapLocation closestLoc = null;
+		Robot closestRob = null;
+		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+		try {
+			if (nearbyRobots.length > 0) {
+				for (Robot r : nearbyRobots) {
+					if (r.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(r).type == RobotType.TOWER
+							|| myRC.senseRobotInfo(r).type != rt) {
+						continue;
+					}
+					if (closestRob == null
+							|| compareRobotDistance(r, closestRob)) {
+						closestRob = r;
+						closestLoc = myRC.senseLocationOf(r);
+					}
+				}
+			}return closestLoc;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }
