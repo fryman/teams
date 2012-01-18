@@ -68,6 +68,7 @@ public class ScorcherPlayer extends BasePlayer {
 					}else{
 						moves = 2;
 					}
+					myRC.setIndicatorString(1, "moves "+moves);
 					runAtEndOfTurn();
 					int countMove = 0;
 					int count = 0;
@@ -108,7 +109,7 @@ public class ScorcherPlayer extends BasePlayer {
 						set = true;
 					}
 				} else {
-					myRC.setIndicatorString(0, "should be two away facing out");
+					myRC.setIndicatorString(0, "should be "+moves+" away facing out");
 					if (senseClosestGroundEnemy() != null
 							&& !myRC.isAttackActive()
 							&& !canSenseArchon()) {
