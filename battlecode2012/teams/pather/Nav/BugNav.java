@@ -41,7 +41,7 @@ public class BugNav extends Navigation {
 	private MapLocation qObstruction = null;
 	private double moveCost;
 	private int turnsStuckOnWall = 0;
-	private final int MAX_TURNS_STUCK_ON_WALL = 100;// TODO determine a good
+	private final int MAX_TURNS_STUCK_ON_WALL = 30;// TODO determine a good
 													// cutoff
 
 	public BugNav(RobotController myRC) {
@@ -148,7 +148,7 @@ public class BugNav extends Navigation {
 				}
 			} else { // tracing
 				turnsStuckOnWall ++;
-				if (clearOfObstacleBug0(target)) { //
+				if (clearOfObstacleBug0(target) || turnsStuckOnWall > MAX_TURNS_STUCK_ON_WALL) { //
 					// robot clear of obstacle // *** this is definitely not a
 					// sufficient //
 					// "clear of obstacle" condition
@@ -157,12 +157,6 @@ public class BugNav extends Navigation {
 					turnsStuckOnWall = 0;
 					return;
 				} else { //
-					if (turnsStuckOnWall >= MAX_TURNS_STUCK_ON_WALL){
-						tracing = false;
-						myRC.setIndicatorString(1, "Clear of obstacle");
-						turnsStuckOnWall = 0;
-						return;
-					}
 					// follow the wall / obstacle boundary
 					if (turnedLeft) {
 						if (myRC.canMove(myRC.getDirection().rotateRight())) {

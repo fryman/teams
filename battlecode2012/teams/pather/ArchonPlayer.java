@@ -12,7 +12,7 @@ public class ArchonPlayer extends BasePlayer {
 	private Random r = new Random();
 	private MapLocation targetLoc = null; // the location at which the tower
 											// should be built
-	private MapLocation[] powerNodes = myRC.senseCapturablePowerNodes();
+	private MapLocation[] capturablePowerNodes = myRC.senseCapturablePowerNodes();
 	private ArrayList<MapLocation> locsToBuild = new ArrayList<MapLocation>();
 	// need to remove from enemyTowerLocs if we destroy enemy towers
 	private ArrayList<MapLocation> enemyTowerLocs = new ArrayList<MapLocation>();
@@ -96,8 +96,8 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.setIndicatorString(1, "attempting destroy at: "
 							+ targetLoc.toString());
 					enemyTowerLocs.add(targetLoc);
-					getNewTarget();
-
+					// TODO this can be modified to create an army here.
+					checkAndCreateConvoy();
 				} else {
 					myRC.setIndicatorString(1, "attempting build at: "
 							+ targetLoc.toString());
@@ -184,10 +184,17 @@ public class ArchonPlayer extends BasePlayer {
 		return false;
 	}
 
+	/**
+	 * Updates the list of capturable power nodes
+	 * 
+	 * Updates the list of locsToBuild
+	 * 
+	 * Updates the list of powerNodesOwned (where towers are present)
+	 */
 	public void updateUnownedNodes() {
-		powerNodes = myRC.senseCapturablePowerNodes();
+		capturablePowerNodes = myRC.senseCapturablePowerNodes();
 		// TODO this line takes 98 bytecodes. is this necessary??
-		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(powerNodes));
+		locsToBuild = new ArrayList<MapLocation>(Arrays.asList(capturablePowerNodes));
 		powerNodesOwned = myRC.senseAlliedPowerNodes();
 	}
 
@@ -199,10 +206,10 @@ public class ArchonPlayer extends BasePlayer {
 		updateUnownedNodes();
 		if (locsToBuild.size() != 0) {
 			for (MapLocation m : locsToBuild) {
-				if (!enemyTowerLocs.contains(m)) {
+//				if (!enemyTowerLocs.contains(m)) {
 					targetLoc = m;
 					return;
-				}
+//				}
 			} // does not handle case where all nodes are enemy towers
 		} else {
 			targetLoc = myRC.sensePowerCore().getLocation();
