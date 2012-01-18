@@ -40,6 +40,9 @@ public class BugNav extends Navigation {
 	private MapLocation qClosest = null;
 	private MapLocation qObstruction = null;
 	private double moveCost;
+	private int turnsStuckOnWall = 0;
+	private final int MAX_TURNS_STUCK_ON_WALL = 100;// TODO determine a good
+													// cutoff
 
 	public BugNav(RobotController myRC) {
 		this.myRC = myRC;
@@ -82,9 +85,9 @@ public class BugNav extends Navigation {
 					// by sensing and if we hit a friendly, // back up rather
 					// than turn
 					// sense whats in front of us
-					if (!myRC.canSenseSquare(myRC
-							.getLocation().add(ideal))){
-						myRC.setIndicatorString(2,"I can't see whats in front of me");
+					if (!myRC.canSenseSquare(myRC.getLocation().add(ideal))) {
+						myRC.setIndicatorString(2,
+								"I can't see whats in front of me");
 						myRC.setDirection(ideal);
 						return;
 					}
@@ -144,14 +147,22 @@ public class BugNav extends Navigation {
 					}
 				}
 			} else { // tracing
+				turnsStuckOnWall ++;
 				if (clearOfObstacleBug0(target)) { //
 					// robot clear of obstacle // *** this is definitely not a
 					// sufficient //
 					// "clear of obstacle" condition
 					tracing = false;
 					myRC.setIndicatorString(1, "Clear of obstacle");
+					turnsStuckOnWall = 0;
 					return;
 				} else { //
+					if (turnsStuckOnWall >= MAX_TURNS_STUCK_ON_WALL){
+						tracing = false;
+						myRC.setIndicatorString(1, "Clear of obstacle");
+						turnsStuckOnWall = 0;
+						return;
+					}
 					// follow the wall / obstacle boundary
 					if (turnedLeft) {
 						if (myRC.canMove(myRC.getDirection().rotateRight())) {
