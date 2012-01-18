@@ -484,6 +484,65 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	public void spawnScorcherAndTransferFlux() {
+		while (true) {
+			try {
+				myRC.setIndicatorString(0, "creating scorcher");
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+				}
+				if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.ON_GROUND) == null
+						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+						&& this.myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.POWER_NODE) == null) {
+					myRC.spawn(RobotType.SCORCHER);
+					myRC.setIndicatorString(2, "just spawned scorcher: ");
+					runAtEndOfTurn();
+					Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2, "recent scorcher: "
+							+ recentScorcher);
+					if (recentScorcher == null) {
+						runAtEndOfTurn();
+						myRC.setIndicatorString(2, "recent scorcher null");
+						continue;
+					}
+					runAtEndOfTurn();
+					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
+							&& myRC.canSenseObject(recentScorcher)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentScorcher)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentScorcher))
+							&& myRC.senseRobotInfo(recentScorcher).flux < RobotType.SOLDIER.maxFlux / 2) {
+						myRC.transferFlux(myRC.senseLocationOf(recentScorcher),
+								RobotLevel.ON_GROUND,
+								RobotType.SCORCHER.maxFlux / 2);
+					}
+					return;
+				}
+				myRC.setIndicatorString(1, "did not attempt to create scorcher");
+				myRC.setIndicatorString(
+						2,
+						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
+				runAtEndOfTurn();
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
+		}
+	}
 
 	/**
 	 * Causes this archon to move away from neighboring archons, allowing
