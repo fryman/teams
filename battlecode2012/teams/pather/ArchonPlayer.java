@@ -56,8 +56,9 @@ public class ArchonPlayer extends BasePlayer {
 						}
 					}
 				}
-				checkAndCreateConvoy();
 				MapLocation capturing = getNewTarget();
+				myRC.setIndicatorString(0, "capturing: " + capturing + " "
+						+ Clock.getRoundNum());
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
@@ -492,7 +493,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void attemptSpawnScoutAndTransferFlux() {
 		try {
-			myRC.setIndicatorString(0, "creating scout");
+			// myRC.setIndicatorString(0, "creating scout");
 			// TODO are these three lines necessary?
 			while (myRC.isMovementActive()) {
 				super.runAtEndOfTurn();
@@ -506,14 +507,14 @@ public class ArchonPlayer extends BasePlayer {
 					&& myRC.senseObjectAtLocation(potentialLocation,
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
-				myRC.setIndicatorString(2, "just spawned scout: ");
+				// myRC.setIndicatorString(2, "just spawned scout: ");
 				runAtEndOfTurn();
 				Robot recentScout = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, RobotLevel.IN_AIR);
-				myRC.setIndicatorString(2, "recent scout: " + recentScout);
+				// myRC.setIndicatorString(2, "recent scout: " + recentScout);
 				if (recentScout == null) {
-					myRC.setIndicatorString(2,
-							"recent scout null: " + Clock.getRoundNum());
+					// myRC.setIndicatorString(2,
+					// "recent scout null: " + Clock.getRoundNum());
 					return;
 				}
 				runAtEndOfTurn();
@@ -530,10 +531,10 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				return;
 			}
-			myRC.setIndicatorString(1, "did not attempt to create scout");
-			myRC.setIndicatorString(
-					2,
-					Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
+			// myRC.setIndicatorString(1, "did not attempt to create scout");
+			// myRC.setIndicatorString(
+			// 2,
+			// Boolean.toString(myRC.getFlux() > RobotType.SCOUT.spawnCost));
 			return;
 		} catch (GameActionException e) {
 			System.out.println("Exception caught");
@@ -552,8 +553,8 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void attemptSpawnSoldierAndTransferFlux() {
 		try {
-			myRC.setIndicatorString(0,
-					"creating soldier: " + Clock.getRoundNum());
+			// myRC.setIndicatorString(0,
+			// "creating soldier: " + Clock.getRoundNum());
 			while (myRC.isMovementActive()) {
 				super.runAtEndOfTurn();
 			}
@@ -569,11 +570,12 @@ public class ArchonPlayer extends BasePlayer {
 					&& this.myRC.senseObjectAtLocation(potentialLocation,
 							RobotLevel.POWER_NODE) == null) {
 				myRC.spawn(RobotType.SOLDIER);
-				myRC.setIndicatorString(2, "just spawned soldier: ");
+				// myRC.setIndicatorString(2, "just spawned soldier: ");
 				super.runAtEndOfTurn();
 				Robot recentSoldier = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, RobotLevel.ON_GROUND);
-				myRC.setIndicatorString(2, "recent soldier: " + recentSoldier);
+				// myRC.setIndicatorString(2, "recent soldier: " +
+				// recentSoldier);
 				if (recentSoldier == null) {
 					myRC.setIndicatorString(2, "recent soldier null");
 					return;
@@ -592,10 +594,10 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				return;
 			}
-			myRC.setIndicatorString(1, "did not attempt to create soldier");
-			myRC.setIndicatorString(
-					2,
-					Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
+			// myRC.setIndicatorString(1, "did not attempt to create soldier");
+			// myRC.setIndicatorString(
+			// 2,
+			// Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
 			return;
 		} catch (GameActionException e) {
 			System.out.println("Exception caught");
