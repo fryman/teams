@@ -160,18 +160,23 @@ public abstract class BasePlayer extends StaticStuff {
 	public Robot findAFriendly() {
 		Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
 		Robot closestFriend = null;
-		if (nearbyObjects.length > 0) {
-			for (Robot e : nearbyObjects) {
-				if (e.getTeam() != myRC.getTeam()) {
-					continue;
-				}
-				if (closestFriend == null
-						|| compareRobotDistance(e, closestFriend)) {
-					closestFriend = e;
+		try {
+			if (nearbyObjects.length > 0) {
+				for (Robot e : nearbyObjects) {
+					if (e.getTeam() != myRC.getTeam()
+							|| myRC.senseRobotInfo(e).type == RobotType.TOWER) {
+						continue;
+					}
+					if (closestFriend == null
+							|| compareRobotDistance(e, closestFriend)) {
+						closestFriend = e;
+					}
 				}
 			}
+			return closestFriend;
+		} catch (GameActionException e1) {
+			return null;
 		}
-		return closestFriend;
 	}
 
 	/**
@@ -328,7 +333,7 @@ public abstract class BasePlayer extends StaticStuff {
 
 	public boolean enemyTowerPresent(MapLocation target) {
 		try {
-			if (!myRC.canSenseSquare(target)){
+			if (!myRC.canSenseSquare(target)) {
 				return true;
 			}
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -554,7 +559,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public void aboutToDie() {
 		// if less than 5% health...
 		try {
-			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
+			if (myRC.getEnergon() <= battlecode.common.RobotType.SOLDIER.attackPower
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
 				Robot weak = findAFriendly();
 				if (weak != null) {
