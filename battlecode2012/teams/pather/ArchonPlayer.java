@@ -49,13 +49,12 @@ public class ArchonPlayer extends BasePlayer {
 					core = myRC.sensePowerCore();
 				}
 
-				while (Clock.getRoundNum() < 200) {
+				if (Clock.getRoundNum() < 200) {
 					while (!spreadOutFromOtherArchons()) {
 						while (myRC.isMovementActive()) {
 							runAtEndOfTurn();
 						}
 					}
-					break;
 				}
 				checkAndCreateConvoy();
 				myRC.setIndicatorString(0, "convoy created");
