@@ -49,11 +49,9 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				if (Clock.getRoundNum() < 200) {
-					while (!spreadOutFromOtherArchons()) {
-						while (myRC.isMovementActive()) {
-							runAtEndOfTurn();
-						}
+				while (Clock.getRoundNum() < 20 && !spreadOutFromOtherArchons()) {
+					while (myRC.isMovementActive()) {
+						runAtEndOfTurn();
 					}
 				}
 				MapLocation capturing = getNewTarget();
@@ -98,14 +96,22 @@ public class ArchonPlayer extends BasePlayer {
 				// since the archon is currently facing the enemy tower, we need
 				// to turn away to allow a soldier to be created (if one does
 				// not already exist)
-				myRC.setIndicatorString(2, "enemy tower present, waiting for soldier: "+Clock.getRoundNum());
-				myRC.setIndicatorString(1, "soldier nearby: "+Boolean.toString(soldierNearby()) + " "+Clock.getRoundNum());
+				myRC.setIndicatorString(
+						2,
+						"enemy tower present, waiting for soldier: "
+								+ Clock.getRoundNum());
+				myRC.setIndicatorString(1,
+						"soldier nearby: " + Boolean.toString(soldierNearby())
+								+ " " + Clock.getRoundNum());
 				if (!soldierNearby()
 						&& myRC.senseObjectAtLocation(
 								myRC.getLocation().add(myRC.getDirection()),
 								RobotLevel.ON_GROUND) != null) {
 					// turn so that we can spawn a soldier
-					myRC.setIndicatorString(2, "turned right to allow soldier to spawn: "+Clock.getRoundNum());
+					myRC.setIndicatorString(
+							2,
+							"turned right to allow soldier to spawn: "
+									+ Clock.getRoundNum());
 					myRC.setDirection(myRC.getDirection().rotateRight());
 				}
 			} else {
@@ -156,24 +162,40 @@ public class ArchonPlayer extends BasePlayer {
 	 *         adjacent and the location is not null)
 	 */
 	public MapLocation goToPowerNodeForBuild(MapLocation capturing) {
-		MapLocation locationToCapture = capturing;
-		while (locationToCapture != null
-				&& !myRC.getLocation().isAdjacentTo(locationToCapture)) {
-			this.nav.getNextMove(locationToCapture);
-			runAtEndOfTurn();
-			// check if we're going to a loc with a tower already
-			updateUnownedNodes();
-			boolean quit = true;
-			for (MapLocation possibleToCapture : capturablePowerNodes) {
-				if (possibleToCapture.equals(locationToCapture)) {
-					quit = false;
+		try {
+			MapLocation locationToCapture = capturing;
+			while (locationToCapture != null
+					&& !myRC.getLocation().isAdjacentTo(locationToCapture)) {
+				this.nav.getNextMove(locationToCapture);
+				runAtEndOfTurn();
+				// check if we're going to a loc with a tower already
+				updateUnownedNodes();
+				boolean quit = true;
+				for (MapLocation possibleToCapture : capturablePowerNodes) {
+					if (possibleToCapture.equals(locationToCapture)) {
+						quit = false;
+					}
+				}
+				if (quit) {
+					locationToCapture = getNewTarget();
 				}
 			}
-			if (quit) {
-				locationToCapture = getNewTarget();
+			// we've accidentally stopped on top of the powernode
+			if (myRC.getLocation().equals(locationToCapture)) {
+				// and need to move off.
+				myRC.setIndicatorString(
+						0,
+						"whoops, stepping on the locationtocapture: "
+								+ Clock.getRoundNum());
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+				}
 			}
+			return locationToCapture;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return locationToCapture;
+		return null;
 	}
 
 	/**
@@ -264,8 +286,8 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Finds closest PowerNode that we can build on. Sets targetLoc to this node's
-	 * location.
+	 * Finds closest PowerNode that we can build on. Sets targetLoc to this
+	 * node's location.
 	 * 
 	 * If there is no powernode that we can build on, sets targetLoc to this
 	 * team's powercore.
@@ -277,12 +299,12 @@ public class ArchonPlayer extends BasePlayer {
 		updateUnownedNodes();
 		if (capturablePowerNodes.length != 0) {
 			MapLocation closest = capturablePowerNodes[0];
-			for (int i=1 ; i<capturablePowerNodes.length; i++){	
-				if( compareMapLocationDistance(capturablePowerNodes[i], closest) ){
+			for (int i = 1; i < capturablePowerNodes.length; i++) {
+				if (compareMapLocationDistance(capturablePowerNodes[i], closest)) {
 					closest = capturablePowerNodes[i];
 				}
 			}
-			targetLoc = closest; //to conform to method signature
+			targetLoc = closest; // to conform to method signature
 			return closest;
 			/*
 			 * The commented code here is archaic. It is saved for safety.
@@ -501,14 +523,12 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			if (smallestDistance < minimumDistance && closest != null) {
-				// TODO currently can be stuck in a feedback loop where an
-				// archon tries to move away from another archon, but thinks it
-				// is stuck on a wall.
 				myRC.setIndicatorString(
 						0,
 						"closest archon: "
 								+ myRC.senseObjectAtLocation(closest,
-										RobotLevel.ON_GROUND).getID());
+										RobotLevel.ON_GROUND).getID() + " "
+								+ Clock.getRoundNum());
 				MapLocation fartherAwayTarget = currentLoc.add(currentLoc
 						.directionTo(closest).opposite(), minimumDistance
 						- (int) smallestDistance);
@@ -614,8 +634,7 @@ public class ArchonPlayer extends BasePlayer {
 				super.runAtEndOfTurn();
 				Robot recentSoldier = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, RobotLevel.ON_GROUND);
-				myRC.setIndicatorString(2, "recent soldier: " +
-				 recentSoldier);
+				myRC.setIndicatorString(2, "recent soldier: " + recentSoldier);
 				if (recentSoldier == null) {
 					myRC.setIndicatorString(2, "recent soldier null");
 					return;
@@ -625,9 +644,13 @@ public class ArchonPlayer extends BasePlayer {
 						&& myRC.canSenseObject(recentSoldier)) {
 					super.runAtEndOfTurn();
 				}
-				myRC.setIndicatorString(2, "enough flux for recent soldier: " +
-						 recentSoldier);
-				myRC.setIndicatorString(0, "can sense recent: " + Boolean.toString(myRC.canSenseObject(recentSoldier)));
+				myRC.setIndicatorString(2, "enough flux for recent soldier: "
+						+ recentSoldier);
+				myRC.setIndicatorString(
+						0,
+						"can sense recent: "
+								+ Boolean.toString(myRC
+										.canSenseObject(recentSoldier)));
 				if (myRC.canSenseObject(recentSoldier)
 						&& acceptableFluxTransferLocation(myRC
 								.senseLocationOf(recentSoldier))
@@ -666,14 +689,14 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
 			boolean scoutPresent = false;
-			boolean soldierPresent = false;
+			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
 						scoutPresent = true;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
-						soldierPresent = true;
+						soldierPresent++;
 					}
 				}
 			}
@@ -682,7 +705,7 @@ public class ArchonPlayer extends BasePlayer {
 				attemptSpawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (!soldierPresent) {
+			if (soldierPresent < 2) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 		} catch (Exception e) {
