@@ -554,7 +554,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public void aboutToDie() {
 		// if less than 5% health...
 		try {
-			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
+			if (myRC.getEnergon() <= battlecode.common.RobotType.SOLDIER.attackPower
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
 				Robot weak = findAFriendly();
 				if (weak != null) {
