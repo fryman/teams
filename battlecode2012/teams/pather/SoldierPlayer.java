@@ -142,8 +142,8 @@ public class SoldierPlayer extends BasePlayer {
 					runAtEndOfTurn();
 				} else {
 					attackAndChaseClosestEnemy(closeEnemy);
+					runAtEndOfTurn();
 				}
-				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();

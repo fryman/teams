@@ -175,6 +175,7 @@ public abstract class BasePlayer extends StaticStuff {
 			}
 			return closestFriend;
 		} catch (GameActionException e1) {
+			e1.printStackTrace();
 			return null;
 		}
 	}
@@ -590,7 +591,6 @@ public abstract class BasePlayer extends StaticStuff {
 	 * toward it, and transfers flux to it.
 	 */
 	public void aboutToDie() {
-		// if less than 5% health...
 		try {
 			if (myRC.getEnergon() <= battlecode.common.RobotType.SOLDIER.attackPower
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
@@ -600,6 +600,7 @@ public abstract class BasePlayer extends StaticStuff {
 					while (!myRC.getLocation().isAdjacentTo(
 							myRC.senseLocationOf(weak))) {
 						nav.getNextMove(myRC.senseLocationOf(weak));
+						myRC.yield();
 					}
 					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
 					double weakFlux = weakRobotInfo.flux;
@@ -616,7 +617,6 @@ public abstract class BasePlayer extends StaticStuff {
 						// System.out.println(myRC.getFlux());
 					}
 				}
-
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
