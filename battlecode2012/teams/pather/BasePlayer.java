@@ -397,6 +397,29 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return closest;
 	}
+	
+	/**
+	 * Determines nearby ground enemy robots and returns the closest of them.
+	 * 
+	 * @return Robot that is the closest, not on our team. Null if no enemy
+	 *         robots are nearby.
+	 */
+	public Robot senseClosestGroundEnemy() {
+		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		Robot closest = null;
+		if (enemies.length > 0) {
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e) 
+						|| e.getRobotLevel() == battlecode.common.RobotLevel.IN_AIR) {
+					continue;
+				}
+				if (closest == null || compareRobotDistance(e, closest)) {
+					closest = e;
+				}
+			}
+		}
+		return closest;
+	}
 
 	public void attackClosestEnemy(Robot closestTar) {
 		try {

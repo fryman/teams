@@ -60,7 +60,7 @@ public class ScorcherPlayer extends BasePlayer {
 				set = true;
 				}
 				myRC.setIndicatorString(0,"should be two away facing out");
-				if(senseClosestEnemy() != null){
+				if(senseClosestGroundEnemy() != null){
 					myRC.setIndicatorString(0,"about to attack");
 					myRC.attackSquare(myRC.getLocation(), battlecode.common.RobotLevel.ON_GROUND);
 					runAtEndOfTurn();
