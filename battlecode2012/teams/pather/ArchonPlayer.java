@@ -276,9 +276,14 @@ public class ArchonPlayer extends BasePlayer {
 	public MapLocation getNewTarget() {
 		updateUnownedNodes();
 		if (capturablePowerNodes.length != 0) {
-			targetLoc = capturablePowerNodes[0]; // to conform to the method
-													// signature.
-			return capturablePowerNodes[0];
+			MapLocation closest = capturablePowerNodes[0];
+			for (int i=1 ; i<capturablePowerNodes.length; i++){	
+				if( compareMapLocationDistance(capturablePowerNodes[i], closest) ){
+					closest = capturablePowerNodes[i];
+				}
+			}
+			targetLoc = closest; //to conform to method signature
+			return closest;
 			/*
 			 * The commented code here is archaic. It is saved for safety.
 			 * 
