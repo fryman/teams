@@ -710,14 +710,14 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
 			boolean scoutPresent = false;
-			boolean soldierPresent = false;
+			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
 						scoutPresent = true;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
-						soldierPresent = true;
+						soldierPresent++;
 					}
 				}
 			}
@@ -726,7 +726,7 @@ public class ArchonPlayer extends BasePlayer {
 				attemptSpawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (!soldierPresent) {
+			if (soldierPresent < 2) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 		} catch (Exception e) {
