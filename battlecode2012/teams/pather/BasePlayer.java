@@ -652,5 +652,15 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return null;
 	}
+	
+	public boolean canSenseArchon(){
+		MapLocation[] archons = myRC.senseAlliedArchons();
+		for(int i=0; i < archons.length; i++){
+			if(myRC.canSenseSquare(archons[i])){
+				return true;
+			}
+		}
+		return false;
+	}
 
 }
