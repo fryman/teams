@@ -53,10 +53,16 @@ public class ScorcherPlayer extends BasePlayer {
 				myRC.setIndicatorString(0,"at powercore");
 				myRC.setDirection(myRC.getLocation().directionTo(core).opposite());
 				runAtEndOfTurn();
-				myRC.moveForward();
-				runAtEndOfTurn();
-				myRC.moveForward();
-				runAtEndOfTurn();
+				int countMove = 0;
+				int count = 0;
+				while (countMove<2 && count<20){
+					if(myRC.canMove(myRC.getDirection())){
+						myRC.moveForward();
+						countMove++;
+					}
+					runAtEndOfTurn();
+					count++;
+				}
 				set = true;
 				}
 				myRC.setIndicatorString(0,"should be two away facing out");
