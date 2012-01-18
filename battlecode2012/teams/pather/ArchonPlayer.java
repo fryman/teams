@@ -88,7 +88,6 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.setDirection(myRC.getLocation().directionTo(capturing));
 				runAtEndOfTurn();
 			}
-			// Now we can build a fucking tower
 			boolean enemyTower = enemyTowerPresent(capturing);
 
 			if (enemyTower == true) {
@@ -96,6 +95,19 @@ public class ArchonPlayer extends BasePlayer {
 						+ targetLoc.toString());
 				enemyTowerLocs.add(targetLoc);
 				// TODO this can be modified to create an army here.
+				// since the archon is currently facing the enemy tower, we need
+				// to turn away to allow a soldier to be created (if one does
+				// not already exist)
+				myRC.setIndicatorString(2, "enemy tower present, waiting for soldier: "+Clock.getRoundNum());
+				myRC.setIndicatorString(1, "soldier nearby: "+Boolean.toString(soldierNearby()) + " "+Clock.getRoundNum());
+				if (!soldierNearby()
+						&& myRC.senseObjectAtLocation(
+								myRC.getLocation().add(myRC.getDirection()),
+								RobotLevel.ON_GROUND) != null) {
+					// turn so that we can spawn a soldier
+					myRC.setIndicatorString(2, "turned right to allow soldier to spawn: "+Clock.getRoundNum());
+					myRC.setDirection(myRC.getDirection().rotateRight());
+				}
 			} else {
 				myRC.setIndicatorString(1,
 						"attempting build at: " + targetLoc.toString());
@@ -104,6 +116,29 @@ public class ArchonPlayer extends BasePlayer {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Determines if there's a soldier nearby. TODO this can be moved to
+	 * baseplayer.
+	 * 
+	 * @return true if there's a soldier within sensor range, false otherwise.
+	 */
+	public boolean soldierNearby() {
+		try {
+			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
+			for (Robot n : neighbors) {
+				if (n.getTeam() == this.myRC.getTeam()) {
+					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	/**
@@ -574,8 +609,8 @@ public class ArchonPlayer extends BasePlayer {
 				super.runAtEndOfTurn();
 				Robot recentSoldier = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, RobotLevel.ON_GROUND);
-				// myRC.setIndicatorString(2, "recent soldier: " +
-				// recentSoldier);
+				myRC.setIndicatorString(2, "recent soldier: " +
+				 recentSoldier);
 				if (recentSoldier == null) {
 					myRC.setIndicatorString(2, "recent soldier null");
 					return;
@@ -585,6 +620,9 @@ public class ArchonPlayer extends BasePlayer {
 						&& myRC.canSenseObject(recentSoldier)) {
 					super.runAtEndOfTurn();
 				}
+				myRC.setIndicatorString(2, "enough flux for recent soldier: " +
+						 recentSoldier);
+				myRC.setIndicatorString(0, "can sense recent: " + Boolean.toString(myRC.canSenseObject(recentSoldier)));
 				if (myRC.canSenseObject(recentSoldier)
 						&& acceptableFluxTransferLocation(myRC
 								.senseLocationOf(recentSoldier))
