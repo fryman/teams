@@ -556,7 +556,7 @@ public abstract class BasePlayer extends StaticStuff {
 		try {
 			if (myRC.getEnergon() < 0.05 * myRC.getMaxEnergon()
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
-				Robot weak = findAWeakFriendly();
+				Robot weak = findAFriendly();
 				if (weak != null) {
 					// System.out.println("about to die, found weak");
 					while (!myRC.getLocation().isAdjacentTo(

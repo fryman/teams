@@ -3,6 +3,7 @@ package pather;
 import pather.Nav.BugNav;
 
 import pather.Nav.Navigation;
+import battlecode.common.Clock;
 import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
@@ -35,6 +36,7 @@ public class ScoutPlayer extends BasePlayer {
 		try {
 			broadcastMessage();
 			if (suitableTimeToHeal()) {
+				myRC.setIndicatorString(2, "healing: "+ Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
 			aboutToDie();
