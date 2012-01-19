@@ -484,7 +484,7 @@ public abstract class BasePlayer extends StaticStuff {
 					myRC.setIndicatorString(2,
 							"Attacking: " + attack.toString());
 				}
-				if (!myRC.isMovementActive()) {
+				if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
 					this.nav.getNextMove(attack);
 				}
 			}
