@@ -794,4 +794,17 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
+	
+	public void runToTestDijkstraNav(){
+		this.nav = new DijkstraNav(myRC);
+		MapLocation capturing = getNewTarget();
+		while (true){
+			try{
+				this.nav.getNextMove(capturing);
+				this.myRC.yield();
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
 }
