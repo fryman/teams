@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new DijkstraNav(rc);
+
 	}
 
 	/**
@@ -50,20 +50,23 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 20
+				while (Clock.getRoundNum() < 50
 						&& !spreadOutFromOtherArchons()) {
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
 				}
-				//spawnScorcherAndTransferFlux();
+				if (this.nav.getClass() != DijkstraNav.class) {
+					this.nav = new DijkstraNav(myRC);
+				}
+				// spawnScorcherAndTransferFlux();
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
-				
+
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -309,6 +312,9 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			targetLoc = closest; // to conform to method signature
+			if (Clock.getRoundNum() < 200) {
+				closest = capturablePowerNodes[(int)Math.random()*capturablePowerNodes.length];
+			}
 			return closest;
 			/*
 			 * The commented code here is archaic. It is saved for safety.
@@ -486,13 +492,13 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
+
 	public void spawnScorcherAndTransferFlux() {
 		while (true) {
 			try {
 				myRC.setIndicatorString(0, "creating scorcher");
 				while (myRC.isMovementActive()) {
-					//runAtEndOfTurn();
+					// runAtEndOfTurn();
 					super.runAtEndOfTurn();
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
@@ -509,19 +515,19 @@ public class ArchonPlayer extends BasePlayer {
 								RobotLevel.POWER_NODE) == null) {
 					myRC.spawn(RobotType.SCORCHER);
 					myRC.setIndicatorString(2, "just spawned scorcher: ");
-					//runAtEndOfTurn();
+					// runAtEndOfTurn();
 					super.runAtEndOfTurn();
 					Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, RobotLevel.ON_GROUND);
 					myRC.setIndicatorString(2, "recent scorcher: "
 							+ recentScorcher);
 					if (recentScorcher == null) {
-						//runAtEndOfTurn();
+						// runAtEndOfTurn();
 						super.runAtEndOfTurn();
 						myRC.setIndicatorString(2, "recent scorcher null");
 						continue;
 					}
-					//runAtEndOfTurn();
+					// runAtEndOfTurn();
 					super.runAtEndOfTurn();
 					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
 							&& myRC.canSenseObject(recentScorcher)) {
@@ -541,7 +547,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.setIndicatorString(
 						2,
 						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
-				//runAtEndOfTurn();
+				// runAtEndOfTurn();
 				super.runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
@@ -566,7 +572,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public boolean spreadOutFromOtherArchons() {
 		try {
-			if (roundsUsedToMoveAway >= 20) {
+			if (roundsUsedToMoveAway >= 50) {
 				return true;
 			}
 			int minimumDistance = GameConstants.PRODUCTION_PENALTY_R2;
@@ -739,20 +745,23 @@ public class ArchonPlayer extends BasePlayer {
 			return;
 		}
 	}
-	
+
 	/**
-	 * Archons sense each other and determine who has the lowest robot number. He executes special code.
+	 * Archons sense each other and determine who has the lowest robot number.
+	 * He executes special code.
+	 * 
 	 * @TODO Find a way to sense objects out of range.
 	 */
-	
+
 	public int checkLowestArchonNumber() {
 		try {
 			MapLocation[] archons = myRC.senseAlliedArchons();
-			int LowestID=1000;
+			int LowestID = 1000;
 			for (MapLocation m : archons) {
-				Robot r=(Robot) myRC.senseObjectAtLocation(m, RobotLevel.ON_GROUND);
-				if (r.getID()<LowestID) {
-					LowestID=r.getID();
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				if (r.getID() < LowestID) {
+					LowestID = r.getID();
 				}
 			}
 			return LowestID;
@@ -802,26 +811,26 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
-	public boolean beingAttacked() { 
+
+	public boolean beingAttacked() {
 		if (myRC.getEnergon() < prevEnergon) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Just to test the costs of running dijkstra.
 	 */
-	public void runToTestDijkstraNav(){
+	public void runToTestDijkstraNav() {
 		this.nav = new DijkstraNav(myRC);
 		MapLocation capturing = getNewTarget();
-		while (true){
-			try{
+		while (true) {
+			try {
 				this.nav.getNextMove(capturing);
 				this.myRC.yield();
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

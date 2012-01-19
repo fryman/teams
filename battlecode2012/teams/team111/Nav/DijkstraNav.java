@@ -23,6 +23,8 @@ public class DijkstraNav extends Navigation {
 	private FastMinHeap<MapLocation> queue;
 	private final int INFINITY = 1000000;
 	private FastHashSet<MapLocation> mapLocationsRemovedFromQueue;
+	private FastHashSet<MapLocation> knownToBeUnreachable = new FastHashSet<MapLocation>(
+			99999);
 	private MapLocation start;
 	private MapLocation end;
 
@@ -35,9 +37,9 @@ public class DijkstraNav extends Navigation {
 	 * computations
 	 */
 	public void init(MapLocation goalLocation) {
-		this.distance = new FastHashMap<MapLocation, Integer>(9999);
-		this.previous = new FastHashMap<MapLocation, MapLocation>(9999);
-		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(9999);
+		this.distance = new FastHashMap<MapLocation, Integer>(99999);
+		this.previous = new FastHashMap<MapLocation, MapLocation>(99999);
+		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(99999);
 		this.queue = new FastMinHeap<MapLocation>();
 		this.start = this.myRC.getLocation();
 		this.end = goalLocation;
@@ -51,7 +53,6 @@ public class DijkstraNav extends Navigation {
 			while (next == null) {
 				dijkstra(target, this.myRC.getLocation());
 				next = this.previous.get(this.myRC.getLocation());
-				// this.myRC.setIndicatorString(2, next.toString());
 			}
 			if (this.myRC.isMovementActive()) {
 				return;
@@ -87,6 +88,7 @@ public class DijkstraNav extends Navigation {
 					}
 					return;
 				}
+				return;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -119,11 +121,13 @@ public class DijkstraNav extends Navigation {
 			}
 			this.mapLocationsRemovedFromQueue.insert(u);
 			for (MapLocation v : getMapLocationNeighbors(u)) {
-				if (this.mapLocationsRemovedFromQueue.search(v)) {
+				if (this.mapLocationsRemovedFromQueue.search(v)
+						|| this.knownToBeUnreachable.search(v)) {
 					continue;
 				} else {
 					if (!locationTraversible(v)) {
-						this.distance.put(v, INFINITY);
+						this.mapLocationsRemovedFromQueue.insert(v);
+						this.knownToBeUnreachable.insert(v);
 					} else {
 						double alt = this.distance.get(u)
 								+ u.distanceSquaredTo(v)
@@ -157,13 +161,6 @@ public class DijkstraNav extends Navigation {
 	public boolean locationTraversible(MapLocation loc) {
 		try {
 			TerrainTile vTerrain = this.myRC.senseTerrainTile(loc);
-//			if (this.myRC.canSenseSquare(loc)) {
-//				GameObject obstruction = this.myRC.senseObjectAtLocation(loc,
-//						this.myRC.getType().level);
-//				if (obstruction != null) {
-//					return false;
-//				}
-//			}
 			if (vTerrain == null) {
 				return true;
 			}
