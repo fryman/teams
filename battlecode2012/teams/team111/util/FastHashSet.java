@@ -1,4 +1,4 @@
-package pather.util;
+package team111.util;
 
 /**
  * Implements a generically typed hashset. Does not accept null entries.

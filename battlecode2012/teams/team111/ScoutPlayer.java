@@ -1,8 +1,8 @@
-package pather;
+package team111;
 
-import pather.Nav.BugNav;
 
-import pather.Nav.Navigation;
+import team111.Nav.BugNav;
+import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
@@ -35,9 +35,9 @@ public class ScoutPlayer extends BasePlayer {
 	@Override
 	public void runAtEndOfTurn() {
 		try {
-			broadcastMessage();
+			//broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
-			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER) {
+			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER && myRC.senseRobotInfo(closestTar).flux>.5) {
 				MapLocation Location = myRC.senseLocationOf(closestTar);
 				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
 					myRC.setIndicatorString(0, "Attacking at the end of the turn.");

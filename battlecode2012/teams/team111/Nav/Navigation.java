@@ -1,6 +1,6 @@
-package pather.Nav;
+package team111.Nav;
 
-import pather.StaticStuff;
+import team111.StaticStuff;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 

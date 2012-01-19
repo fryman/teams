@@ -1,8 +1,8 @@
-package pather;
+package team111;
 
-import pather.Nav.BugNav;
 
-import pather.Nav.Navigation;
+import team111.Nav.BugNav;
+import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;

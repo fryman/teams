@@ -1,9 +1,9 @@
-package pather;
+package team111;
 
-import pather.Nav.BugNav;
-import pather.Nav.DijkstraNav;
-import pather.Nav.Navigation;
-import pather.util.BoardModel;
+import team111.Nav.BugNav;
+import team111.Nav.DijkstraNav;
+import team111.Nav.Navigation;
+import team111.util.BoardModel;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
@@ -22,7 +22,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-		broadcastMessage();
+		//broadcastMessage();
 		myRC.yield();
 	}
 
