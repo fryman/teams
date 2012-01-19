@@ -19,6 +19,7 @@ public class ArchonPlayer extends BasePlayer {
 	private PowerNode[] powerNodesOwned = myRC.senseAlliedPowerNodes();
 	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
 											// this.
+	private double prevEnergon = 0;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -793,6 +794,14 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public boolean beingAttacked() { 
+		if (myRC.getEnergon() < prevEnergon) {
+			return true;
+		}else {
+			return false;
 		}
 	}
 	
