@@ -22,6 +22,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
+		//this.nav = new DijkstraNav(rc);
 	}
 
 	/**
@@ -32,11 +33,11 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	@Override
 	public void runAtEndOfTurn() {
+		myRC.yield();
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
 		broadcastMessage();
 		this.findWeakFriendsAndTransferFlux();
-		myRC.yield();
 	}
 
 	public void run() {
@@ -787,7 +788,7 @@ public class ArchonPlayer extends BasePlayer {
 				attemptSpawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 2) {
+			if (soldierPresent < 3) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 		} catch (Exception e) {
@@ -795,6 +796,9 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 	
+	/**
+	 * Just to test the costs of running dijkstra.
+	 */
 	public void runToTestDijkstraNav(){
 		this.nav = new DijkstraNav(myRC);
 		MapLocation capturing = getNewTarget();

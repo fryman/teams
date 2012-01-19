@@ -18,8 +18,8 @@ import pather.util.*;
  */
 public class DijkstraNav extends Navigation {
 	private RobotController myRC;
-	private HashMap<MapLocation, Integer> distance;
-	private HashMap<MapLocation, MapLocation> previous;
+	private FastHashMap<MapLocation, Integer> distance;
+	private FastHashMap<MapLocation, MapLocation> previous;
 	private FastMinHeap<MapLocation> queue;
 	private final int INFINITY = 1000000;
 	private FastHashSet<MapLocation> mapLocationsRemovedFromQueue;
@@ -35,9 +35,9 @@ public class DijkstraNav extends Navigation {
 	 * computations
 	 */
 	public void init(MapLocation goalLocation) {
-		this.distance = new HashMap<MapLocation, Integer>();
-		this.previous = new HashMap<MapLocation, MapLocation>();
-		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(200);
+		this.distance = new FastHashMap<MapLocation, Integer>(9999);
+		this.previous = new FastHashMap<MapLocation, MapLocation>(9999);
+		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(9999);
 		this.queue = new FastMinHeap<MapLocation>();
 		this.start = this.myRC.getLocation();
 		this.end = goalLocation;
@@ -75,6 +75,18 @@ public class DijkstraNav extends Navigation {
 				myRC.moveForward();
 				myRC.setIndicatorString(1, "Moving ideal");
 				return;
+			} else {
+				// walk aimlessly
+				if (myRC.canMove(myRC.getDirection())) {
+					myRC.moveForward();
+				} else {
+					if (Math.random() < .5) {
+						myRC.setDirection(myRC.getDirection().rotateLeft());
+					} else {
+						myRC.setDirection(myRC.getDirection().rotateRight());
+					}
+					return;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -96,7 +108,8 @@ public class DijkstraNav extends Navigation {
 		this.queue.insert(start, 0);
 		while (this.queue.size() != 0) {
 			MapLocation u = this.queue.extractMin();
-			if (this.distance.get(u) == INFINITY) {
+			int distToU = this.distance.get(u);
+			if (distToU == INFINITY) {
 				break;
 			}
 			if (u.equals(end)) {
@@ -105,14 +118,7 @@ public class DijkstraNav extends Navigation {
 				return;
 			}
 			this.mapLocationsRemovedFromQueue.insert(u);
-			System.out.println("before insert: " + Clock.getBytecodeNum());
-			this.mapLocationsRemovedFromQueue.search(u);
-			System.out.println("after insert: " + Clock.getBytecodeNum());
 			for (MapLocation v : getMapLocationNeighbors(u)) {
-				// System.out.println("before minimum: " +
-				// Clock.getBytecodeNum());
-				// System.out.println("after minimum: " +
-				// Clock.getBytecodeNum());
 				if (this.mapLocationsRemovedFromQueue.search(v)) {
 					continue;
 				} else {
