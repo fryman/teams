@@ -37,7 +37,7 @@ public class ScoutPlayer extends BasePlayer {
 		try {
 			//broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
-			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER) {
+			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER && myRC.senseRobotInfo(closestTar).flux>.5) {
 				MapLocation Location = myRC.senseLocationOf(closestTar);
 				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
 					myRC.setIndicatorString(0, "Attacking at the end of the turn.");
