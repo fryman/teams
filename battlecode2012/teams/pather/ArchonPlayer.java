@@ -56,6 +56,7 @@ public class ArchonPlayer extends BasePlayer {
 						runAtEndOfTurn();
 					}
 				}
+				//spawnScorcherAndTransferFlux();
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
