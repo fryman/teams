@@ -489,7 +489,8 @@ public class ArchonPlayer extends BasePlayer {
 			try {
 				myRC.setIndicatorString(0, "creating scorcher");
 				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
+					//runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
@@ -505,17 +506,20 @@ public class ArchonPlayer extends BasePlayer {
 								RobotLevel.POWER_NODE) == null) {
 					myRC.spawn(RobotType.SCORCHER);
 					myRC.setIndicatorString(2, "just spawned scorcher: ");
-					runAtEndOfTurn();
+					//runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, RobotLevel.ON_GROUND);
 					myRC.setIndicatorString(2, "recent scorcher: "
 							+ recentScorcher);
 					if (recentScorcher == null) {
-						runAtEndOfTurn();
+						//runAtEndOfTurn();
+						super.runAtEndOfTurn();
 						myRC.setIndicatorString(2, "recent scorcher null");
 						continue;
 					}
-					runAtEndOfTurn();
+					//runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
 							&& myRC.canSenseObject(recentScorcher)) {
 						super.runAtEndOfTurn();
@@ -534,7 +538,8 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.setIndicatorString(
 						2,
 						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
-				runAtEndOfTurn();
+				//runAtEndOfTurn();
+				super.runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
 				e.printStackTrace();
