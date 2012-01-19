@@ -35,7 +35,7 @@ public class ScoutPlayer extends BasePlayer {
 	@Override
 	public void runAtEndOfTurn() {
 		try {
-			broadcastMessage();
+			//broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
 			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER) {
 				MapLocation Location = myRC.senseLocationOf(closestTar);

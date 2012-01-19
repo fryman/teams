@@ -22,7 +22,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-		broadcastMessage();
+		//broadcastMessage();
 		myRC.yield();
 	}
 

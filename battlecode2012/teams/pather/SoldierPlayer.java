@@ -8,7 +8,7 @@ import pather.util.FastArrayList;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
-import battlecode.common.Robot;
+import battlecode.common.*;
 import battlecode.common.RobotController;
 import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
@@ -130,7 +130,7 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
-				Robot closeEnemy = senseClosestEnemy();
+				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy == null) {
 					this.nav.getNextMove(friendlyMapLocationToFollow);
 					runAtEndOfTurn();
@@ -151,32 +151,73 @@ public class SoldierPlayer extends BasePlayer {
 			}
 		}
 	}
-	
+
 	/**
 	 * Finds and returns the BEST enemy to shoot at.
 	 */
-	public Robot senseBestEnemy(){
-		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
-		
-		FastArrayList<Robot> archons = new FastArrayList<Robot>(enemies.length);
-		FastArrayList<Robot> soldiers = new FastArrayList<Robot>(enemies.length);
-		FastArrayList<Robot> scorchers = new FastArrayList<Robot>(enemies.length);
-		FastArrayList<Robot> others = new FastArrayList<Robot>(enemies.length);
-		
-		Robot closest = null;
-		Robot weakest = null;
-		if (enemies.length > 0) {
+	public Robot senseBestEnemy() {
+		try {
+			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> others = new FastArrayList<Robot>(
+					enemies.length);
+
 			for (Robot e : enemies) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
-				if (closest == null || compareRobotDistance(e, closest)) {
-					closest = e;
-				}
-				if (weakest == null || compareRobotEnergon(e, weakest)){
-					weakest = e;
+				RobotInfo eInfo = myRC.senseRobotInfo(e);
+				switch (eInfo.type) {
+				case ARCHON:
+					archons.add(e);
+					break;
+				case SOLDIER:
+					soldiers.add(e);
+					break;
+				case SCORCHER:
+					scorchers.add(e);
+					break;
+				default:
+					others.add(e);
 				}
 			}
+			FastArrayList<Robot> priorityTargets = null;
+			if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
+			} else if (archons.size() > 0) {
+				priorityTargets = archons;
+			} else if (others.size() > 0) {
+				priorityTargets = others;
+			}
+			if (priorityTargets != null) {
+				Robot closest = null;
+				Robot weakest = null;
+				if (priorityTargets.size() > 0) {
+					for (int i = 0; i < priorityTargets.size(); i++) {
+						Robot e = priorityTargets.get(i);
+						if (e.getTeam() == myRC.getTeam()
+								|| !myRC.canSenseObject(e)) {
+							continue;
+						}
+						if (closest == null || compareRobotDistance(e, closest)) {
+							closest = e;
+						}
+						if (weakest == null || compareRobotEnergon(e, weakest)) {
+							weakest = e;
+						}
+					}
+				}
+				return weakest;
+			}
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

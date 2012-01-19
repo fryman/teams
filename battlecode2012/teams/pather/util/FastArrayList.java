@@ -19,12 +19,15 @@ public class FastArrayList<T> {
 	}
 
 	public FastArrayList(int initialSize) {
-		if (initialSize < 1) {
-			throw new RuntimeException("Initial Size must be >= 1");
+		if (initialSize < DEFAULT_CAPACITY) {
+			this.data = (T[]) new Object[DEFAULT_CAPACITY];
+			this.size = 0;
+			this.capacity = DEFAULT_CAPACITY;
+		} else {
+			this.data = (T[]) new Object[initialSize];
+			this.size = 0;
+			this.capacity = initialSize;
 		}
-		this.data = (T[]) new Object[initialSize];
-		this.size = 0;
-		this.capacity = initialSize;
 	}
 
 	public void add(T elem) {
@@ -69,15 +72,17 @@ public class FastArrayList<T> {
 			if (this.data[i].equals(elem)) {
 				return true;
 			}
-		}return false;
+		}
+		return false;
 	}
-	
+
 	public int indexOf(T elem) {
 		for (int i = 0; i < this.size - 1; i++) {
 			if (this.data[i].equals(elem)) {
 				return i;
 			}
-		}return -1;		
+		}
+		return -1;
 	}
 
 	public void checkResize() {
@@ -90,7 +95,7 @@ public class FastArrayList<T> {
 			this.capacity = this.capacity * 2;
 		}
 	}
-	
+
 	public int size() {
 		return this.size;
 	}
