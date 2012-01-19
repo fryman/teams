@@ -41,10 +41,11 @@ public class FastArrayList<T> {
 				break;
 			}
 		}
-		if (locToRemove != -1){
-			for (int i = locToRemove; i < this.size; i++){
-				
+		if (locToRemove != -1) {
+			for (int i = locToRemove; i < this.size - 1; i++) {
+				this.data[i] = this.data[i + 1];
 			}
+			this.size -= 1;
 		}
 	}
 
