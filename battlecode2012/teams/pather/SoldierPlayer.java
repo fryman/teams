@@ -4,6 +4,7 @@ import java.util.Random;
 
 import pather.Nav.BugNav;
 import pather.Nav.Navigation;
+import pather.util.FastArrayList;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -149,5 +150,34 @@ public class SoldierPlayer extends BasePlayer {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Finds and returns the BEST enemy to shoot at.
+	 */
+	public Robot senseBestEnemy(){
+		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		
+		FastArrayList<Robot> archons = new FastArrayList<Robot>(enemies.length);
+		FastArrayList<Robot> soldiers = new FastArrayList<Robot>(enemies.length);
+		FastArrayList<Robot> scorchers = new FastArrayList<Robot>(enemies.length);
+		FastArrayList<Robot> others = new FastArrayList<Robot>(enemies.length);
+		
+		Robot closest = null;
+		Robot weakest = null;
+		if (enemies.length > 0) {
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
+					continue;
+				}
+				if (closest == null || compareRobotDistance(e, closest)) {
+					closest = e;
+				}
+				if (weakest == null || compareRobotEnergon(e, weakest)){
+					weakest = e;
+				}
+			}
+		}
+		return null;
 	}
 }

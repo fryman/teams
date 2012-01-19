@@ -665,7 +665,8 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * Note that this method depends on sensor range
+	 * Note that this method depends on sensor range, so not a good option to
+	 * sense friendly towers
 	 * 
 	 * @param rt
 	 * @return returns MapLocation of closest robot of type rt
@@ -678,7 +679,6 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyRobots.length > 0) {
 				for (Robot r : nearbyRobots) {
 					if (r.getTeam() != myRC.getTeam()
-							|| myRC.senseRobotInfo(r).type == RobotType.TOWER
 							|| myRC.senseRobotInfo(r).type != rt) {
 						continue;
 					}
@@ -696,6 +696,22 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
+	public MapLocation findNearestAlliedTower() {
+		MapLocation closestLoc = null;
+		PowerNode[] towers = myRC.senseAlliedPowerNodes();
+		if (towers.length > 0) {
+			for (PowerNode t : towers) {
+				if (closestLoc == null
+						|| myRC.getLocation()
+								.distanceSquaredTo(t.getLocation()) < myRC
+								.getLocation().distanceSquaredTo(closestLoc)) {
+					closestLoc = t.getLocation();
+				}
+
+			}
+		}return closestLoc;
+	}
+	
 	public boolean canSenseArchon() {
 		MapLocation[] archons = myRC.senseAlliedArchons();
 		for (int i = 0; i < archons.length; i++) {
