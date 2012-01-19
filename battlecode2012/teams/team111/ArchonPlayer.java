@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		//this.nav = new DijkstraNav(rc);
+		this.nav = new DijkstraNav(rc);
 	}
 
 	/**
