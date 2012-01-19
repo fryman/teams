@@ -586,34 +586,46 @@ public abstract class BasePlayer extends StaticStuff {
 	}
 
 	/**
-	 * If this robot has < 0.05*getMaxEnergon(), finds a weak neighbor, moves
-	 * toward it, and transfers flux to it.
+	 * If this robot has energon <= SOLDIER.attackPower and is not an archon,
+	 * finds a neighbor. If there is no neighbor, retreats (if possible). This
+	 * robot then moves toward the neighbor, disregarding all other activity. It
+	 * then transfers flux to that neighbor.
 	 */
 	public void aboutToDie() {
 		try {
 			if (myRC.getEnergon() <= battlecode.common.RobotType.SOLDIER.attackPower
 					&& myRC.getType() != battlecode.common.RobotType.ARCHON) {
-				Robot weak = findAFriendly();
-				if (weak != null) {
+				Robot neighbor = findAFriendly();
+				if (neighbor == null) {
+					// move backward
+					if (this.myRC.canMove(this.myRC.getDirection().opposite())
+							&& !this.myRC.isMovementActive()) {
+						this.myRC.moveBackward();
+					}
+				}
+				if (neighbor != null) {
 					// System.out.println("about to die, found weak");
-					while (!myRC.getLocation().isAdjacentTo(
-							myRC.senseLocationOf(weak))) {
-						nav.getNextMove(myRC.senseLocationOf(weak));
+					while (this.myRC.canSenseObject(neighbor)
+							&& !myRC.getLocation().isAdjacentTo(
+									myRC.senseLocationOf(neighbor))) {
+						nav.getNextMove(myRC.senseLocationOf(neighbor));
 						myRC.yield();
 					}
-					RobotInfo weakRobotInfo = myRC.senseRobotInfo(weak);
-					double weakFlux = weakRobotInfo.flux;
-					double maxFlux = weakRobotInfo.type.maxFlux;
-					double fluxAmountToTransfer = Math.min(maxFlux - weakFlux,
-							myRC.getFlux());
-					if (fluxAmountToTransfer > 0) {
-						// System.out.println("transfer");
-						// System.out.println(maxFlux-weakFlux);
-						// System.out.println(myRC.getFlux());
-						myRC.transferFlux(weakRobotInfo.location,
-								weakRobotInfo.robot.getRobotLevel(),
-								fluxAmountToTransfer);
-						// System.out.println(myRC.getFlux());
+					if (this.myRC.canSenseObject(neighbor)) {
+						RobotInfo weakRobotInfo = myRC.senseRobotInfo(neighbor);
+						double weakFlux = weakRobotInfo.flux;
+						double maxFlux = weakRobotInfo.type.maxFlux;
+						double fluxAmountToTransfer = Math.min(maxFlux
+								- weakFlux, myRC.getFlux());
+						if (fluxAmountToTransfer > 0) {
+							// System.out.println("transfer");
+							// System.out.println(maxFlux-weakFlux);
+							// System.out.println(myRC.getFlux());
+							myRC.transferFlux(weakRobotInfo.location,
+									weakRobotInfo.robot.getRobotLevel(),
+									fluxAmountToTransfer);
+							// System.out.println(myRC.getFlux());
+						}
 					}
 				}
 			}
