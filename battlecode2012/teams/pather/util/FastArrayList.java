@@ -80,7 +80,7 @@ public class FastArrayList<T> {
 		}return -1;		
 	}
 
-	private void checkResize() {
+	public void checkResize() {
 		if (this.size == this.capacity) {
 			T[] biggerT = (T[]) new Object[this.capacity * 2];
 			for (int i = 0; i < this.size; i++) {
@@ -91,7 +91,7 @@ public class FastArrayList<T> {
 		}
 	}
 	
-	private int size() {
+	public int size() {
 		return this.size;
 	}
 }
