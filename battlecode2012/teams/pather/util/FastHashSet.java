@@ -50,7 +50,10 @@ public class FastHashSet<T> {
 			throw new RuntimeException(
 					"Cannot search for a null element in this set.");
 		}
-		int bucket = elem.hashCode() % capacity;
+		int bucket = (elem.hashCode() & 0x7fffffff) % capacity;
+		if (this.set[bucket] == null) {
+			return false;
+		}
 		return set[bucket].equals(elem);
 	}
 
@@ -65,7 +68,7 @@ public class FastHashSet<T> {
 			throw new RuntimeException(
 					"Cannot insert a null element into this set.");
 		}
-		int bucket = elem.hashCode() % capacity;
+		int bucket = (elem.hashCode() & 0x7fffffff) % capacity;
 		if (this.set[bucket] == null) {
 			size++;
 		}
@@ -84,10 +87,11 @@ public class FastHashSet<T> {
 			throw new RuntimeException(
 					"Cannot delete a null element from this set.");
 		}
-		int bucket = elem.hashCode() % capacity;
+		int bucket = (elem.hashCode() & 0x7fffffff) % capacity;
 		if (this.set[bucket].equals(elem)) {
 			this.set[bucket] = null;
 			this.size--;
+			this.loadFactor = this.size / (1.0 * this.capacity);
 		}
 	}
 
@@ -102,7 +106,7 @@ public class FastHashSet<T> {
 			int bucket;
 			this.size = 0;
 			for (int i = 0; i < this.set.length; i++) {
-				bucket = this.set[i].hashCode() % capacity;
+				bucket = (this.set[i].hashCode() & 0x7fffffff) % capacity;
 				if (biggerT[bucket] == null) {
 					size++;
 				}
@@ -121,7 +125,31 @@ public class FastHashSet<T> {
 		return this.loadFactor;
 	}
 
+	/**
+	 * Expect:
+	 * 
+	 * 0.03
+	 * 
+	 * True
+	 * 
+	 * False
+	 * 
+	 * 0.02
+	 * 
+	 * False
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
-		
+		FastHashSet<String> strSet = new FastHashSet<String>(100);
+		strSet.insert("Tall");
+		strSet.insert("dark");
+		strSet.insert("and handsome");
+		System.out.println(strSet.loadFactor);
+		System.out.println(strSet.search("Tall"));
+		System.out.println(strSet.search("tall"));
+		strSet.delete("Tall");
+		System.out.println(strSet.loadFactor);
+		System.out.println(strSet.search("Tall"));
 	}
 }
