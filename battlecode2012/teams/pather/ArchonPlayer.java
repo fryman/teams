@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		//this.nav = new DijkstraNav(rc);
+		// this.nav = new DijkstraNav(rc);
 	}
 
 	/**
@@ -38,6 +38,7 @@ public class ArchonPlayer extends BasePlayer {
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
 		broadcastMessage();
+		//updatePrevEnergon();
 		this.findWeakFriendsAndTransferFlux();
 	}
 
@@ -50,8 +51,7 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 20
-						&& !spreadOutFromOtherArchons()) {
+				while (Clock.getRoundNum() < 20 && !spreadOutFromOtherArchons()) {
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
@@ -59,10 +59,17 @@ public class ArchonPlayer extends BasePlayer {
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
+
+				/*if (beingAttacked()) {
+					if (myRC.canMove(myRC.getDirection().opposite())) {
+						myRC.setDirection(myRC.getDirection().opposite());
+					}
+				}*/
+
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
-				
+
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -485,7 +492,7 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
+
 	public void spawnScorcherAndTransferFlux() {
 		while (true) {
 			try {
@@ -733,20 +740,23 @@ public class ArchonPlayer extends BasePlayer {
 			return;
 		}
 	}
-	
+
 	/**
-	 * Archons sense each other and determine who has the lowest robot number. He executes special code.
+	 * Archons sense each other and determine who has the lowest robot number.
+	 * He executes special code.
+	 * 
 	 * @TODO Find a way to sense objects out of range.
 	 */
-	
+
 	public int checkLowestArchonNumber() {
 		try {
 			MapLocation[] archons = myRC.senseAlliedArchons();
-			int LowestID=1000;
+			int LowestID = 1000;
 			for (MapLocation m : archons) {
-				Robot r=(Robot) myRC.senseObjectAtLocation(m, RobotLevel.ON_GROUND);
-				if (r.getID()<LowestID) {
-					LowestID=r.getID();
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				if (r.getID() < LowestID) {
+					LowestID = r.getID();
 				}
 			}
 			return LowestID;
@@ -796,26 +806,30 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
-	public boolean beingAttacked() { 
+
+	public boolean beingAttacked() {
 		if (myRC.getEnergon() < prevEnergon) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
 	}
-	
+
+	public void updatePrevEnergon() {
+		prevEnergon = myRC.getEnergon();
+	}
+
 	/**
 	 * Just to test the costs of running dijkstra.
 	 */
-	public void runToTestDijkstraNav(){
+	public void runToTestDijkstraNav() {
 		this.nav = new DijkstraNav(myRC);
 		MapLocation capturing = getNewTarget();
-		while (true){
-			try{
+		while (true) {
+			try {
 				this.nav.getNextMove(capturing);
 				this.myRC.yield();
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
