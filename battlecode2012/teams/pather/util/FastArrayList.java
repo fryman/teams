@@ -90,4 +90,8 @@ public class FastArrayList<T> {
 			this.capacity = this.capacity * 2;
 		}
 	}
+	
+	private int size() {
+		return this.size;
+	}
 }
