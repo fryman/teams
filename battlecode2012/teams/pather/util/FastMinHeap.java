@@ -31,12 +31,15 @@ public class FastMinHeap<E> {
 	}
 
 	/**
-	 * Sets the size of this heap to initialSize.
+	 * Sets the size of this heap to initialSize. initialSize must be >=1.
 	 * 
 	 * @param initialSize
 	 *            Beginning capacity of this heap.
 	 */
 	public FastMinHeap(int initialSize) {
+		if (initialSize < 1) {
+			throw new RuntimeException("Initial size of heap must be >= 1");
+		}
 		this.objectHeap = (E[]) new Object[initialSize];
 		this.costHeap = new double[initialSize];
 		this.size = 0;
@@ -216,6 +219,46 @@ public class FastMinHeap<E> {
 			out += this.objectHeap[i] + " " + this.costHeap[i] + "\n";
 		}
 		return out;
+	}
+
+	/**
+	 * Returns the size of this heap
+	 * 
+	 * @return the size of this heap
+	 */
+	public int size() {
+		return this.size;
+	}
+
+	/**
+	 * Returns true if the size of this heap is zero, false otherwise.
+	 * 
+	 * @return true if the size of this heap is zero, false otherwise.
+	 */
+	public boolean isEmpty() {
+		if (this.size == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * returns the location in the heap which contains elem (using .equals()).
+	 * 
+	 * returns -1 if elem is not in the heap.
+	 * 
+	 * @param elem
+	 *            element to find in the heap
+	 * @return the location in the heap which contains elem, or -1 if elem not
+	 *         in the heap.
+	 */
+	public int locationOf(E elem) {
+		for (int i = 0; i < this.size; i ++){
+			if (this.objectHeap[i].equals(elem)){
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	/**

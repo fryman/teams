@@ -15,17 +15,16 @@ import pather.util.*;
  * Too many bytecodes for reasonable usage.
  * 
  * @author saf
- * 
- * @deprecated uses too many bytecodes for operation as implemented. use bugnav!
  */
-@Deprecated
 public class DijkstraNav extends Navigation {
 	private RobotController myRC;
 	private HashMap<MapLocation, Integer> distance;
 	private HashMap<MapLocation, MapLocation> previous;
-	private PriorityQueue<MapLocation> queue;
+	private FastMinHeap<MapLocation> queue;
 	private final int INFINITY = 1000000;
 	private HashSet<MapLocation> mapLocationsRemovedFromQueue;
+	private MapLocation start;
+	private MapLocation end;
 
 	public DijkstraNav(RobotController myRC) {
 		this.myRC = myRC;
@@ -39,54 +38,9 @@ public class DijkstraNav extends Navigation {
 		this.distance = new HashMap<MapLocation, Integer>();
 		this.previous = new HashMap<MapLocation, MapLocation>();
 		this.mapLocationsRemovedFromQueue = new HashSet<MapLocation>();
-
-		/**
-		 * Inner class used for comparing MapLocations by distance.
-		 * 
-		 * @author saf
-		 */
-		class MapLocationComparer implements Comparator {
-
-			private MapLocation startLocation;
-			private MapLocation goalLocation;
-
-			public MapLocationComparer(MapLocation startLocation,
-					MapLocation goalLocation) {
-				this.startLocation = startLocation;
-				this.goalLocation = goalLocation;
-			}
-
-			/**
-			 * Returns a negative integer, zero, or a positive integer as the
-			 * first argument is less than, equal to, or greater than the
-			 * second.
-			 */
-			@Override
-			public int compare(Object arg0, Object arg1) {
-				try {
-					if (arg0.getClass() != MapLocation.class
-							|| arg1.getClass() != MapLocation.class) {
-						throw new RuntimeException(
-								"This is intended to compare maplocations");
-					} else {
-						double dist0 = this.startLocation
-								.distanceSquaredTo((MapLocation) arg0)
-								+ ((MapLocation) arg0)
-										.distanceSquaredTo(goalLocation);
-						double dist1 = this.startLocation
-								.distanceSquaredTo((MapLocation) arg1)
-								+ ((MapLocation) arg0)
-										.distanceSquaredTo(goalLocation);
-						return (int) (dist1 - dist0);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return 0;
-			}
-		}
-		this.queue = new PriorityQueue<MapLocation>(100,
-				new MapLocationComparer(this.myRC.getLocation(), goalLocation));
+		this.queue = new FastMinHeap<MapLocation>(64);
+		this.start = this.myRC.getLocation();
+		this.end = goalLocation;
 	}
 
 	@Override
@@ -138,9 +92,9 @@ public class DijkstraNav extends Navigation {
 	public void dijkstra(MapLocation start, MapLocation end) {
 		init(end);
 		this.distance.put(start, 0);
-		this.queue.add(start);
+		this.queue.insert(start, 0);
 		while (this.queue.size() != 0) {
-			MapLocation u = this.queue.peek();
+			MapLocation u = this.queue.minimum();
 			if (this.distance.get(u) == INFINITY) {
 				break;
 			}
@@ -150,7 +104,7 @@ public class DijkstraNav extends Navigation {
 				return;
 			}
 			System.out.println(start.distanceSquaredTo(u));
-			this.mapLocationsRemovedFromQueue.add(this.queue.remove());
+			this.mapLocationsRemovedFromQueue.add(this.queue.extractMin());
 			for (MapLocation v : getMapLocationNeighbors(u)) {
 				if (this.mapLocationsRemovedFromQueue.contains(v)) {
 					continue;
@@ -170,8 +124,12 @@ public class DijkstraNav extends Navigation {
 									|| alt < this.distance.get(v)) {
 								this.distance.put(v, (int) alt);
 								this.previous.put(v, u);
-								this.queue.remove(v);
-								this.queue.add(v); // *****
+								int location = this.queue.locationOf(v);
+								if (location == -1){
+									this.queue.insert(v, alt);
+								} else {
+									this.queue.decreaseKey(location, alt);
+								}
 							}
 						}
 					} else {
@@ -181,8 +139,12 @@ public class DijkstraNav extends Navigation {
 								|| alt < this.distance.get(v)) {
 							this.distance.put(v, (int) alt);
 							this.previous.put(v, u);
-							this.queue.remove(v);
-							this.queue.add(v);
+							int location = this.queue.locationOf(v);
+							if (location == -1){
+								this.queue.insert(v, alt);
+							} else {
+								this.queue.decreaseKey(location, alt);
+							}
 						}
 					}
 				}
@@ -203,6 +165,10 @@ public class DijkstraNav extends Navigation {
 				m.add(Direction.SOUTH_EAST), m.add(Direction.SOUTH_WEST),
 				m.add(Direction.WEST) };
 		return neighbors;
+	}
+
+	public double getCostOfLocation(MapLocation m) {
+		return this.start.distanceSquaredTo(m) + (m).distanceSquaredTo(end);
 	}
 
 }
