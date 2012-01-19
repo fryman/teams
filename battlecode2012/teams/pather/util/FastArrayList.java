@@ -50,19 +50,34 @@ public class FastArrayList<T> {
 	}
 
 	public void remove(int loc) {
-
+		for (int i = loc; i < this.size - 1; i++) {
+			this.data[i] = this.data[i + 1];
+		}
+		this.size -= 1;
 	}
 
-	public void get(int loc) {
-
+	public T get(int loc) {
+		return this.data[loc];
 	}
 
-	public void set(int loc) {
-
+	public void set(int loc, T elem) {
+		this.data[loc] = elem;
 	}
 
-	public void contains(T elem) {
-
+	public boolean contains(T elem) {
+		for (int i = 0; i < this.size - 1; i++) {
+			if (this.data[i].equals(elem)) {
+				return true;
+			}
+		}return false;
+	}
+	
+	public int indexOf(T elem) {
+		for (int i = 0; i < this.size - 1; i++) {
+			if (this.data[i].equals(elem)) {
+				return i;
+			}
+		}return -1;		
 	}
 
 	private void checkResize() {
