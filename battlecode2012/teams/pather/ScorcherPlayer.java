@@ -46,7 +46,7 @@ public class ScorcherPlayer extends BasePlayer {
 
 	public void runDefendCore() {
 		//fix - if myRC.getFlux()<move cost - to check if can move
-		//fix - navigation?
+		//fix - navigation - after coming in
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
@@ -74,7 +74,7 @@ public class ScorcherPlayer extends BasePlayer {
 					int count = 0;
 					while (countMove < moves && count < 10) {
 						if (myRC.canMove(myRC.getDirection())
-								&& !myRC.isMovementActive()) {
+								&& !myRC.isMovementActive()&&myRC.getFlux()>myRC.getType().moveCost) {
 							myRC.moveForward();
 							countMove++;
 						}
@@ -89,16 +89,16 @@ public class ScorcherPlayer extends BasePlayer {
 						while (myRC.isMovementActive()) {
 							runAtEndOfTurn();
 						}
-						if(myRC.getDirection().isDiagonal()){
+						if(myRC.getDirection().isDiagonal()&&myRC.getFlux()>myRC.getType().moveCost){
 							myRC.setDirection(myRC.getDirection().rotateLeft());
 						}
-						else{
+						else if (myRC.getFlux()>myRC.getType().moveCost){
 							myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
 						}
 						int count3 = 0;
 						while (count3 < 1) {
 							if (myRC.canMove(myRC.getDirection())
-									&& !myRC.isMovementActive()) {
+									&& !myRC.isMovementActive()&&myRC.getFlux()>myRC.getType().moveCost) {
 								myRC.moveForward();
 								count3++;
 							}
@@ -112,7 +112,7 @@ public class ScorcherPlayer extends BasePlayer {
 					myRC.setIndicatorString(0, "should be "+moves+" away facing out");
 					if (senseClosestGroundEnemy() != null
 							&& !myRC.isAttackActive()
-							&& !canSenseArchon()) {
+							&& !canSenseArchon()&&myRC.canAttackSquare(myRC.getLocation())) {
 						myRC.setIndicatorString(0, "about to attack");
 						myRC.attackSquare(myRC.getLocation(),
 								battlecode.common.RobotLevel.ON_GROUND);
