@@ -18,6 +18,9 @@ public class DisrupterPlayer extends BasePlayer {
 	}
 	
 	public void run() {
+		
+		
+		
 		runAtEndOfTurn();
 	}
 
