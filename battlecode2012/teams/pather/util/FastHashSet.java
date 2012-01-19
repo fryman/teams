@@ -106,12 +106,16 @@ public class FastHashSet<T> {
 			int bucket;
 			this.size = 0;
 			for (int i = 0; i < this.set.length; i++) {
+				if (this.set[i] == null) {
+					continue;
+				}
 				bucket = (this.set[i].hashCode() & 0x7fffffff) % capacity;
 				if (biggerT[bucket] == null) {
 					size++;
 				}
 				biggerT[bucket] = this.set[i];
 			}
+			this.set = biggerT;
 			this.loadFactor = this.size / (1.0 * this.capacity);
 		}
 	}

@@ -15,8 +15,8 @@ public class RobotPlayer {
 	public void nonStaticRun(RobotController rc){
 		switch (rc.getType()) {
 		case ARCHON:
-			new ArchonPlayer(rc).run();
-			//new ArchonPlayer(rc).runToTestDijkstraNav();
+			//new ArchonPlayer(rc).run();
+			new ArchonPlayer(rc).runToTestDijkstraNav();
 		case SCOUT:
 			new ScoutPlayer(rc).run();
 		case SOLDIER:

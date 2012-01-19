@@ -22,7 +22,7 @@ public class DijkstraNav extends Navigation {
 	private HashMap<MapLocation, MapLocation> previous;
 	private FastMinHeap<MapLocation> queue;
 	private final int INFINITY = 1000000;
-	private HashSet<MapLocation> mapLocationsRemovedFromQueue;
+	private FastHashSet<MapLocation> mapLocationsRemovedFromQueue;
 	private MapLocation start;
 	private MapLocation end;
 
@@ -37,7 +37,7 @@ public class DijkstraNav extends Navigation {
 	public void init(MapLocation goalLocation) {
 		this.distance = new HashMap<MapLocation, Integer>();
 		this.previous = new HashMap<MapLocation, MapLocation>();
-		this.mapLocationsRemovedFromQueue = new HashSet<MapLocation>();
+		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(200);
 		this.queue = new FastMinHeap<MapLocation>();
 		this.start = this.myRC.getLocation();
 		this.end = goalLocation;
@@ -104,15 +104,16 @@ public class DijkstraNav extends Navigation {
 						"path computed: " + Clock.getRoundNum());
 				return;
 			}
-			// System.out.println("before minimum: " + Clock.getBytecodeNum());
-			this.mapLocationsRemovedFromQueue.add(u);
-			// System.out.println("after minimum: " + Clock.getBytecodeNum());
+			this.mapLocationsRemovedFromQueue.insert(u);
+			System.out.println("before insert: " + Clock.getBytecodeNum());
+			this.mapLocationsRemovedFromQueue.search(u);
+			System.out.println("after insert: " + Clock.getBytecodeNum());
 			for (MapLocation v : getMapLocationNeighbors(u)) {
 				// System.out.println("before minimum: " +
 				// Clock.getBytecodeNum());
 				// System.out.println("after minimum: " +
 				// Clock.getBytecodeNum());
-				if (this.mapLocationsRemovedFromQueue.contains(v)) {
+				if (this.mapLocationsRemovedFromQueue.search(v)) {
 					continue;
 				} else {
 					if (!locationTraversible(v)) {
