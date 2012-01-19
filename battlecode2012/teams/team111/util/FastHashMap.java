@@ -1,4 +1,4 @@
-package pather.util;
+package team111.util;
 
 /**
  * Implements a faster hashmap. Maps keys of type K to values of type V. Does

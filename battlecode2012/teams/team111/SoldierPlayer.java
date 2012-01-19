@@ -1,17 +1,11 @@
-package pather;
+package team111;
 
 import java.util.Random;
 
-import pather.Nav.BugNav;
-import pather.Nav.Navigation;
-import pather.util.FastArrayList;
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
+import team111.Nav.BugNav;
+import team111.Nav.Navigation;
+import team111.util.FastArrayList;
 import battlecode.common.*;
-import battlecode.common.RobotController;
-import battlecode.common.RobotLevel;
-import battlecode.common.RobotType;
 
 public class SoldierPlayer extends BasePlayer {
 

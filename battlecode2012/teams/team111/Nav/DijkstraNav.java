@@ -1,4 +1,4 @@
-package pather.Nav;
+package team111.Nav;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -7,9 +7,9 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 
 import battlecode.common.*;
-import pather.*;
-import pather.Nav.*;
-import pather.util.*;
+import team111.*;
+import team111.Nav.*;
+import team111.util.*;
 
 /**
  * Too many bytecodes for reasonable usage.
