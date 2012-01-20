@@ -11,7 +11,6 @@ public abstract class BasePlayer extends StaticStuff {
 	protected Navigation nav = null;
 
 	public BasePlayer(RobotController rc) {
-		// Today use BugNav
 		this.nav = new LocalAreaNav(rc);
 	}
 
