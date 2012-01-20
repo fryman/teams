@@ -125,8 +125,13 @@ public class ArchonPlayer extends BasePlayer {
 					scoutCount++;
 				}
 				while(scorcherCount<6){
+					int countMoves = 0;
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
+					while(countMoves<5){
+						randomWalk();
+						countMoves++;
+					}
 				}
 				fluxToFriends();
 				super.runAtEndOfTurn();
