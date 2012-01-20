@@ -363,6 +363,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void destroyTower(MapLocation target) {
 		try {
+			if (!myRC.canSenseSquare(target)) {
+				return;
+			}
 			while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() != myRC.getTeam()) {
