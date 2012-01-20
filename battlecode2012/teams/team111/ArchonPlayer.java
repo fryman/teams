@@ -60,9 +60,8 @@ public class ArchonPlayer extends BasePlayer {
 				IDNumbers[Counter] = r.getID();
 				Counter++;
 			}
-			if (false) {
-				// runDefendCoreWithSchorchers();
-				runDefendCoreWithSchorchers();
+			if (false) {//myRC.getRobot().getID()==IDNumbers[0]) {
+				runDefendCoreWithScorchers();
 			} else {
 				runArchonBrain();
 			}
@@ -115,22 +114,36 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 	
-	public void runDefendCoreWithSchorchers(){
+	public void runDefendCoreWithScorchers(){
 		while (true) {
 			try {
+				MapLocation core = myRC.sensePowerCore().getLocation();
 				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				while(scoutCount<1){
 					spawnScoutAndTransferFlux();
 					scoutCount++;
 				}
+				while(scorcherCount<5){
+					int countMoves = 0;
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+					while(countMoves<4){
+						randomWalk();
+						countMoves++;
+					}
+				}
 				while(scorcherCount<6){
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
+					while (!myRC.getLocation().isAdjacentTo(core)) {
+						this.nav.getNextMove(core);
+						super.runAtEndOfTurn();
+					}
 				}
 				fluxToFriends();
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -138,11 +151,11 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean fluxToFriends() {
+	public void fluxToFriends() {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
-			MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 			if (weakFriendlyUnit != null) {
+				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
 					this.nav.getNextMove(weakLoc);
 					runAtEndOfTurn();
@@ -159,14 +172,11 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
-					return true;
 				}
 			}
-			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
 	}
 	
 	
