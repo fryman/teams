@@ -130,6 +130,7 @@ public class ArchonPlayer extends BasePlayer {
 					scorcherCount++;
 					while(countMoves<5){
 						randomWalk();
+						countMoves++;
 					}
 				}
 				fluxToFriends();
