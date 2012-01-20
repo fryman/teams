@@ -117,7 +117,7 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				while(scoutCount<1){
 					spawnScoutAndTransferFlux();
@@ -128,7 +128,7 @@ public class ArchonPlayer extends BasePlayer {
 					scorcherCount++;
 				}
 				fluxToFriends();
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
