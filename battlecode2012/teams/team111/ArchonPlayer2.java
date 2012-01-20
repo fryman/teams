@@ -39,29 +39,25 @@ public class ArchonPlayer2 extends BasePlayer {
 		myRC.yield();
 	}
 
-	public void run() {
+	private int scorcherCount = 0;
+	private int scoutCount = 0;
+	
+	public void runDefendCoreWithScorchers() {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				// This causes the archons to spread out quickly, and limits
-				// spreading to 200 rounds. Realistically spreading out is
-				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 20
-						&& !spreadOutFromOtherArchons()) {
-					while (myRC.isMovementActive()) {
-						runAtEndOfTurn();
-					}
+				while(scoutCount<2){
+					spawnScorcherAndTransferFlux();
+					scoutCount++;
 				}
-				spawnScorcherAndTransferFlux();
-				MapLocation capturing = getNewTarget();
-				myRC.setIndicatorString(0, "capturing: " + capturing + " "
-						+ Clock.getRoundNum());
-				goToPowerNodeForBuild(capturing);
-				buildOrDestroyTower(capturing);
+				while(scorcherCount<7){
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+				}
+				fluxToFriends();
 				runAtEndOfTurn();
-				
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
@@ -69,6 +65,38 @@ public class ArchonPlayer2 extends BasePlayer {
 		}
 	}
 
+	public boolean fluxToFriends() {
+		try {
+			Robot weakFriendlyUnit = findAWeakFriendly();
+			MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
+			if (weakFriendlyUnit != null) {
+				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
+					this.nav.getNextMove(weakLoc);
+					runAtEndOfTurn();
+				}
+				// figure out how much flux he needs.
+				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
+				double weakFluxAmount = weakRobotInfo.flux;
+				double maxFluxAmount = weakRobotInfo.type.maxFlux;
+				double fluxAmountToTransfer = 0.5*(maxFluxAmount-weakFluxAmount);
+				if (fluxAmountToTransfer > myRC.getFlux()){
+					fluxAmountToTransfer = myRC.getFlux();
+				}
+				if (fluxAmountToTransfer > 0) {
+					myRC.transferFlux(weakRobotInfo.location,
+							weakRobotInfo.robot.getRobotLevel(),
+							fluxAmountToTransfer);
+					return true;
+				}
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	
 	/**
 	 * Attempts to build a tower on a given location, or destroy it if there's
 	 * an enemy tower present.
@@ -271,6 +299,8 @@ public class ArchonPlayer2 extends BasePlayer {
 		}
 		return false;
 	}
+	
+
 
 	/**
 	 * Updates the list of capturable power nodes
