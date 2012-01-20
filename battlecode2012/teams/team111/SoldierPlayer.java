@@ -175,7 +175,7 @@ public class SoldierPlayer extends BasePlayer {
 					soldiers.add(e);
 					break;
 				case SCORCHER:
-					scorchers.add(e);
+					others.add(e);
 					break;
 				default:
 					others.add(e);

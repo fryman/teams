@@ -17,7 +17,7 @@ public class FastHashMap<K, V> {
 	private int size;
 	private int capacity;
 	private final double MAX_LOAD_FACTOR = 0.3;
-	private final int DEFAULT_SIZE = 8;
+	private final int DEFAULT_SIZE = 99999;
 	private double loadFactor;
 
 	/**
@@ -191,6 +191,16 @@ public class FastHashMap<K, V> {
 	 */
 	public double getLoadFactor() {
 		return this.loadFactor;
+	}
+	
+	public String toString(){
+		String out = "";
+		for (int i = 0; i < keys.length; i ++){
+			if (keys[i] != null){
+				out += "Key: " + keys[i] + ", Val: " + values[i] + "\n";
+			}
+		}
+		return out;
 	}
 
 	/**

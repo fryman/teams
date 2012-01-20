@@ -19,6 +19,7 @@ public class FastMinHeap<E> {
 	private int capacity;
 	private final int DEFAULT_CAPACITY = 8;
 	private final int INFINITY = 1000000;
+	private FastHashMap<E, Integer> locations;
 
 	/**
 	 * Default constructor gives initial size DEFAULT_CAPACITY.
@@ -28,6 +29,7 @@ public class FastMinHeap<E> {
 		this.costHeap = new double[DEFAULT_CAPACITY];
 		this.size = 0;
 		this.capacity = DEFAULT_CAPACITY;
+		this.locations = new FastHashMap();
 	}
 
 	/**
@@ -44,6 +46,7 @@ public class FastMinHeap<E> {
 		this.costHeap = new double[initialSize];
 		this.size = 0;
 		this.capacity = initialSize;
+		this.locations = new FastHashMap();
 	}
 
 	/**
@@ -61,6 +64,7 @@ public class FastMinHeap<E> {
 		this.size += 1;
 		this.objectHeap[this.size - 1] = elementToInsert;
 		this.costHeap[this.size - 1] = this.INFINITY;
+		this.locations.put(elementToInsert, this.size-1);
 		this.decreaseKey(this.size - 1, valueOfElem);
 	}
 
@@ -96,6 +100,8 @@ public class FastMinHeap<E> {
 		this.objectHeap[0] = this.objectHeap[this.size - 1];
 		this.costHeap[0] = this.costHeap[this.size - 1];
 		this.size -= 1;
+		this.locations.delete(min);
+		this.locations.put(this.objectHeap[0], 0);
 		this.minHeapify(0);
 		return min;
 	}
@@ -131,8 +137,10 @@ public class FastMinHeap<E> {
 			double tempC = this.costHeap[i];
 			this.objectHeap[i] = this.objectHeap[parent(i)];
 			this.costHeap[i] = this.costHeap[parent(i)];
+			this.locations.put(this.objectHeap[i], i);
 			this.objectHeap[parent(i)] = tempE;
 			this.costHeap[parent(i)] = tempC;
+			this.locations.put(tempE, parent(i));
 			i = parent(i);
 		}
 	}
@@ -166,8 +174,10 @@ public class FastMinHeap<E> {
 			double tempC = this.costHeap[location];
 			this.objectHeap[location] = this.objectHeap[smallest];
 			this.costHeap[location] = this.costHeap[smallest];
+			this.locations.put(this.objectHeap[location], location);
 			this.objectHeap[smallest] = tempE;
 			this.costHeap[smallest] = tempC;
+			this.locations.put(tempE, smallest);
 			minHeapify(smallest);
 		}
 	}
@@ -243,9 +253,7 @@ public class FastMinHeap<E> {
 	}
 
 	/**
-	 * returns the location in the heap which contains elem (using .equals()).
-	 * 
-	 * returns -1 if elem is not in the heap.
+	 * returns the location in the heap which contains elem (using hashCode).
 	 * 
 	 * @param elem
 	 *            element to find in the heap
@@ -253,12 +261,11 @@ public class FastMinHeap<E> {
 	 *         in the heap.
 	 */
 	public int locationOf(E elem) {
-		for (int i = 0; i < this.size; i ++){
-			if (this.objectHeap[i].equals(elem)){
-				return i;
-			}
+		Integer tentativeLoc = this.locations.get(elem);
+		if (tentativeLoc == null){
+			return -1;
 		}
-		return -1;
+		return this.locations.get(elem);
 	}
 
 	/**
@@ -274,7 +281,10 @@ public class FastMinHeap<E> {
 		stringHeap.insert("one", 1);
 		stringHeap.insert("six", 6);
 		stringHeap.insert("neg one", -1);
+		System.out.println(stringHeap.locations.toString());
 		System.out.println("min: " + stringHeap.extractMin());
+		System.out.println(stringHeap.locations.toString());
 		System.out.println(stringHeap.toString());
+		System.out.println(stringHeap.locationOf("one"));
 	}
 }

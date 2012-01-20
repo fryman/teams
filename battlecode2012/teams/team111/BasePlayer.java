@@ -11,7 +11,7 @@ public abstract class BasePlayer extends StaticStuff {
 
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
-		this.nav = new BugNav(rc);
+		this.nav = new DijkstraNav(rc);
 	}
 
 	/**
