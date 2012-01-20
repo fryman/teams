@@ -347,6 +347,9 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void buildTower(MapLocation target) {
 		try {
+			if (!myRC.canSenseSquare(target)){
+				return;
+			}
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() == myRC.getTeam()) {
@@ -365,6 +368,7 @@ public class ArchonPlayer extends BasePlayer {
 				myRC.setIndicatorString(1, "null");
 			}
 		} catch (GameActionException e) {
+			System.out.println(Clock.getBytecodeNum());
 			e.printStackTrace();
 		}
 	}
