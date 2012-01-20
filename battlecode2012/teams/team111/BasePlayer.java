@@ -2,6 +2,7 @@ package team111;
 
 import team111.Nav.BugNav;
 import team111.Nav.DijkstraNav;
+import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import team111.util.BoardModel;
 import battlecode.common.*;
@@ -11,7 +12,7 @@ public abstract class BasePlayer extends StaticStuff {
 
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
-		this.nav = new DijkstraNav(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	/**

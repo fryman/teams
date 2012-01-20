@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new DijkstraNav(rc);
+		//this.nav = new DijkstraNav(rc);
 	}
 
 	/**
@@ -828,10 +828,10 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Just to test the costs of running dijkstra.
+	 * Just to test the costs of running navs.
 	 */
-	public void runToTestDijkstraNav() {
-		this.nav = new DijkstraNav(myRC);
+	public void runToTestNav() {
+		this.nav = new LocalAreaNav(myRC);
 		MapLocation capturing = getNewTarget();
 		while (true) {
 			try {

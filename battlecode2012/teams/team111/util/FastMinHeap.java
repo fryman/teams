@@ -12,7 +12,7 @@ package team111.util;
  * @author saf
  * 
  */
-public class FastMinHeap<E> {
+public class FastMinHeap<E> implements PriorityQueue<E>{
 	private E[] objectHeap;
 	private double[] costHeap;
 	private int size;

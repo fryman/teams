@@ -25,7 +25,7 @@ public class RobotPlayer {
 //				System.out.println("GOT HERE. count "+count);
 //				new ArchonPlayer2(rc).run();
 //			}
-			//new ArchonPlayer(rc).runToTestDijkstraNav();
+			//new ArchonPlayer(rc).runToTestNav();
 		case SCOUT:
 			new ScoutPlayer(rc).run();
 		case SOLDIER:

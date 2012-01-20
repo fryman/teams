@@ -54,6 +54,10 @@ public class BugNav extends Navigation {
 		getNextMoveBug0(target);
 		return;
 	}
+	
+	public boolean onWall(){
+		return tracing;
+	}
 
 	public void getNextMoveBug0(MapLocation target) {
 		try {
