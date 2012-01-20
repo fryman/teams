@@ -184,6 +184,10 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
+	
+	/**
+	 * @return the closest enemy Robot of 
+	 */
 
 	/**
 	 * Finds the friendly nearby that has the lowest flux and is not an archon.
@@ -680,7 +684,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 * sense friendly towers
 	 * 
 	 * @param rt
-	 * @return returns MapLocation of closest robot of type rt
+	 * @return returns MapLocation of closest friendly robot of type rt
 	 */
 	public MapLocation findNearestFriendlyRobotType(RobotType rt) {
 		MapLocation closestLoc = null;
@@ -706,7 +710,42 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
+	
+	/**
+	 * Note that this method depends on sensor range, so not a good option to
+	 * sense enemy towers
+	 * 
+	 * @param rt
+	 * @return returns MapLocation of closest enemy robot of type rt
+	 */
+	public MapLocation findNearestEnemyRobotType(RobotType rt) {
+		MapLocation closestLoc = null;
+		Robot closestRob = null;
+		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+		try {
+			if (nearbyRobots.length > 0) {
+				for (Robot r : nearbyRobots) {
+					if (r.getTeam() == myRC.getTeam()
+							|| myRC.senseRobotInfo(r).type != rt) {
+						continue;
+					}
+					if (closestRob == null
+							|| compareRobotDistance(r, closestRob)) {
+						closestRob = r;
+						closestLoc = myRC.senseLocationOf(r);
+					}
+				}
+			}
+			return closestLoc;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
+	/** 
+	 * @return MapLocation of closest allied tower
+	 */
 	public MapLocation findNearestAlliedTower() {
 		MapLocation closestLoc = null;
 		PowerNode[] towers = myRC.senseAlliedPowerNodes();
