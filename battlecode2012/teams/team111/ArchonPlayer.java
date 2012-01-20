@@ -117,6 +117,7 @@ public class ArchonPlayer extends BasePlayer {
 	public void runDefendCoreWithScorchers(){
 		while (true) {
 			try {
+				MapLocation core = myRC.sensePowerCore().getLocation();
 				while (myRC.isMovementActive()) {
 					super.runAtEndOfTurn();
 				}
@@ -124,13 +125,21 @@ public class ArchonPlayer extends BasePlayer {
 					spawnScoutAndTransferFlux();
 					scoutCount++;
 				}
-				while(scorcherCount<6){
+				while(scorcherCount<5){
 					int countMoves = 0;
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
-					while(countMoves<5){
+					while(countMoves<4){
 						randomWalk();
 						countMoves++;
+					}
+				}
+				while(scorcherCount<6){
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+					while (!myRC.getLocation().isAdjacentTo(core)) {
+						this.nav.getNextMove(core);
+						super.runAtEndOfTurn();
 					}
 				}
 				fluxToFriends();
