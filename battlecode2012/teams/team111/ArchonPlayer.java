@@ -142,11 +142,11 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean fluxToFriends() {
+	public void fluxToFriends() {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
-			MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 			if (weakFriendlyUnit != null) {
+				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
 					this.nav.getNextMove(weakLoc);
 					runAtEndOfTurn();
@@ -163,14 +163,11 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
-					return true;
 				}
 			}
-			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
 	}
 	
 	
