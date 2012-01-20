@@ -117,6 +117,7 @@ public class ArchonPlayer extends BasePlayer {
 	public void runDefendCoreWithScorchers(){
 		while (true) {
 			try {
+				MapLocation core = myRC.sensePowerCore().getLocation();
 				while (myRC.isMovementActive()) {
 					super.runAtEndOfTurn();
 				}
@@ -124,13 +125,21 @@ public class ArchonPlayer extends BasePlayer {
 					spawnScoutAndTransferFlux();
 					scoutCount++;
 				}
-				while(scorcherCount<6){
+				while(scorcherCount<5){
 					int countMoves = 0;
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
-					while(countMoves<5){
+					while(countMoves<4){
 						randomWalk();
 						countMoves++;
+					}
+				}
+				while(scorcherCount<6){
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+					while (!myRC.getLocation().isAdjacentTo(core)) {
+						this.nav.getNextMove(core);
+						super.runAtEndOfTurn();
 					}
 				}
 				fluxToFriends();
@@ -142,11 +151,11 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean fluxToFriends() {
+	public void fluxToFriends() {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
-			MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 			if (weakFriendlyUnit != null) {
+				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
 					this.nav.getNextMove(weakLoc);
 					runAtEndOfTurn();
@@ -163,14 +172,11 @@ public class ArchonPlayer extends BasePlayer {
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
-					return true;
 				}
 			}
-			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
 	}
 	
 	
