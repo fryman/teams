@@ -5,10 +5,13 @@ import team111.Nav.DijkstraNav;
 import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import team111.util.BoardModel;
+import team111.util.FastArrayList;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	protected Navigation nav = null;
+	protected static final int ARCHON_PING_MESSAGE = 47;
+	protected static final int ARCHON_ENEMY_MESSAGE = 98;
 
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
@@ -23,7 +26,8 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-		//broadcastMessage();
+		// broadcastMessage();
+		pingPresence();
 		myRC.yield();
 	}
 
@@ -374,6 +378,9 @@ public abstract class BasePlayer extends StaticStuff {
 				} else if (!myRC.isAttackActive()) {
 					nav.getNextMove(target);
 				}
+				if (!myRC.canSenseSquare(target)) {
+					break;
+				}
 				runAtEndOfTurn();
 			}
 		} catch (GameActionException e) {
@@ -713,9 +720,10 @@ public abstract class BasePlayer extends StaticStuff {
 				}
 
 			}
-		}return closestLoc;
+		}
+		return closestLoc;
 	}
-	
+
 	public boolean canSenseArchon() {
 		MapLocation[] archons = myRC.senseAlliedArchons();
 		for (int i = 0; i < archons.length; i++) {
@@ -726,4 +734,130 @@ public abstract class BasePlayer extends StaticStuff {
 		return false;
 	}
 
+	/**
+	 * Sends a message saying this robot is present and broadcasting its
+	 * location.
+	 */
+	public void pingPresence() {
+		try {
+			Message message = new Message();
+			message.ints = new int[] { ARCHON_PING_MESSAGE };
+			message.locations = new MapLocation[] { this.myRC.getLocation() };
+			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
+					+ 16 * message.getFluxCost()) {
+				myRC.broadcast(message);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Finds and returns the BEST enemy to shoot at.
+	 */
+	public Robot senseBestEnemy() {
+		try {
+			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> others = new FastArrayList<Robot>(
+					enemies.length);
+
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
+					continue;
+				}
+				RobotInfo eInfo = myRC.senseRobotInfo(e);
+				switch (eInfo.type) {
+				case ARCHON:
+					archons.add(e);
+					break;
+				case SOLDIER:
+					soldiers.add(e);
+					break;
+				case SCORCHER:
+					others.add(e);
+					break;
+				default:
+					others.add(e);
+				}
+			}
+			FastArrayList<Robot> priorityTargets = null;
+			if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
+			} else if (archons.size() > 0) {
+				priorityTargets = archons;
+			} else if (others.size() > 0) {
+				priorityTargets = others;
+			}
+			if (priorityTargets != null) {
+				Robot closest = null;
+				Robot weakest = null;
+				if (priorityTargets.size() > 0) {
+					for (int i = 0; i < priorityTargets.size(); i++) {
+						Robot e = priorityTargets.get(i);
+						if (e.getTeam() == myRC.getTeam()
+								|| !myRC.canSenseObject(e)) {
+							continue;
+						}
+						if (closest == null || compareRobotDistance(e, closest)) {
+							closest = e;
+						}
+						if (weakest == null || compareRobotEnergon(e, weakest)) {
+							weakest = e;
+						}
+					}
+				}
+				return weakest;
+			}
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * Receives all messages in the queue. Returns an attack location, else
+	 * null.
+	 */
+	public MapLocation receiveMessages() {
+		Message[] recents = this.myRC.getAllMessages();
+		MapLocation follow = null;
+		MapLocation attack = null;
+		for (Message r : recents) {
+			if (r.ints != null && r.ints[0] == ARCHON_ENEMY_MESSAGE) {
+				return r.locations[0];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Useful when a robot only knows where an enemy is, rather than having
+	 * information about the object.
+	 * 
+	 * @param n
+	 */
+	public void attackAndChaseMapLocation(MapLocation n) {
+		try {
+			if (n == null) {
+				return;
+			}
+			if (myRC.canAttackSquare(n) && !myRC.isAttackActive()) {
+				myRC.attackSquare(n, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "Attacking: " + n.toString());
+			}
+			if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
+				this.nav.getNextMove(n);
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
 }
