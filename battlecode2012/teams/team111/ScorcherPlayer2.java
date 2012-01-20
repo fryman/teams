@@ -64,6 +64,7 @@ public class ScorcherPlayer2 extends BasePlayer {
 	 * attack. A good condition would mean that there are enemies
 	 * in range to shoot and that there are more enemies than allies
 	 * in range since scorchers can do damage with friendly fire.  
+	 * It also makes sure there are NO archons in range of attack.
 	 * 
 	 * @return Returns true if there are good conditions for the 
 	 * scorcher to attack.
@@ -83,7 +84,7 @@ public class ScorcherPlayer2 extends BasePlayer {
 						numEnemies++;
 					}
 				}
-				if (numEnemies > numAllies) {		//more enemies
+				if (numEnemies > numAllies && !canSenseArchon()) {		//more enemies
 					return true;
 				} else {		//if you will be doing more damage to yourself, do not attack
 					return false;
