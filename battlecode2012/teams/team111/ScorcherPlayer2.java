@@ -1,6 +1,5 @@
 package team111;
 
-import team111.Nav.BugNav;
 import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -40,10 +39,10 @@ public class ScorcherPlayer2 extends BasePlayer {
 	}
 
 	public void run() {
-		runDefendCore();
+		runChokePoints();
 	}
 
-	public void runDefendCore() {
+	public void runChokePoints() {
 		while (true) {
 			try {
 				if (shouldAttack()) {
