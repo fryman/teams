@@ -123,7 +123,7 @@ public class ArchonPlayer extends BasePlayer {
 					spawnScoutAndTransferFlux();
 					scoutCount++;
 				}
-				while(scorcherCount<7){
+				while(scorcherCount<6){
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
 				}
