@@ -41,7 +41,7 @@ public class SoldierPlayer extends BasePlayer {
 						RobotLevel.POWER_NODE) != null) {
 					getOffPowerNode();
 				}
-				closestTar = senseClosestEnemy();
+				closestTar = senseBestEnemy();
 				if (closestTar == null) {
 					try {
 						Robot friend = findAFriendly();
