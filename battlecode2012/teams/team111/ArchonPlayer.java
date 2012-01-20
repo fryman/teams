@@ -20,10 +20,12 @@ public class ArchonPlayer extends BasePlayer {
 	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
 											// this.
 	private double prevEnergon = 0;
-
+	private int scorcherCount = 0;
+	private int scoutCount = 0;
+	
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		//this.nav = new DijkstraNav(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	/**
@@ -37,11 +39,43 @@ public class ArchonPlayer extends BasePlayer {
 		myRC.yield();
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
-		//broadcastMessage();
+		// broadcastMessage();
+		//pingPresence();
 		this.findWeakFriendsAndTransferFlux();
 	}
 
+	/**
+	 * Run method allowing for case by case archon run methods.
+	 * 
+	 * @author brian
+	 */
 	public void run() {
+		try {
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			int Counter = 0;
+			for (MapLocation m : archons) {
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				IDNumbers[Counter] = r.getID();
+				Counter++;
+			}
+			if (false) {//myRC.getRobot().getID()==IDNumbers[0]) {
+				runDefendCoreWithScorchers();
+			} else {
+				runArchonBrain();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * First archon brain, for building towers.
+	 * 
+	 * @author saf
+	 */
+	public void runArchonBrain() {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
@@ -50,26 +84,25 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 200 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 50
-						&& !spreadOutFromOtherArchons()) {
+				while (Clock.getRoundNum() < 50 && !spreadOutFromOtherArchons()) {
 					while (myRC.isMovementActive()) {
 						runAtEndOfTurn();
 					}
 				}
-//				if (this.nav.getClass() != DijkstraNav.class) {
-//					this.nav = new DijkstraNav(myRC);
-//				}
+				// if (this.nav.getClass() != DijkstraNav.class) {
+				// this.nav = new DijkstraNav(myRC);
+				// }
 				// spawnScorcherAndTransferFlux();
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
-				
-				/*if (beingAttacked()) {
-				if (myRC.canMove(myRC.getDirection().opposite())) {
-					myRC.setDirection(myRC.getDirection().opposite());
-					}
-				}*/
-				
+
+				/*
+				 * if (beingAttacked()) { if
+				 * (myRC.canMove(myRC.getDirection().opposite())) {
+				 * myRC.setDirection(myRC.getDirection().opposite()); } }
+				 */
+				sendPingOrEnemyLoc();
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
@@ -80,7 +113,73 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	public void runDefendCoreWithScorchers(){
+		while (true) {
+			try {
+				MapLocation core = myRC.sensePowerCore().getLocation();
+				while (myRC.isMovementActive()) {
+					super.runAtEndOfTurn();
+				}
+				while(scoutCount<1){
+					spawnScoutAndTransferFlux();
+					scoutCount++;
+				}
+				while(scorcherCount<5){
+					int countMoves = 0;
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+					while(countMoves<4){
+						randomWalk();
+						countMoves++;
+					}
+				}
+				while(scorcherCount<6){
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+					while (!myRC.getLocation().isAdjacentTo(core)) {
+						this.nav.getNextMove(core);
+						super.runAtEndOfTurn();
+					}
+				}
+				fluxToFriends();
+				super.runAtEndOfTurn();
+			} catch (Exception e) {
+				System.out.println("caught exception:");
+				e.printStackTrace();
+			}
+		}
+	}
 
+	public void fluxToFriends() {
+		try {
+			Robot weakFriendlyUnit = findAWeakFriendly();
+			if (weakFriendlyUnit != null) {
+				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
+				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
+					this.nav.getNextMove(weakLoc);
+					runAtEndOfTurn();
+				}
+				// figure out how much flux he needs.
+				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
+				double weakFluxAmount = weakRobotInfo.flux;
+				double maxFluxAmount = weakRobotInfo.type.maxFlux;
+				double fluxAmountToTransfer = 0.5*(maxFluxAmount-weakFluxAmount);
+				if (fluxAmountToTransfer > myRC.getFlux()){
+					fluxAmountToTransfer = myRC.getFlux();
+				}
+				if (fluxAmountToTransfer > 0) {
+					myRC.transferFlux(weakRobotInfo.location,
+							weakRobotInfo.robot.getRobotLevel(),
+							fluxAmountToTransfer);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	/**
 	 * Attempts to build a tower on a given location, or destroy it if there's
 	 * an enemy tower present.
@@ -300,8 +399,8 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Finds closest PowerNode that we can build on. Sets targetLoc to this
-	 * node's location.
+	 * Finds PowerNode that we can build on "closest" to the opponent PowerCore.
+	 * (Farthest from ours...). Sets targetLoc to this node's location.
 	 * 
 	 * If there is no powernode that we can build on, sets targetLoc to this
 	 * team's powercore.
@@ -312,17 +411,24 @@ public class ArchonPlayer extends BasePlayer {
 	public MapLocation getNewTarget() {
 		updateUnownedNodes();
 		if (capturablePowerNodes.length != 0) {
-			MapLocation closest = capturablePowerNodes[0];
+			MapLocation best = capturablePowerNodes[0];
+			double farthestDist = this.myRC.sensePowerCore().getLocation()
+					.distanceSquaredTo(best);
+			double sample;
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
-				if (compareMapLocationDistance(capturablePowerNodes[i], closest)) {
-					closest = capturablePowerNodes[i];
+				sample = capturablePowerNodes[i].distanceSquaredTo(this.myRC
+						.sensePowerCore().getLocation());
+				if (sample > farthestDist) {
+					farthestDist = sample;
+					best = capturablePowerNodes[i];
 				}
 			}
-			targetLoc = closest; // to conform to method signature
+			targetLoc = best; // to conform to method signature
 			if (Clock.getRoundNum() < 200) {
-				closest = capturablePowerNodes[(int)Math.random()*capturablePowerNodes.length];
+				best = capturablePowerNodes[(int) Math.random()
+						* capturablePowerNodes.length];
 			}
-			return closest;
+			return best;
 			/*
 			 * The commented code here is archaic. It is saved for safety.
 			 * 
@@ -347,7 +453,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void buildTower(MapLocation target) {
 		try {
-			if (!myRC.canSenseSquare(target)){
+			if (!myRC.canSenseSquare(target)) {
 				return;
 			}
 			if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
@@ -363,6 +469,9 @@ public class ArchonPlayer extends BasePlayer {
 				if (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) == null) {
 					myRC.spawn(RobotType.TOWER);
 					runAtEndOfTurn();
+				}
+				if (!myRC.canSenseSquare(target)) {
+					return;
 				}
 				getNewTarget();
 				myRC.setIndicatorString(1, "null");
@@ -762,6 +871,7 @@ public class ArchonPlayer extends BasePlayer {
 	 * He executes special code.
 	 * 
 	 * @TODO Find a way to sense objects out of range.
+	 * @author brian
 	 */
 
 	public int checkLowestArchonNumber() {
@@ -832,7 +942,8 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Just to test the costs of running navs.
+	 * Just to test the costs of running navs. Correct behavior is walking to a
+	 * powernode
 	 */
 	public void runToTestNav() {
 		this.nav = new LocalAreaNav(myRC);
@@ -844,6 +955,30 @@ public class ArchonPlayer extends BasePlayer {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	/**
+	 * Send a "ping" (here's my location) message or the location of an enemy if
+	 * one is present.
+	 */
+	public void sendPingOrEnemyLoc() {
+		try {
+			Robot bestEnemy = senseBestEnemy();
+			if (bestEnemy == null) {
+				pingPresence();
+			} else {
+				Message message = new Message();
+				message.ints = new int[] { ARCHON_ENEMY_MESSAGE };
+				message.locations = new MapLocation[] { this.myRC
+						.senseLocationOf(bestEnemy) };
+				if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
+						+ 16 * message.getFluxCost()) {
+					myRC.broadcast(message);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
