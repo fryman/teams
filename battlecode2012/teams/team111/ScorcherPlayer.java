@@ -10,7 +10,7 @@ import battlecode.common.Robot;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
-public class ScorcherPlayer0 extends BasePlayer {
+public class ScorcherPlayer extends BasePlayer {
 
 	private Navigation nav = null;
 	private MapLocation targetLoc;
@@ -25,7 +25,7 @@ public class ScorcherPlayer0 extends BasePlayer {
 	// private Robot friendlyToFollow = null;
 	// private MapLocation friendlyMapLocationToFollow = null;
 
-	public ScorcherPlayer0(RobotController rc) {
+	public ScorcherPlayer(RobotController rc) {
 		super(rc);
 	}
 
