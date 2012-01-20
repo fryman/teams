@@ -63,6 +63,13 @@ public class ArchonPlayer extends BasePlayer {
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
+				
+				/*if (beingAttacked()) {
+				if (myRC.canMove(myRC.getDirection().opposite())) {
+					myRC.setDirection(myRC.getDirection().opposite());
+					}
+				}*/
+				
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
