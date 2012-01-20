@@ -124,6 +124,12 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
+				MapLocation archonEnemy = receiveMessages();
+				if (archonEnemy != null) {
+					attackAndChaseMapLocation(archonEnemy);
+					runAtEndOfTurn();
+					continue;
+				}
 				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy == null) {
 					this.nav.getNextMove(friendlyMapLocationToFollow);

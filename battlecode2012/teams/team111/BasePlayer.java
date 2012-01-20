@@ -10,6 +10,8 @@ import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	protected Navigation nav = null;
+	protected static final int ARCHON_PING_MESSAGE = 47;
+	protected static final int ARCHON_ENEMY_MESSAGE = 98;
 
 	public BasePlayer(RobotController rc) {
 		// Today use BugNav
@@ -739,6 +741,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public void pingPresence() {
 		try {
 			Message message = new Message();
+			message.ints = new int[] { ARCHON_PING_MESSAGE };
 			message.locations = new MapLocation[] { this.myRC.getLocation() };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()) {
@@ -748,7 +751,7 @@ public abstract class BasePlayer extends StaticStuff {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Finds and returns the BEST enemy to shoot at.
 	 */
@@ -819,4 +822,42 @@ public abstract class BasePlayer extends StaticStuff {
 		return null;
 	}
 
+	/**
+	 * Receives all messages in the queue. Returns an attack location, else
+	 * null.
+	 */
+	public MapLocation receiveMessages() {
+		Message[] recents = this.myRC.getAllMessages();
+		MapLocation follow = null;
+		MapLocation attack = null;
+		for (Message r : recents) {
+			if (r.ints != null && r.ints[0] == ARCHON_ENEMY_MESSAGE) {
+				return r.locations[0];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Useful when a robot only knows where an enemy is, rather than having
+	 * information about the object.
+	 * 
+	 * @param n
+	 */
+	public void attackAndChaseMapLocation(MapLocation n) {
+		try {
+			if (n == null) {
+				return;
+			}
+			if (myRC.canAttackSquare(n) && !myRC.isAttackActive()) {
+				myRC.attackSquare(n, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "Attacking: " + n.toString());
+			}
+			if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
+				this.nav.getNextMove(n);
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
 }

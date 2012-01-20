@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-		// this.nav = new DijkstraNav(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	/**
@@ -38,9 +38,10 @@ public class ArchonPlayer extends BasePlayer {
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
 		// broadcastMessage();
-		pingPresence();
+		//pingPresence();
 		this.findWeakFriendsAndTransferFlux();
 	}
+
 	/**
 	 * Run method allowing for case by case archon run methods.
 	 * 
@@ -50,15 +51,15 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			MapLocation[] archons = myRC.senseAlliedArchons();
 			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			int Counter=0;
+			int Counter = 0;
 			for (MapLocation m : archons) {
 				Robot r = (Robot) myRC.senseObjectAtLocation(m,
 						RobotLevel.ON_GROUND);
-				IDNumbers[Counter]=r.getID();
+				IDNumbers[Counter] = r.getID();
 				Counter++;
 			}
 			if (false) {
-				//runDefendCoreWithSchorchers();
+				// runDefendCoreWithSchorchers();
 			} else {
 				runArchonBrain();
 			}
@@ -66,7 +67,7 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * First archon brain, for building towers.
 	 * 
@@ -900,6 +901,7 @@ public class ArchonPlayer extends BasePlayer {
 				pingPresence();
 			} else {
 				Message message = new Message();
+				message.ints = new int[] { ARCHON_ENEMY_MESSAGE };
 				message.locations = new MapLocation[] { this.myRC
 						.senseLocationOf(bestEnemy) };
 				if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST

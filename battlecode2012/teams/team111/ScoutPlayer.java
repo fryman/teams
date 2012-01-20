@@ -2,6 +2,7 @@ package team111;
 
 
 import team111.Nav.BugNav;
+import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.RobotInfo;
@@ -13,7 +14,7 @@ import battlecode.common.RobotType;
 
 public class ScoutPlayer extends BasePlayer {
 
-	private Navigation nav = null;
+	private Navigation nav;
 	private MapLocation targetLoc;
 	private Robot closestTar;
 	private Robot friendlyToFollow = null;
@@ -21,6 +22,7 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon
@@ -111,6 +113,7 @@ public class ScoutPlayer extends BasePlayer {
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
+				runAtEndOfTurn();
 			}
 		}
 	}
