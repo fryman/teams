@@ -23,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
-
+		this.nav = new DijkstraNav(rc);
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class ArchonPlayer extends BasePlayer {
 		myRC.yield();
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
-		broadcastMessage();
+		//broadcastMessage();
 		this.findWeakFriendsAndTransferFlux();
 	}
 
@@ -56,9 +56,9 @@ public class ArchonPlayer extends BasePlayer {
 						runAtEndOfTurn();
 					}
 				}
-				if (this.nav.getClass() != DijkstraNav.class) {
-					this.nav = new DijkstraNav(myRC);
-				}
+//				if (this.nav.getClass() != DijkstraNav.class) {
+//					this.nav = new DijkstraNav(myRC);
+//				}
 				// spawnScorcherAndTransferFlux();
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "

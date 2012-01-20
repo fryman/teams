@@ -1,5 +1,6 @@
 package team111.util;
 
+
 /**
  * Implements a fast array list (backed by an array).
  * 
@@ -98,5 +99,31 @@ public class FastArrayList<T> {
 
 	public int size() {
 		return this.size;
+	}
+	
+	public void reverse() {
+		T[] reversedData = (T[]) new Object[this.capacity];
+		for (int i = 0; i < this.size; i++){
+			reversedData[i] = this.data[this.size - i - 1];
+		}
+		this.data = reversedData;
+	}
+	
+	public String toString(){
+		String out = "";
+		for (int i = 0 ; i < this.size; i++){
+			out += this.data[i] + " ";
+		}
+		return out;
+	}
+	
+	public static void main(String[] args){
+		FastArrayList<Integer> ints = new FastArrayList<Integer>(10);
+		ints.add(4);
+		ints.add(3);
+		ints.add(18);
+		System.out.println(ints.toString());
+		ints.reverse();
+		System.out.println(ints.toString());
 	}
 }

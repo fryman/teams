@@ -25,8 +25,8 @@ public class DijkstraNav extends Navigation {
 	private FastHashSet<MapLocation> mapLocationsRemovedFromQueue;
 	private FastHashSet<MapLocation> knownToBeUnreachable = new FastHashSet<MapLocation>(
 			99999);
-	private MapLocation start;
-	private MapLocation end;
+	private FastArrayList<MapLocation> locationsLastToFirst;
+	private int indexInLocationsFastArrayList = -1;
 
 	public DijkstraNav(RobotController myRC) {
 		this.myRC = myRC;
@@ -38,21 +38,22 @@ public class DijkstraNav extends Navigation {
 	 */
 	public void init(MapLocation goalLocation) {
 		this.distance = new FastHashMap<MapLocation, Integer>(99999);
+		this.locationsLastToFirst = new FastArrayList<MapLocation>(20);
 		this.previous = new FastHashMap<MapLocation, MapLocation>(99999);
 		this.mapLocationsRemovedFromQueue = new FastHashSet<MapLocation>(99999);
 		this.queue = new FastMinHeap<MapLocation>();
-		this.start = this.myRC.getLocation();
-		this.end = goalLocation;
 	}
 
 	@Override
 	public void getNextMove(MapLocation target) {
 		try {
 			// get the next location
-			MapLocation next = null;
+			MapLocation next = getNextLocation();
+			//System.out.println(next);
 			while (next == null) {
-				dijkstra(target, this.myRC.getLocation());
-				next = this.previous.get(this.myRC.getLocation());
+				dijkstra(this.myRC.getLocation(), target);
+				next = getNextLocation();
+				//System.out.println("after d: "+next);
 			}
 			if (this.myRC.isMovementActive()) {
 				return;
@@ -114,9 +115,10 @@ public class DijkstraNav extends Navigation {
 			if (distToU == INFINITY) {
 				break;
 			}
-			if (u.equals(end)) {
+			if (u.equals(end) || this.myRC.getLocation().distanceSquaredTo(u) > 15) {
 				myRC.setIndicatorString(0,
 						"path computed: " + Clock.getRoundNum());
+				occupyLastToFirst(u);
 				return;
 			}
 			this.mapLocationsRemovedFromQueue.insert(u);
@@ -196,6 +198,32 @@ public class DijkstraNav extends Navigation {
 				m.add(Direction.NORTH), m.add(Direction.SOUTH),
 				m.add(Direction.WEST) };
 		return neighbors;
+	}
+
+	/**
+	 * Uses previous pointers to create a "next" path.
+	 * 
+	 * @param endOfPartialPath
+	 *            This MapLocation is the final location on the computed partial
+	 *            path.
+	 */
+	public void occupyLastToFirst(MapLocation endOfPartialPath) {
+		MapLocation end = endOfPartialPath;
+		while (end != null) {
+			this.locationsLastToFirst.add(end);
+			end = this.previous.get(end);
+		}
+		this.indexInLocationsFastArrayList = this.locationsLastToFirst.size()-1;
+	}
+
+	public MapLocation getNextLocation() {
+		if (this.indexInLocationsFastArrayList == -1) {
+			return null;
+		} else {
+			this.indexInLocationsFastArrayList--;
+			return this.locationsLastToFirst
+					.get(this.indexInLocationsFastArrayList + 1);
+		}
 	}
 
 }
