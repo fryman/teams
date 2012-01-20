@@ -21,7 +21,6 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new BugNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon

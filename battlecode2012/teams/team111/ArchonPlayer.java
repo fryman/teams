@@ -41,8 +41,38 @@ public class ArchonPlayer extends BasePlayer {
 		pingPresence();
 		this.findWeakFriendsAndTransferFlux();
 	}
-
+	/**
+	 * Run method allowing for case by case archon run methods.
+	 * 
+	 * @author brian
+	 */
 	public void run() {
+		try {
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			int Counter=0;
+			for (MapLocation m : archons) {
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				IDNumbers[Counter]=r.getID();
+				Counter++;
+			}
+			if (false) {
+				//runDefendCoreWithSchorchers();
+			} else {
+				runArchonBrain();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * First archon brain, for building towers.
+	 * 
+	 * @author saf
+	 */
+	public void runArchonBrain() {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
@@ -772,6 +802,7 @@ public class ArchonPlayer extends BasePlayer {
 	 * He executes special code.
 	 * 
 	 * @TODO Find a way to sense objects out of range.
+	 * @author brian
 	 */
 
 	public int checkLowestArchonNumber() {
