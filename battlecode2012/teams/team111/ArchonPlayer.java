@@ -20,7 +20,9 @@ public class ArchonPlayer extends BasePlayer {
 	private int roundsUsedToMoveAway = 0; // TODO find a suitable maximum for
 											// this.
 	private double prevEnergon = 0;
-
+	private int scorcherCount = 0;
+	private int scoutCount = 0;
+	
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
 		this.nav = new LocalAreaNav(rc);
@@ -60,6 +62,7 @@ public class ArchonPlayer extends BasePlayer {
 			}
 			if (false) {
 				// runDefendCoreWithSchorchers();
+				runDefendCoreWithSchorchers();
 			} else {
 				runArchonBrain();
 			}
@@ -111,7 +114,62 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	public void runDefendCoreWithSchorchers(){
+		while (true) {
+			try {
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				while(scoutCount<1){
+					spawnScoutAndTransferFlux();
+					scoutCount++;
+				}
+				while(scorcherCount<6){
+					spawnScorcherAndTransferFlux();
+					scorcherCount++;
+				}
+				fluxToFriends();
+				runAtEndOfTurn();
+			} catch (Exception e) {
+				System.out.println("caught exception:");
+				e.printStackTrace();
+			}
+		}
+	}
 
+	public boolean fluxToFriends() {
+		try {
+			Robot weakFriendlyUnit = findAWeakFriendly();
+			MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
+			if (weakFriendlyUnit != null) {
+				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
+					this.nav.getNextMove(weakLoc);
+					runAtEndOfTurn();
+				}
+				// figure out how much flux he needs.
+				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
+				double weakFluxAmount = weakRobotInfo.flux;
+				double maxFluxAmount = weakRobotInfo.type.maxFlux;
+				double fluxAmountToTransfer = 0.5*(maxFluxAmount-weakFluxAmount);
+				if (fluxAmountToTransfer > myRC.getFlux()){
+					fluxAmountToTransfer = myRC.getFlux();
+				}
+				if (fluxAmountToTransfer > 0) {
+					myRC.transferFlux(weakRobotInfo.location,
+							weakRobotInfo.robot.getRobotLevel(),
+							fluxAmountToTransfer);
+					return true;
+				}
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	
 	/**
 	 * Attempts to build a tower on a given location, or destroy it if there's
 	 * an enemy tower present.
