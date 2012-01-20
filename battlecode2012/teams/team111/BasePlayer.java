@@ -1,5 +1,6 @@
 package team111;
 
+import team111.Nav.BoidianNav;
 import team111.Nav.BugNav;
 import team111.Nav.DijkstraNav;
 import team111.Nav.LocalAreaNav;
@@ -14,7 +15,6 @@ public abstract class BasePlayer extends StaticStuff {
 	protected static final int ARCHON_ENEMY_MESSAGE = 98;
 
 	public BasePlayer(RobotController rc) {
-		// Today use BugNav
 		this.nav = new LocalAreaNav(rc);
 	}
 
