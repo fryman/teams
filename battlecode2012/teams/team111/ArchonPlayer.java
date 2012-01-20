@@ -58,7 +58,7 @@ public class ArchonPlayer extends BasePlayer {
 				IDNumbers[Counter]=r.getID();
 				Counter++;
 			}
-			if (false) {
+			if (myRC.getRobot().getID()==IDNumbers[0]) {
 				runDefendCoreWithSchorchers();
 			} else {
 				runArchonBrain();
