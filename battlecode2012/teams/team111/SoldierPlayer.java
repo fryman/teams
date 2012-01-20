@@ -2,7 +2,11 @@ package team111;
 
 import java.util.Random;
 
+import com.sun.org.apache.bcel.internal.generic.L2D;
+
+import team111.Nav.BoidianNav;
 import team111.Nav.BugNav;
+import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import team111.util.FastArrayList;
 import battlecode.common.*;
@@ -21,6 +25,7 @@ public class SoldierPlayer extends BasePlayer {
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon

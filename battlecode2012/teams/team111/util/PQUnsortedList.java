@@ -50,7 +50,7 @@ public class PQUnsortedList<T> implements PriorityQueue<T> {
 			return null;
 		}
 		double min = INFINITY;
-		int loc = -1;
+		int loc = 0;
 		for (int i = 0; i < this.size; i++){
 			if (this.values[i] < min){
 				min = this.values[i];
