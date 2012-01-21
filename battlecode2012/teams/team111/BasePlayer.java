@@ -11,8 +11,15 @@ import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	protected Navigation nav = null;
-	protected static final int ARCHON_PING_MESSAGE = 47;
-	protected static final int ARCHON_ENEMY_MESSAGE = 98;
+	public static final int ARCHON_PING_MESSAGE = 47;
+	public static final int ARCHON_ENEMY_MESSAGE = 98;
+	public static final int NON_ARCHON_PING_MESSAGE = 982;
+	public static final int SOLDIER_PING_MESSAGE = 9394;
+	public static final int SCOUT_PING_MESSAGE = 212;
+	public static final int AIRBORNE_PING_MESSAGE = 2123;
+	public static final int GROUND_PING_MESSAGE = 21122;
+	protected Message[] messages;
+	protected double prevEnergon;
 
 	public BasePlayer(RobotController rc) {
 		this.nav = new LocalAreaNav(rc);
@@ -28,6 +35,10 @@ public abstract class BasePlayer extends StaticStuff {
 		aboutToDie();
 		// broadcastMessage();
 		pingPresence();
+		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())){
+			try {myRC.moveBackward();} catch (Exception e){e.printStackTrace();}
+		}
+		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
 	}
 
@@ -184,6 +195,10 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
+	
+	/**
+	 * @return the closest enemy Robot of 
+	 */
 
 	/**
 	 * Finds the friendly nearby that has the lowest flux and is not an archon.
@@ -680,7 +695,7 @@ public abstract class BasePlayer extends StaticStuff {
 	 * sense friendly towers
 	 * 
 	 * @param rt
-	 * @return returns MapLocation of closest robot of type rt
+	 * @return returns MapLocation of closest friendly robot of type rt
 	 */
 	public MapLocation findNearestFriendlyRobotType(RobotType rt) {
 		MapLocation closestLoc = null;
@@ -706,7 +721,40 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
+	
+	/**
+	 * Note that this method depends on sensor range, so not a good option to
+	 * sense enemy towers
+	 * 
+	 * @param rt
+	 * @return returns closest enemy Robot of type rt
+	 */
+	public Robot findNearestEnemyRobotType(RobotType rt) {
+		Robot closestRob = null;
+		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+		try {
+			if (nearbyRobots.length > 0) {
+				for (Robot r : nearbyRobots) {
+					if (r.getTeam() == myRC.getTeam()
+							|| myRC.senseRobotInfo(r).type != rt) {
+						continue;
+					}
+					if (closestRob == null
+							|| compareRobotDistance(r, closestRob)) {
+						closestRob = r;
+					}
+				}
+			}
+			return closestRob;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
+	/** 
+	 * @return MapLocation of closest allied tower
+	 */
 	public MapLocation findNearestAlliedTower() {
 		MapLocation closestLoc = null;
 		PowerNode[] towers = myRC.senseAlliedPowerNodes();
@@ -741,7 +789,11 @@ public abstract class BasePlayer extends StaticStuff {
 	public void pingPresence() {
 		try {
 			Message message = new Message();
-			message.ints = new int[] { ARCHON_PING_MESSAGE };
+			if (this.myRC.getType().isAirborne()) {
+				message.ints = new int[] { AIRBORNE_PING_MESSAGE };
+			} else {
+				message.ints = new int[] { GROUND_PING_MESSAGE };
+			}
 			message.locations = new MapLocation[] { this.myRC.getLocation() };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()) {
@@ -788,10 +840,10 @@ public abstract class BasePlayer extends StaticStuff {
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
-			} else if (archons.size() > 0) {
+			if (archons.size() > 0) {
 				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
@@ -826,11 +878,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 * Receives all messages in the queue. Returns an attack location, else
 	 * null.
 	 */
-	public MapLocation receiveMessages() {
-		Message[] recents = this.myRC.getAllMessages();
-		MapLocation follow = null;
-		MapLocation attack = null;
-		for (Message r : recents) {
+	public MapLocation receiveMessagesReturnAttack() {
+		this.messages = this.myRC.getAllMessages();
+		for (Message r : this.messages) {
 			if (r.ints != null && r.ints[0] == ARCHON_ENEMY_MESSAGE) {
 				return r.locations[0];
 			}
@@ -858,6 +908,14 @@ public abstract class BasePlayer extends StaticStuff {
 			}
 		} catch (GameActionException e1) {
 			e1.printStackTrace();
+		}
+	}
+	
+	public boolean beingAttacked() {
+		if (myRC.getEnergon() < prevEnergon) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 }

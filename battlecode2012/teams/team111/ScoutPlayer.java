@@ -1,6 +1,5 @@
 package team111;
 
-
 import team111.Nav.BoidianNav;
 import team111.Nav.BugNav;
 import team111.Nav.LocalAreaNav;
@@ -23,6 +22,7 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
+		//this.nav = new LocalAreaNav(rc);
 		this.nav = new LocalAreaNav(rc);
 	}
 
@@ -37,12 +37,16 @@ public class ScoutPlayer extends BasePlayer {
 	@Override
 	public void runAtEndOfTurn() {
 		try {
-			//broadcastMessage();
+			pingPresence(); // added
+			// broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
-			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER && myRC.senseRobotInfo(closestTar).flux>.5) {
+			if (closestTar != null
+					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
+					&& myRC.senseRobotInfo(closestTar).flux > .5) {
 				MapLocation Location = myRC.senseLocationOf(closestTar);
 				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
-					myRC.setIndicatorString(0, "Attacking at the end of the turn.");
+					myRC.setIndicatorString(0,
+							"Attacking at the end of the turn.");
 					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
 						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
 					} else {
@@ -51,7 +55,7 @@ public class ScoutPlayer extends BasePlayer {
 				}
 			}
 			if (suitableTimeToHeal()) {
-				myRC.setIndicatorString(2, "healing: "+ Clock.getRoundNum());
+				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
 			aboutToDie();
@@ -73,14 +77,22 @@ public class ScoutPlayer extends BasePlayer {
 	public void runFollowFriendlyMode() {
 		while (true) {
 			try {
-				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
-				if (friendlyMapLocationToFollow == null) {
-					// game over...
-					myRC.suicide();
+				Robot target = findNearestEnemyRobotType(RobotType.SCORCHER);
+				if (target != null && myRC.senseRobotInfo(target).flux > 2) {
+					while (myRC.senseRobotInfo(target).flux > 2) {
+						attackAndFollowScorcher(target);
+					}
+				} else {
+					friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+					if (friendlyMapLocationToFollow == null) {
+						// game over...
+						myRC.suicide();
+					}
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					myRC.setIndicatorString(0, "following a friendly");
+					runAtEndOfTurn();
 				}
-				this.nav.getNextMove(friendlyMapLocationToFollow);
-				myRC.setIndicatorString(0, "following a friendly");
-				runAtEndOfTurn();
+
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
@@ -154,5 +166,23 @@ public class ScoutPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	public void attackAndFollowScorcher(Robot scorcher) {
+		try {
+			MapLocation scorcherLoc = myRC.senseLocationOf(scorcher);
+			if (myRC.getLocation().distanceSquaredTo(scorcherLoc) > 3
+					&& !myRC.isMovementActive()) {
+				this.nav.getNextMove(scorcherLoc);
+				System.out.println("Why are you not working ass hole?");
+			}
+			if (myRC.canAttackSquare(scorcherLoc) && !myRC.isAttackActive()) {
+				myRC.attackSquare(scorcherLoc, RobotLevel.ON_GROUND);
+			}
+			runAtEndOfTurn();
+		} catch (Exception e) {
+			e.printStackTrace();
+			runAtEndOfTurn();
+		}
 	}
 }

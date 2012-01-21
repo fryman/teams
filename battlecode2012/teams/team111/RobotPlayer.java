@@ -16,6 +16,7 @@ public class RobotPlayer {
 	public void nonStaticRun(RobotController rc){
 		switch (rc.getType()) {
 		case ARCHON:
+			//new ArchonPlayer(rc).runArchonRush();
 			new ArchonPlayer(rc).run();
 //			if (count < (battlecode.common.GameConstants.NUMBER_OF_ARCHONS-2)){
 //				new ArchonPlayer(rc).run();
@@ -26,12 +27,16 @@ public class RobotPlayer {
 //				new ArchonPlayer2(rc).run();
 //			}
 			//new ArchonPlayer(rc).runToTestNav();
+			break;
 		case SCOUT:
 			new ScoutPlayer(rc).run();
+			break;
 		case SOLDIER:
 			new SoldierPlayer(rc).run();
+			break;
 		case SCORCHER:
 			new ScorcherPlayer(rc).run();
+			break;
 		case DISRUPTER:
 			new DisrupterPlayer(rc).run();
 		}
