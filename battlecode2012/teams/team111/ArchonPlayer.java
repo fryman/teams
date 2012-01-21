@@ -152,6 +152,34 @@ public class ArchonPlayer extends BasePlayer {
 	}
 	
 	/**
+	 * Archons rush and build soldiers on the way.
+	 * 
+	 * @author brian
+	 */
+	
+	public void runArchonRush(boolean Trigger) {
+		while (true) {
+			try {
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				if (myRC.getFlux()==290) {
+					spawnSoldierAndTransferFlux();
+					Trigger=true;
+				}
+				if (Trigger && soldierCount<3) {
+					
+				}
+				runAtEndOfTurn();
+
+			} catch (Exception e) {
+				System.out.println("caught exception:");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
 	 * A method for archons to sit and refuel scorchers after building a defensive perimiter
 	 * around the power core.
 	 * 
