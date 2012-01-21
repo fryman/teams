@@ -245,7 +245,7 @@ public class BoidianNav extends Navigation {
 
 	private boolean tooClose(MapLocation m) {
 		for (int i = 0; i < this.friends.size(); i++) {
-			if (this.friends.get(i).distanceSquaredTo(m) < 3
+			if (this.friends.get(i).distanceSquaredTo(m) < 2
 					&& matchesLevel(this.msgSignatures.get(i))) {
 				return true;
 			}

@@ -23,7 +23,7 @@ public class ScoutPlayer extends BasePlayer {
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
 		//this.nav = new LocalAreaNav(rc);
-		this.nav = new BoidianNav(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon

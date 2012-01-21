@@ -5,8 +5,6 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
 public class ScorcherPlayer extends BasePlayer {
-
-	private Navigation nav = null;
 	private boolean in_position = false;
 	private int desired_squares_from_core = 2;
 	private int attempts_to_position = 0;
