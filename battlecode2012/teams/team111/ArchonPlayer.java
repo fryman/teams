@@ -981,4 +981,23 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Sends a message saying this robot is present and broadcasting its
+	 * location.
+	 */
+	@Override
+	public void pingPresence() {
+		try {
+			Message message = new Message();
+			message.ints = new int[] { ARCHON_PING_MESSAGE };
+			message.locations = new MapLocation[] { this.myRC.getLocation() };
+			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
+					+ 16 * message.getFluxCost()) {
+				myRC.broadcast(message);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

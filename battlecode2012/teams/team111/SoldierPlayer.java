@@ -25,7 +25,8 @@ public class SoldierPlayer extends BasePlayer {
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new LocalAreaNav(rc);
+		//this.nav = new LocalAreaNav(rc);
+		this.nav = new BoidianNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon
@@ -129,12 +130,12 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
-				MapLocation archonEnemy = receiveMessages();
-				if (archonEnemy != null) {
-					attackAndChaseMapLocation(archonEnemy);
-					runAtEndOfTurn();
-					continue;
-				}
+//				MapLocation archonEnemy = receiveMessagesReturnAttack();
+//				if (archonEnemy != null) {
+//					attackAndChaseMapLocation(archonEnemy);
+//					runAtEndOfTurn();
+//					continue;
+//				}
 				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy == null) {
 					this.nav.getNextMove(friendlyMapLocationToFollow);

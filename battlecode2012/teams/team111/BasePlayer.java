@@ -11,8 +11,14 @@ import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
 	protected Navigation nav = null;
-	protected static final int ARCHON_PING_MESSAGE = 47;
-	protected static final int ARCHON_ENEMY_MESSAGE = 98;
+	public static final int ARCHON_PING_MESSAGE = 47;
+	public static final int ARCHON_ENEMY_MESSAGE = 98;
+	public static final int NON_ARCHON_PING_MESSAGE = 982;
+	public static final int SOLDIER_PING_MESSAGE = 9394;
+	public static final int SCOUT_PING_MESSAGE = 212;
+	public static final int AIRBORNE_PING_MESSAGE = 2123;
+	public static final int GROUND_PING_MESSAGE = 21122;
+	protected Message[] messages;
 
 	public BasePlayer(RobotController rc) {
 		this.nav = new LocalAreaNav(rc);
@@ -741,7 +747,11 @@ public abstract class BasePlayer extends StaticStuff {
 	public void pingPresence() {
 		try {
 			Message message = new Message();
-			message.ints = new int[] { ARCHON_PING_MESSAGE };
+			if (this.myRC.getType().isAirborne()) {
+				message.ints = new int[] { AIRBORNE_PING_MESSAGE };
+			} else {
+				message.ints = new int[] { GROUND_PING_MESSAGE };
+			}
 			message.locations = new MapLocation[] { this.myRC.getLocation() };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()) {
@@ -826,11 +836,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 * Receives all messages in the queue. Returns an attack location, else
 	 * null.
 	 */
-	public MapLocation receiveMessages() {
-		Message[] recents = this.myRC.getAllMessages();
-		MapLocation follow = null;
-		MapLocation attack = null;
-		for (Message r : recents) {
+	public MapLocation receiveMessagesReturnAttack() {
+		this.messages = this.myRC.getAllMessages();
+		for (Message r : this.messages) {
 			if (r.ints != null && r.ints[0] == ARCHON_ENEMY_MESSAGE) {
 				return r.locations[0];
 			}

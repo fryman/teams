@@ -1,5 +1,9 @@
 package team111.Nav;
 
+import javax.annotation.MatchesPattern;
+
+import team111.BasePlayer;
+import team111.util.FastArrayList;
 import team111.util.FastHashSet;
 import team111.util.PQSortedList;
 import team111.util.PQUnsortedList;
@@ -8,6 +12,9 @@ import battlecode.common.*;
 
 public class BoidianNav extends Navigation {
 	private RobotController myRC;
+	private Message[] messages;
+	private FastArrayList<MapLocation> friends;
+	private FastArrayList<Integer> msgSignatures;
 
 	public BoidianNav(RobotController myRC) {
 		this.myRC = myRC;
@@ -29,8 +36,8 @@ public class BoidianNav extends Navigation {
 	@Override
 	public void getNextMove(MapLocation target) {
 		try {
-			MapLocation next = determineBestLocation();
-			if (this.myRC.isMovementActive()) {
+			MapLocation next = determineBestLocationFromMessages(target);
+			if (this.myRC.isMovementActive() || next == null) {
 				return;
 			}
 			Direction ideal = myRC.getLocation().directionTo(next);
@@ -62,6 +69,11 @@ public class BoidianNav extends Navigation {
 		}
 	}
 
+	public void getNextMove(MapLocation target, Message[] recents) {
+		this.messages = recents;
+		this.getNextMove(target);
+	}
+
 	private MapLocation determineBestLocation() {
 		try {
 			MapLocation[] options = getNearestNineNeighbors(this.myRC
@@ -77,12 +89,12 @@ public class BoidianNav extends Navigation {
 				if (fInfo.team != this.myRC.getTeam()) {
 					continue;
 				}
-				
+
 				if (fInfo.type == RobotType.ARCHON) {
-					friendCOM[0] += 5*fInfo.location.x;
-					friendCOM[1] += 5*fInfo.location.y;
-					friendDir[0] += 5*fInfo.direction.dx;
-					friendDir[1] += 5*fInfo.direction.dy;
+					friendCOM[0] += 5 * fInfo.location.x;
+					friendCOM[1] += 5 * fInfo.location.y;
+					friendDir[0] += 5 * fInfo.direction.dx;
+					friendDir[1] += 5 * fInfo.direction.dy;
 					numFriends += 5;
 				} else {
 					friendCOM[0] += fInfo.location.x;
@@ -172,6 +184,87 @@ public class BoidianNav extends Navigation {
 			e.printStackTrace();
 		}
 		return true;
+	}
+
+	public MapLocation determineBestLocationFromMessages(MapLocation target) {
+		try {
+			this.messages = this.myRC.getAllMessages();
+			MapLocation[] options = getNearestNineNeighbors(this.myRC
+					.getLocation());
+			PriorityQueue<MapLocation> pq = new PQUnsortedList<MapLocation>(10);
+			this.friends = new FastArrayList<MapLocation>(30);
+			this.msgSignatures = new FastArrayList<Integer>(30);
+			double[] friendCOM = new double[2];
+			double numFriends = 0;
+			for (Message m : this.messages) {
+				if (m.ints[0] != BasePlayer.AIRBORNE_PING_MESSAGE
+						&& m.ints[0] != BasePlayer.GROUND_PING_MESSAGE
+						&& m.ints[0] != BasePlayer.ARCHON_PING_MESSAGE) {
+					continue;
+				}
+				MapLocation msgLoc = m.locations[0];
+				friends.add(msgLoc);
+				msgSignatures.add(m.ints[0]);
+				if (m.ints[0] == BasePlayer.ARCHON_PING_MESSAGE) {
+					friendCOM[0] += 5 * msgLoc.x;
+					friendCOM[1] += 5 * msgLoc.y;
+					numFriends += 5;
+				} else {
+					friendCOM[0] += msgLoc.x;
+					friendCOM[1] += msgLoc.y;
+					numFriends++;
+				}
+			}
+			friendCOM[0] = friendCOM[0] / numFriends;
+			friendCOM[1] = friendCOM[1] / numFriends;
+			for (MapLocation m : options) {
+				if (!locationTraversible(m) || tooClose(m)) {
+					continue;
+				} else {
+					// we have a location that is traversible. now we need to
+					// score it.
+					Direction ideal = myRC.getLocation().directionTo(m);
+					Direction toGoal = myRC.getLocation().directionTo(target);
+					double score = 10 * (m.x - friendCOM[0])
+							* (m.x - friendCOM[0]) + 10 * (m.y - friendCOM[1])
+							* (m.y - friendCOM[1]);
+					double cos = (ideal.dx * toGoal.dx + ideal.dy * toGoal.dy)
+							/ (Math.sqrt(ideal.dx * ideal.dx + ideal.dy
+									* ideal.dy) * Math.sqrt(toGoal.dx
+									* toGoal.dx + toGoal.dy * toGoal.dy));
+					score = score / (cos + 1.01);
+					pq.insert(m, score);
+				}
+			}
+			return pq.extractMin();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private boolean tooClose(MapLocation m) {
+		for (int i = 0; i < this.friends.size(); i++) {
+			if (this.friends.get(i).distanceSquaredTo(m) < 3
+					&& matchesLevel(this.msgSignatures.get(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean matchesLevel(int l){
+		if (this.myRC.getType().isAirborne()){
+			if (l == BasePlayer.AIRBORNE_PING_MESSAGE) {
+				return true;
+			}
+			return false;
+		} else {
+			if (l == BasePlayer.AIRBORNE_PING_MESSAGE) {
+				return false;
+			}
+			return true;
+		}
 	}
 
 }

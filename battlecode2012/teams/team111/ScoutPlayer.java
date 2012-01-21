@@ -23,7 +23,8 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new LocalAreaNav(rc);
+		//this.nav = new LocalAreaNav(rc);
+		this.nav = new BoidianNav(rc);
 	}
 
 	// go explore, follow spawned archon, transfer energon to archon
@@ -37,7 +38,7 @@ public class ScoutPlayer extends BasePlayer {
 	@Override
 	public void runAtEndOfTurn() {
 		try {
-			//broadcastMessage();
+			pingPresence(); // added
 			Robot closestTar = senseClosestEnemy();
 			if (closestTar != null && myRC.senseRobotInfo(closestTar).type != RobotType.TOWER && myRC.senseRobotInfo(closestTar).flux>.5) {
 				MapLocation Location = myRC.senseLocationOf(closestTar);
