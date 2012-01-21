@@ -48,10 +48,15 @@ public class ArchonPlayer extends BasePlayer {
 		}
 		this.prevEnergon = this.myRC.getEnergon();
 	}
-	
-	public void bugOut(){
-		if (myRC.canMove(myRC.getDirection().opposite())){
-			try {myRC.moveBackward();} catch (Exception e){e.printStackTrace();}
+
+	public void bugOut() {
+		if (!myRC.isMovementActive()
+				&& myRC.canMove(myRC.getDirection().opposite())) {
+			try {
+				myRC.moveBackward();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -62,20 +67,21 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			MapLocation[] archons = myRC.senseAlliedArchons();
-			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			int Counter = 0;
-			for (MapLocation m : archons) {
-				Robot r = (Robot) myRC.senseObjectAtLocation(m,
-						RobotLevel.ON_GROUND);
-				IDNumbers[Counter] = r.getID();
-				Counter++;
-			}
-			if (myRC.getRobot().getID() == IDNumbers[0]) {
-				runDefendCoreWithScorchers();
-			} else {
-				runArchonBrain();
-			}
+//			MapLocation[] archons = myRC.senseAlliedArchons();
+//			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+//			int Counter = 0;
+//			for (MapLocation m : archons) {
+//				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+//						RobotLevel.ON_GROUND);
+//				IDNumbers[Counter] = r.getID();
+//				Counter++;
+//			}
+//			if (myRC.getRobot().getID() == IDNumbers[0]) {
+//				runDefendCoreWithScorchers();
+//			} else {
+//				runArchonBrain();
+//			}
+			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -979,7 +985,6 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-
 	/**
 	 * Just to test the costs of running navs. Correct behavior is walking to a
 	 * powernode
@@ -1071,7 +1076,7 @@ public class ArchonPlayer extends BasePlayer {
 			this.myRC.yield();
 			Message[] otherWallMsgs = this.myRC.getAllMessages();
 			for (Message o : otherWallMsgs) {
-				if ( o.locations == null) {
+				if (o.locations == null) {
 					continue;
 				}
 				for (MapLocation q : o.locations) {
@@ -1104,11 +1109,11 @@ public class ArchonPlayer extends BasePlayer {
 			double xEstimate = xIdeal + capX;
 			double yEstimate = yIdeal + capY;
 
-			System.out.println("" + (int) (xEstimate) + " "
-					+ (int) (yEstimate));
+			System.out
+					.println("" + (int) (xEstimate) + " " + (int) (yEstimate));
 			Message bestGuess = new Message();
-			int[] suspectedLocation = new int[] { (int) (10*xEstimate),
-					(int) (10*yEstimate) };
+			int[] suspectedLocation = new int[] { (int) (10 * xEstimate),
+					(int) (10 * yEstimate) };
 			bestGuess.ints = suspectedLocation;
 			while (myRC.getFlux() < battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * bestGuess.getFluxCost()) {

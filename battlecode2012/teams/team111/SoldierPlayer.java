@@ -25,7 +25,7 @@ public class SoldierPlayer extends BasePlayer {
 
 	public SoldierPlayer(RobotController rc) {
 		super(rc);
-		//this.nav = new LocalAreaNav(rc);
+		// this.nav = new LocalAreaNav(rc);
 		this.nav = new LocalAreaNav(rc);
 	}
 
@@ -130,12 +130,12 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
-//				MapLocation archonEnemy = receiveMessagesReturnAttack();
-//				if (archonEnemy != null) {
-//					attackAndChaseMapLocation(archonEnemy);
-//					runAtEndOfTurn();
-//					continue;
-//				}
+				// MapLocation archonEnemy = receiveMessagesReturnAttack();
+				// if (archonEnemy != null) {
+				// attackAndChaseMapLocation(archonEnemy);
+				// runAtEndOfTurn();
+				// continue;
+				// }
 				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy == null) {
 					this.nav.getNextMove(friendlyMapLocationToFollow);
@@ -218,6 +218,11 @@ public class SoldierPlayer extends BasePlayer {
 							weakest = e;
 						}
 					}
+				}
+				RobotInfo wInfo = myRC.senseRobotInfo(weakest);
+				if (wInfo.type == RobotType.TOWER
+						&& !ownAdjacentTower(wInfo.location)) {
+					return null;
 				}
 				return weakest;
 			}
