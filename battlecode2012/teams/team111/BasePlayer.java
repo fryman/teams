@@ -716,10 +716,9 @@ public abstract class BasePlayer extends StaticStuff {
 	 * sense enemy towers
 	 * 
 	 * @param rt
-	 * @return returns MapLocation of closest enemy robot of type rt
+	 * @return returns closest enemy Robot of type rt
 	 */
-	public MapLocation findNearestEnemyRobotType(RobotType rt) {
-		MapLocation closestLoc = null;
+	public Robot findNearestEnemyRobotType(RobotType rt) {
 		Robot closestRob = null;
 		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
 		try {
@@ -732,11 +731,10 @@ public abstract class BasePlayer extends StaticStuff {
 					if (closestRob == null
 							|| compareRobotDistance(r, closestRob)) {
 						closestRob = r;
-						closestLoc = myRC.senseLocationOf(r);
 					}
 				}
 			}
-			return closestLoc;
+			return closestRob;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

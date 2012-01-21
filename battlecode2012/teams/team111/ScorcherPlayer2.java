@@ -12,17 +12,9 @@ import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
 
 public class ScorcherPlayer2 extends BasePlayer {
-
-	private Navigation nav = null;
-	private MapLocation targetLoc;
-	private Robot closestTar;
-	private boolean set = false;
-	private int moves = 2;
-	private int tries = 0;
-	private int timesMoved = 0;
-
-	// private Robot friendlyToFollow = null;
-	// private MapLocation friendlyMapLocationToFollow = null;
+	
+	//intended for these scorchers to sit at choke points and 
+	//attack all enemies as they try to pass through
 
 	public ScorcherPlayer2(RobotController rc) {
 		super(rc);
