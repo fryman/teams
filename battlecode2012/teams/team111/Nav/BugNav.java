@@ -41,7 +41,7 @@ public class BugNav extends Navigation {
 	private MapLocation qObstruction = null;
 	private double moveCost;
 	private int turnsStuckOnWall = 0;
-	private final int MAX_TURNS_STUCK_ON_WALL = 30;// TODO determine a good
+	private final int MAX_TURNS_STUCK_ON_WALL = 20;// TODO determine a good
 													// cutoff
 
 	public BugNav(RobotController myRC) {
@@ -136,7 +136,7 @@ public class BugNav extends Navigation {
 									.sqrt(vectorToGoal[0] * vectorToGoal[0]
 											+ vectorToGoal[1] * vectorToGoal[1]));
 
-					if (leftCos > rightCos && Math.random() > 0.5) {
+					if (leftCos > rightCos) {
 						myRC.setDirection(ideal.rotateLeft());
 						turnedLeft = true;
 						myRC.setIndicatorString(1,

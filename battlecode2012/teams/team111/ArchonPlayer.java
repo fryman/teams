@@ -50,8 +50,27 @@ public class ArchonPlayer extends BasePlayer {
 			bugOut();
 		}
 		this.prevEnergon = this.myRC.getEnergon();
+		// run away from scorchers.
+		if (scorcherPresent()) {
+			bugOut();
+		}
 	}
 
+	/**
+	 * 
+	 * @return true when archon can see a scorcher, else false.
+	 */
+	public boolean scorcherPresent() {
+		Robot scorch = findNearestEnemyRobotType(RobotType.SCORCHER);
+		if (scorch == null) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Causes archon to move backward (assumes it is being attacked)
+	 */
 	public void bugOut() {
 		if (!myRC.isMovementActive()
 				&& myRC.canMove(myRC.getDirection().opposite())) {
@@ -269,7 +288,7 @@ public class ArchonPlayer extends BasePlayer {
 				if (!soldierNearby()
 						&& myRC.senseObjectAtLocation(
 								myRC.getLocation().add(myRC.getDirection()),
-								RobotLevel.ON_GROUND) != null) {
+								RobotLevel.ON_GROUND) != null && !this.myRC.isMovementActive()) {
 					// turn so that we can spawn a soldier
 					myRC.setIndicatorString(
 							2,
@@ -328,7 +347,7 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			MapLocation locationToCapture = capturing;
 			while (locationToCapture != null
-					&& !myRC.getLocation().isAdjacentTo(locationToCapture)) {
+					&& !myRC.getLocation().isAdjacentTo(locationToCapture) && !beingAttacked()) {
 				this.nav.getNextMove(locationToCapture);
 				this.locationApproaching = locationToCapture;
 				runAtEndOfTurn();
@@ -469,12 +488,13 @@ public class ArchonPlayer extends BasePlayer {
 
 			double smallestScoreToThis = here.distanceSquaredTo(best)
 					/ (best.distanceSquaredTo(archonCOM) + 1.01)
-					* best.distanceSquaredTo(enemyPowerCoreEstimate);
+					+ best.distanceSquaredTo(enemyPowerCoreEstimate);
 			double sample;
 
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
 				sample = capturablePowerNodes[i].distanceSquaredTo(here)
-						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01);
+						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01)
+						* best.distanceSquaredTo(enemyPowerCoreEstimate);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
 					best = capturablePowerNodes[i];
@@ -966,7 +986,7 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 4) {
+			if (soldierPresent < 5) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 			// if cannot see scout, spawn one.
