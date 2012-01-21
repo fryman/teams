@@ -19,6 +19,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public static final int AIRBORNE_PING_MESSAGE = 2123;
 	public static final int GROUND_PING_MESSAGE = 21122;
 	protected Message[] messages;
+	protected double prevEnergon;
 
 	public BasePlayer(RobotController rc) {
 		this.nav = new LocalAreaNav(rc);
@@ -34,6 +35,10 @@ public abstract class BasePlayer extends StaticStuff {
 		aboutToDie();
 		// broadcastMessage();
 		pingPresence();
+		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())){
+			try {myRC.moveBackward();} catch (Exception e){e.printStackTrace();}
+		}
+		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
 	}
 
@@ -835,10 +840,10 @@ public abstract class BasePlayer extends StaticStuff {
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
-			} else if (archons.size() > 0) {
+			if (archons.size() > 0) {
 				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
@@ -903,6 +908,14 @@ public abstract class BasePlayer extends StaticStuff {
 			}
 		} catch (GameActionException e1) {
 			e1.printStackTrace();
+		}
+	}
+	
+	public boolean beingAttacked() {
+		if (myRC.getEnergon() < prevEnergon) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 }

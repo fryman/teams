@@ -136,7 +136,7 @@ public class BugNav extends Navigation {
 									.sqrt(vectorToGoal[0] * vectorToGoal[0]
 											+ vectorToGoal[1] * vectorToGoal[1]));
 
-					if (leftCos > rightCos) {
+					if (leftCos > rightCos && Math.random() > 0.5) {
 						myRC.setDirection(ideal.rotateLeft());
 						turnedLeft = true;
 						myRC.setIndicatorString(1,

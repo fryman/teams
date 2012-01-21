@@ -5,6 +5,7 @@ import battlecode.common.*;
 import java.util.*;
 
 import team111.Nav.*;
+import team111.util.FastHashSet;
 
 public class ArchonPlayer extends BasePlayer {
 
@@ -22,7 +23,7 @@ public class ArchonPlayer extends BasePlayer {
 	private double prevEnergon = 0;
 	private int scorcherCount = 0;
 	private int scoutCount = 0;
-	
+
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
 		this.nav = new LocalAreaNav(rc);
@@ -40,8 +41,18 @@ public class ArchonPlayer extends BasePlayer {
 		checkAndAttemptCreateConvoy();
 		aboutToDie();
 		// broadcastMessage();
-		//pingPresence();
+		// pingPresence();
 		this.findWeakFriendsAndTransferFlux();
+		if (beingAttacked()) {
+			bugOut();
+		}
+		this.prevEnergon = this.myRC.getEnergon();
+	}
+	
+	public void bugOut(){
+		if (myRC.canMove(myRC.getDirection().opposite())){
+			try {myRC.moveBackward();} catch (Exception e){e.printStackTrace();}
+		}
 	}
 
 	/**
@@ -60,7 +71,7 @@ public class ArchonPlayer extends BasePlayer {
 				IDNumbers[Counter] = r.getID();
 				Counter++;
 			}
-			if (myRC.getRobot().getID()==IDNumbers[0]) {
+			if (myRC.getRobot().getID() == IDNumbers[0]) {
 				runDefendCoreWithScorchers();
 			} else {
 				runArchonBrain();
@@ -113,28 +124,28 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
-	public void runDefendCoreWithScorchers(){
+
+	public void runDefendCoreWithScorchers() {
 		while (true) {
 			try {
 				MapLocation core = myRC.sensePowerCore().getLocation();
 				while (myRC.isMovementActive()) {
 					super.runAtEndOfTurn();
 				}
-				while(scoutCount<1){
+				while (scoutCount < 1) {
 					spawnScoutAndTransferFlux();
 					scoutCount++;
 				}
-				while(scorcherCount<5){
+				while (scorcherCount < 5) {
 					int countMoves = 0;
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
-					while(countMoves<4){
+					while (countMoves < 4) {
 						randomWalk();
 						countMoves++;
 					}
 				}
-				while(scorcherCount<6){
+				while (scorcherCount < 6) {
 					spawnScorcherAndTransferFlux();
 					scorcherCount++;
 					while (!myRC.getLocation().isAdjacentTo(core)) {
@@ -150,23 +161,25 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
+
 	/**
 	 * Archons rush and build soldiers on the way.
 	 * 
 	 * @author brian
 	 */
-	
+
 	public void runArchonRush() {
-		boolean trigger=false;
+		boolean trigger = false;
+		MapLocation estimate = estimateEnemyPowerCore();
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				if (myRC.getFlux()>=290) {
+				nav.getNextMove(estimate);
+				if (myRC.getFlux() >= 290) {
 					spawnSoldierAndTransferFlux();
-					trigger=true;
+					trigger = true;
 				}
 				if (trigger) {
 					spawnSoldierAndTransferFlux();
@@ -178,10 +191,10 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
-	
+
 	/**
-	 * A method for archons to sit and refuel scorchers after building a defensive perimiter
-	 * around the power core.
+	 * A method for archons to sit and refuel scorchers after building a
+	 * defensive perimiter around the power core.
 	 * 
 	 * @author tburfield
 	 */
@@ -199,8 +212,8 @@ public class ArchonPlayer extends BasePlayer {
 				RobotInfo weakRobotInfo = myRC.senseRobotInfo(weakFriendlyUnit);
 				double weakFluxAmount = weakRobotInfo.flux;
 				double maxFluxAmount = weakRobotInfo.type.maxFlux;
-				double fluxAmountToTransfer = 0.5*(maxFluxAmount-weakFluxAmount);
-				if (fluxAmountToTransfer > myRC.getFlux()){
+				double fluxAmountToTransfer = 0.5 * (maxFluxAmount - weakFluxAmount);
+				if (fluxAmountToTransfer > myRC.getFlux()) {
 					fluxAmountToTransfer = myRC.getFlux();
 				}
 				if (fluxAmountToTransfer > 0) {
@@ -213,8 +226,7 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
-	
+
 	/**
 	 * Attempts to build a tower on a given location, or destroy it if there's
 	 * an enemy tower present.
@@ -959,7 +971,7 @@ public class ArchonPlayer extends BasePlayer {
 				attemptSpawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 3) {
+			if (soldierPresent < 4) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 		} catch (Exception e) {
@@ -967,13 +979,6 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-	public boolean beingAttacked() {
-		if (myRC.getEnergon() < prevEnergon) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 
 	/**
 	 * Just to test the costs of running navs. Correct behavior is walking to a
@@ -1015,7 +1020,7 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Sends a message saying this robot is present and broadcasting its
 	 * location.
@@ -1034,17 +1039,102 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
-	
-	public void estimateEnemyPowerCore(){
-		int dist = (int)Math.sqrt(myRC.getType().sensorRadiusSquared);
-		MapLocation m = this.myRC.getLocation();
-		MapLocation[] neighbors = { m.add(Direction.EAST,dist),
-				m.add(Direction.NORTH,dist), m.add(Direction.NORTH_EAST,dist),
-				m.add(Direction.NORTH_WEST,dist), m.add(Direction.SOUTH,dist),
-				m.add(Direction.SOUTH_EAST,dist), m.add(Direction.SOUTH_WEST,dist),
-				m.add(Direction.WEST,dist) };
-		for (MapLocation n : neighbors){
-			System.out.println(myRC.senseTerrainTile(m));
+
+	public MapLocation estimateEnemyPowerCore() {
+		try {
+			int dist = (int) Math.sqrt(myRC.getType().sensorRadiusSquared);
+			MapLocation m = this.myRC.getLocation();
+			MapLocation[] neighbors = { m.add(Direction.EAST, dist),
+					m.add(Direction.NORTH, dist),
+					m.add(Direction.NORTH_EAST, dist),
+					m.add(Direction.NORTH_WEST, dist),
+					m.add(Direction.SOUTH, dist),
+					m.add(Direction.SOUTH_EAST, dist),
+					m.add(Direction.SOUTH_WEST, dist),
+					m.add(Direction.WEST, dist) };
+			MapLocation[] walls = new MapLocation[100];
+			int locOpen = 0;
+			for (int i = 0; i < 8; i++) {
+				TerrainTile t = myRC.senseTerrainTile(neighbors[i]);
+				if (t == TerrainTile.OFF_MAP) {
+					walls[locOpen] = neighbors[i];
+					locOpen++;
+				}
+			}
+			Message wallMsg = new Message();
+			wallMsg.locations = walls;
+			while (myRC.getFlux() < battlecode.common.GameConstants.BROADCAST_FIXED_COST
+					+ 16 * wallMsg.getFluxCost()) {
+				this.myRC.yield();
+			}
+			myRC.broadcast(wallMsg);
+			this.myRC.yield();
+			Message[] otherWallMsgs = this.myRC.getAllMessages();
+			for (Message o : otherWallMsgs) {
+				if ( o.locations == null) {
+					continue;
+				}
+				for (MapLocation q : o.locations) {
+					if (q != null) {
+						walls[locOpen] = q;
+						locOpen++;
+					}
+				}
+			}
+			double xIdeal = 0; // based on walls
+			double yIdeal = 0; // based on walls
+			FastHashSet<Direction> wallsSeen = new FastHashSet<Direction>(9999);
+			for (MapLocation n : walls) {
+				if (n != null) {
+					Direction d = n.directionTo(m);
+					if (!wallsSeen.search(d)) {
+						xIdeal += d.dx;
+						yIdeal += d.dy;
+						wallsSeen.insert(d);
+					}
+				}
+			}
+			MapLocation[] capturables = myRC.senseCapturablePowerNodes();
+			double capX = 0;
+			double capY = 0;
+			for (MapLocation c : capturables) {
+				capX += c.x - m.x;
+				capY += c.y - m.y;
+			}
+			double xEstimate = xIdeal + capX;
+			double yEstimate = yIdeal + capY;
+
+			System.out.println("" + (int) (xEstimate) + " "
+					+ (int) (yEstimate));
+			Message bestGuess = new Message();
+			int[] suspectedLocation = new int[] { (int) (10*xEstimate),
+					(int) (10*yEstimate) };
+			bestGuess.ints = suspectedLocation;
+			while (myRC.getFlux() < battlecode.common.GameConstants.BROADCAST_FIXED_COST
+					+ 16 * bestGuess.getFluxCost()) {
+				this.myRC.yield();
+			}
+			myRC.broadcast(bestGuess);
+			for (int i = 0; i < 1; i++) {
+				this.myRC.yield();
+			}
+			Message[] otherGuessMsgs = this.myRC.getAllMessages();
+			for (Message o : otherGuessMsgs) {
+				if (o.ints != null) {
+					suspectedLocation[0] += o.ints[0];
+					suspectedLocation[1] += o.ints[1];
+				} else {
+					System.out.println("Null msg");
+				}
+			}
+			MapLocation guess = m.add(suspectedLocation[0],
+					suspectedLocation[1]);
+			System.out.println("Compiled guess: " + suspectedLocation[0] + ", "
+					+ suspectedLocation[1]);
+			return guess;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		return null;
 	}
 }
