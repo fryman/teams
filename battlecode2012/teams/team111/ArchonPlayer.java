@@ -482,13 +482,6 @@ public class ArchonPlayer extends BasePlayer {
 						* capturablePowerNodes.length];
 			}
 			return best;
-			/*
-			 * The commented code here is archaic. It is saved for safety.
-			 * 
-			 * for (MapLocation m : capturablePowerNodes) { // if
-			 * (!enemyTowerLocs.contains(m)) { targetLoc = m; return m; // } }
-			 * // does not handle case where all nodes are enemy towers
-			 */
 		} else {
 			targetLoc = myRC.sensePowerCore().getLocation(); // to conform to
 																// the method
