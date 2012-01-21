@@ -391,16 +391,14 @@ public abstract class BasePlayer extends StaticStuff {
 			if (!myRC.canSenseSquare(target)) {
 				return;
 			}
-			while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+			while (myRC.canSenseSquare(target)
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() != myRC.getTeam()) {
 				if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
 					myRC.attackSquare(target, RobotLevel.ON_GROUND);
 				} else if (!myRC.isAttackActive()) {
 					nav.getNextMove(target);
-				}
-				if (!myRC.canSenseSquare(target)) {
-					break;
 				}
 				runAtEndOfTurn();
 			}
