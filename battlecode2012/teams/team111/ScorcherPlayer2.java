@@ -1,6 +1,5 @@
 package team111;
 
-import team111.Nav.BugNav;
 import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -13,17 +12,9 @@ import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
 
 public class ScorcherPlayer2 extends BasePlayer {
-
-	private Navigation nav = null;
-	private MapLocation targetLoc;
-	private Robot closestTar;
-	private boolean set = false;
-	private int moves = 2;
-	private int tries = 0;
-	private int timesMoved = 0;
-
-	// private Robot friendlyToFollow = null;
-	// private MapLocation friendlyMapLocationToFollow = null;
+	
+	//intended for these scorchers to sit at choke points and 
+	//attack all enemies as they try to pass through
 
 	public ScorcherPlayer2(RobotController rc) {
 		super(rc);
@@ -40,10 +31,10 @@ public class ScorcherPlayer2 extends BasePlayer {
 	}
 
 	public void run() {
-		runDefendCore();
+		runChokePoints();
 	}
 
-	public void runDefendCore() {
+	public void runChokePoints() {
 		while (true) {
 			try {
 				if (shouldAttack()) {
@@ -65,6 +56,7 @@ public class ScorcherPlayer2 extends BasePlayer {
 	 * attack. A good condition would mean that there are enemies
 	 * in range to shoot and that there are more enemies than allies
 	 * in range since scorchers can do damage with friendly fire.  
+	 * It also makes sure there are NO archons in range of attack.
 	 * 
 	 * @return Returns true if there are good conditions for the 
 	 * scorcher to attack.
@@ -84,7 +76,7 @@ public class ScorcherPlayer2 extends BasePlayer {
 						numEnemies++;
 					}
 				}
-				if (numEnemies > numAllies) {		//more enemies
+				if (numEnemies > numAllies && !canSenseArchon()) {		//more enemies
 					return true;
 				} else {		//if you will be doing more damage to yourself, do not attack
 					return false;

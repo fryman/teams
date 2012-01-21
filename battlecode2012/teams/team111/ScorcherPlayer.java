@@ -1,32 +1,23 @@
 package team111;
 
-
-import team111.Nav.BugNav;
 import team111.Nav.Navigation;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
-import battlecode.common.Robot;
 import battlecode.common.RobotController;
-import battlecode.common.RobotType;
 
 public class ScorcherPlayer extends BasePlayer {
 
 	private Navigation nav = null;
-	private MapLocation targetLoc;
-	private Robot closestTar;
-	private boolean set = false;
-	private int moves = 2;
-	private int tries = 0;
-	private int timesMoved = 0;
+	private boolean in_position = false;
+	private int desired_squares_from_core = 2;
+	private int attempts_to_position = 0;
+	private MapLocation core = myRC.sensePowerCore().getLocation();
+	private int actual_squares_from_core = 0;
 
 	// private Robot friendlyToFollow = null;
 	// private MapLocation friendlyMapLocationToFollow = null;
 
 	public ScorcherPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new BugNav(rc);
 	}
 
 	@Override
@@ -43,136 +34,138 @@ public class ScorcherPlayer extends BasePlayer {
 		runDefendCore();
 	}
 
-	// archon - if can sense power core and not two scorchers - build
-	// scorchers??
-
 	public void runDefendCore() {
 		// fix - if myRC.getFlux()<move cost - to check if can move
 		// fix - navigation - after coming in
 		while (true) {
 			try {
-				MapLocation core = myRC.sensePowerCore().getLocation();
-				if (set == false) {
-					myRC.setIndicatorString(2, "tries: "+tries);
-					if (tries < 3) {
-						while (!myRC.getLocation().isAdjacentTo(core)) {
-							this.nav.getNextMove(core);
-							runAtEndOfTurn();
-						}
-						myRC.setIndicatorString(0, "at powercore");
-						myRC.setIndicatorString(1, "");
-						myRC.setIndicatorString(2, "");
-						while (myRC.isMovementActive()) {
-							runAtEndOfTurn();
-						}
-						myRC.setDirection(myRC.getLocation().directionTo(core)
-								.opposite());
-						runAtEndOfTurn();
-						if (myRC.getDirection().isDiagonal()) {
-							moves = 1;
+				if (!in_position) {
+					if (attempts_to_position < 3) {
+						myRC.setIndicatorString(0, "attempts_to_position: "
+								+ attempts_to_position + " actual "
+								+ actual_squares_from_core + " desired "
+								+ desired_squares_from_core);
+						navToCoreAndAboutFace();
+						attempts_to_position++;
+						advanceIntoPosition();
+						if (actual_squares_from_core != desired_squares_from_core) {
+							navToCoreAndMoveToNextCardinal();
+							in_position = false;
 						} else {
-							moves = 2;
-						}
-						tries++;
-						myRC.setIndicatorString(1, "moves " + moves);
-						int countMove = 0;
-						int count = 0;
-						while (countMove < moves && count < 10) {
-							if (myRC.canMove(myRC.getDirection())
-									&& !myRC.isMovementActive()
-									&& myRC.getFlux() > myRC.getType().moveCost) {
-								myRC.moveForward();
-								countMove++;
-							}
-							runAtEndOfTurn();
-							count++;
-						}
-						if (countMove != moves) {
-							while (!myRC.getLocation().isAdjacentTo(core)) {
-								this.nav.getNextMove(core);
-								runAtEndOfTurn();
-							}
-							while (myRC.isMovementActive()) {
-								runAtEndOfTurn();
-							}
-							if (myRC.getDirection().isDiagonal()
-									&& myRC.getFlux() > myRC.getType().moveCost) {
-								myRC.setDirection(myRC.getDirection()
-										.rotateLeft());
-							} else if (myRC.getFlux() > myRC.getType().moveCost) {
-								myRC.setDirection(myRC.getDirection()
-										.rotateLeft().rotateLeft());
-							}
-							int count3 = 0;
-							while (count3 < 1) {
-								if (myRC.canMove(myRC.getDirection())
-										&& !myRC.isMovementActive()
-										&& myRC.getFlux() > myRC.getType().moveCost) {
-									myRC.moveForward();
-									count3++;
-								}
-								runAtEndOfTurn();
-							}
-							set = false;
-						} else {
-							set = true;
+							in_position = true;
+							break;
 						}
 					} else {
-						// stop facing out
-						while (!myRC.getLocation().isAdjacentTo(core)) {
-							this.nav.getNextMove(core);
-							runAtEndOfTurn();
-						}
-						myRC.setIndicatorString(0, "at powercore");
-						myRC.setIndicatorString(1, "");
-						myRC.setIndicatorString(2, "");
-						while (myRC.isMovementActive()) {
-							runAtEndOfTurn();
-						}
-						myRC.setDirection(myRC.getLocation().directionTo(core)
-								.opposite());
-						runAtEndOfTurn();
-						if (myRC.getDirection().isDiagonal()) {
-							moves = 1;
-						} else {
-							moves = 2;
-						}
+						navToCoreAndAboutFace();
 					}
 				} else {
-					if (set == true) {
-						myRC.setIndicatorString(0, "should be " + moves
-								+ " away facing out");
-						if (senseClosestGroundEnemy() != null
-								&& !myRC.isAttackActive()
-								&& !canSenseArchon()
-								&& myRC.canAttackSquare(myRC.getLocation().add(
-										myRC.getDirection()))) {
-							myRC.setIndicatorString(0, "about to attack ");
-							myRC.attackSquare(myRC.getLocation(),
-									battlecode.common.RobotLevel.ON_GROUND);
-							runAtEndOfTurn();
-						} else
-							runAtEndOfTurn();
-					} else {
-						// try to set up then shoot
-						if (timesMoved >= moves) {
-							set = true;
-							runAtEndOfTurn();
-						} else {
-							if (myRC.canMove(myRC.getDirection())
-									&& !myRC.isMovementActive()
-									&& myRC.getFlux() > myRC.getType().moveCost) {
-								myRC.moveForward();
-								timesMoved++;
-							}
-							runAtEndOfTurn();
-						}
+					scorcherAttackAvoidArchons();
+					if (actual_squares_from_core != desired_squares_from_core && myRC.canMove(myRC.getDirection())) {
+						attempts_to_position = 0;
 					}
 				}
+
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public void navToCore() {
+		myRC.setIndicatorString(0, "navigating to core");
+		while (!myRC.getLocation().isAdjacentTo(core)) {
+			this.nav.getNextMove(core);
+			runAtEndOfTurn();
+		}
+	}
+
+	public void navToCoreAndAboutFace() {
+		try {
+			navToCore();
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
+			myRC.setDirection(myRC.getLocation().directionTo(core).opposite());
+			runAtEndOfTurn();
+		} catch (Exception e) {
+			System.out.println("Exception Caught");
+			e.printStackTrace();
+		}
+	}
+
+	public void advanceIntoPosition() {
+		try {
+			if (myRC.getDirection().isDiagonal()) {
+				desired_squares_from_core = 1;
+			} else {
+				desired_squares_from_core = 2;
+			}
+			myRC.setIndicatorString(0, "attempting move forward "
+					+ desired_squares_from_core + "squares");
+			int patience = 0;
+			while (actual_squares_from_core < desired_squares_from_core
+					&& patience < 10) {
+				if (myRC.canMove(myRC.getDirection())
+						&& !myRC.isMovementActive()
+						&& myRC.getFlux() > myRC.getType().moveCost) {
+					myRC.moveForward();
+					actual_squares_from_core++;
+				}
+				patience++;
+				runAtEndOfTurn();
+			}
+			if (actual_squares_from_core == desired_squares_from_core) {
+				in_position = true;
+			}
+		} catch (Exception e) {
+			System.out.println("Exception Caught");
+			e.printStackTrace();
+		}
+	}
+
+	public void navToCoreAndMoveToNextCardinal() {
+		try {
+			navToCore();
+			if (myRC.getDirection().isDiagonal()
+					&& myRC.getFlux() > myRC.getType().moveCost) {
+				myRC.setDirection(myRC.getDirection().rotateLeft());
+			} else if (myRC.getFlux() > myRC.getType().moveCost) {
+				myRC.setDirection(myRC.getDirection().rotateLeft().rotateLeft());
+			}
+			int patience = 0;
+			while (patience < 1) {
+				if (myRC.canMove(myRC.getDirection())
+						&& !myRC.isMovementActive()
+						&& myRC.getFlux() > myRC.getType().moveCost) {
+					myRC.moveForward();
+					patience++;
+				}
+				runAtEndOfTurn();
+			}
+
+		} catch (Exception e) {
+			System.out.println("Exception Caught");
+			e.printStackTrace();
+		}
+	}
+
+	public void scorcherAttackAvoidArchons() {
+		try {
+			myRC.setIndicatorString(0, "in position and attacking");
+			if (senseClosestGroundEnemy() != null
+					&& !myRC.isAttackActive()
+					&& !canSenseArchon()
+					&& myRC.canAttackSquare(myRC.getLocation().add(
+							myRC.getDirection()))) {
+				myRC.setIndicatorString(0, "about to attack ");
+				myRC.attackSquare(myRC.getLocation(),
+						battlecode.common.RobotLevel.ON_GROUND);
+			}
+			runAtEndOfTurn();
+		} catch (Exception e) {
+			System.out.println("Exception Caught");
+			e.printStackTrace();
 		}
 	}
 
