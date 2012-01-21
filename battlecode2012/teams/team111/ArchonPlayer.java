@@ -23,6 +23,8 @@ public class ArchonPlayer extends BasePlayer {
 	private double prevEnergon = 0;
 	private int scorcherCount = 0;
 	private int scoutCount = 0;
+	private MapLocation locationApproaching;
+	private MapLocation enemyPowerCoreEstimate;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -42,6 +44,7 @@ public class ArchonPlayer extends BasePlayer {
 		aboutToDie();
 		// broadcastMessage();
 		// pingPresence();
+		sendPingOrEnemyLoc();
 		this.findWeakFriendsAndTransferFlux();
 		if (beingAttacked()) {
 			bugOut();
@@ -67,20 +70,22 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-//			MapLocation[] archons = myRC.senseAlliedArchons();
-//			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-//			int Counter = 0;
-//			for (MapLocation m : archons) {
-//				Robot r = (Robot) myRC.senseObjectAtLocation(m,
-//						RobotLevel.ON_GROUND);
-//				IDNumbers[Counter] = r.getID();
-//				Counter++;
-//			}
-//			if (myRC.getRobot().getID() == IDNumbers[0]) {
-//				runDefendCoreWithScorchers();
-//			} else {
-//				runArchonBrain();
-//			}
+			// MapLocation[] archons = myRC.senseAlliedArchons();
+			// int[] IDNumbers = new
+			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			// int Counter = 0;
+			// for (MapLocation m : archons) {
+			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
+			// RobotLevel.ON_GROUND);
+			// IDNumbers[Counter] = r.getID();
+			// Counter++;
+			// }
+			// if (myRC.getRobot().getID() == IDNumbers[0]) {
+			// runDefendCoreWithScorchers();
+			// } else {
+			// runArchonBrain();
+			// }
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
 			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -95,31 +100,23 @@ public class ArchonPlayer extends BasePlayer {
 	public void runArchonBrain() {
 		while (true) {
 			try {
-				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
-				}
 				// This causes the archons to spread out quickly, and limits
-				// spreading to 200 rounds. Realistically spreading out is
+				// spreading to 50 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				while (Clock.getRoundNum() < 50 && !spreadOutFromOtherArchons()) {
-					while (myRC.isMovementActive()) {
-						runAtEndOfTurn();
-					}
-				}
-				// if (this.nav.getClass() != DijkstraNav.class) {
-				// this.nav = new DijkstraNav(myRC);
+				// while (Clock.getRoundNum() < 50 &&
+				// !spreadOutFromOtherArchons()) {
+				// while (myRC.isMovementActive()) {
+				// runAtEndOfTurn();
 				// }
-				// spawnScorcherAndTransferFlux();
+				// }
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
-
 				/*
 				 * if (beingAttacked()) { if
 				 * (myRC.canMove(myRC.getDirection().opposite())) {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
-				sendPingOrEnemyLoc();
 				goToPowerNodeForBuild(capturing);
 				buildOrDestroyTower(capturing);
 				runAtEndOfTurn();
@@ -333,6 +330,7 @@ public class ArchonPlayer extends BasePlayer {
 			while (locationToCapture != null
 					&& !myRC.getLocation().isAdjacentTo(locationToCapture)) {
 				this.nav.getNextMove(locationToCapture);
+				this.locationApproaching = locationToCapture;
 				runAtEndOfTurn();
 				// check if we're going to a loc with a tower already
 				updateUnownedNodes();
@@ -465,22 +463,24 @@ public class ArchonPlayer extends BasePlayer {
 		updateUnownedNodes();
 		if (capturablePowerNodes.length != 0) {
 			MapLocation best = capturablePowerNodes[0];
-			double farthestDist = this.myRC.sensePowerCore().getLocation()
-					.distanceSquaredTo(best);
+			MapLocation here = this.myRC.getLocation();
+			double[] com = archonCOM();
+			MapLocation archonCOM = getMapLocationFromCoordinates(com);
+
+			double smallestScoreToThis = here.distanceSquaredTo(best)
+					/ (best.distanceSquaredTo(archonCOM) + 1.01)
+					* best.distanceSquaredTo(enemyPowerCoreEstimate);
 			double sample;
+
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
-				sample = capturablePowerNodes[i].distanceSquaredTo(this.myRC
-						.sensePowerCore().getLocation());
-				if (sample > farthestDist) {
-					farthestDist = sample;
+				sample = capturablePowerNodes[i].distanceSquaredTo(here)
+						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01);
+				if (sample < smallestScoreToThis) {
+					smallestScoreToThis = sample;
 					best = capturablePowerNodes[i];
 				}
 			}
 			targetLoc = best; // to conform to method signature
-			if (Clock.getRoundNum() < 200) {
-				best = capturablePowerNodes[(int) Math.random()
-						* capturablePowerNodes.length];
-			}
 			return best;
 		} else {
 			targetLoc = myRC.sensePowerCore().getLocation(); // to conform to
@@ -803,7 +803,7 @@ public class ArchonPlayer extends BasePlayer {
 			if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
 				return;
 			}
-			if (myRC.getFlux() > RobotType.SCOUT.spawnCost
+			if (myRC.getFlux() > 1.5 * RobotType.SCOUT.spawnCost
 					&& myRC.senseObjectAtLocation(potentialLocation,
 							RobotLevel.IN_AIR) == null) {
 				myRC.spawn(RobotType.SCOUT);
@@ -965,13 +965,13 @@ public class ArchonPlayer extends BasePlayer {
 					}
 				}
 			}
-			// if cannot see scout, spawn one.
-			if (!scoutPresent) {
-				attemptSpawnScoutAndTransferFlux();
-			}
 			// if cannot see soldier, spawn one.
 			if (soldierPresent < 4) {
 				attemptSpawnSoldierAndTransferFlux();
+			}
+			// if cannot see scout, spawn one.
+			if (!scoutPresent) {
+				attemptSpawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1010,7 +1010,8 @@ public class ArchonPlayer extends BasePlayer {
 				message.locations = new MapLocation[] { this.myRC
 						.senseLocationOf(bestEnemy) };
 				if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
-						+ 16 * message.getFluxCost()) {
+						+ 16 * message.getFluxCost()
+						&& !this.myRC.hasBroadcasted()) {
 					myRC.broadcast(message);
 				}
 			}
@@ -1028,9 +1029,12 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Message message = new Message();
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
-			message.locations = new MapLocation[] { this.myRC.getLocation() };
+			message.locations = new MapLocation[] { this.myRC.getLocation()
+					.add(this.myRC.getLocation().directionTo(
+							locationApproaching), 2) };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
-					+ 16 * message.getFluxCost()) {
+					+ 16 * message.getFluxCost()
+					&& !this.myRC.hasBroadcasted()) {
 				myRC.broadcast(message);
 			}
 		} catch (Exception e) {
@@ -1102,8 +1106,8 @@ public class ArchonPlayer extends BasePlayer {
 			double xEstimate = xIdeal + capX;
 			double yEstimate = yIdeal + capY;
 
-			System.out
-					.println("" + (int) (xEstimate) + " " + (int) (yEstimate));
+			// System.out
+			// .println("" + (int) (xEstimate) + " " + (int) (yEstimate));
 			Message bestGuess = new Message();
 			int[] suspectedLocation = new int[] { (int) (10 * xEstimate),
 					(int) (10 * yEstimate) };
@@ -1122,13 +1126,14 @@ public class ArchonPlayer extends BasePlayer {
 					suspectedLocation[0] += o.ints[0];
 					suspectedLocation[1] += o.ints[1];
 				} else {
-					System.out.println("Null msg");
+					// System.out.println("Null msg");
 				}
 			}
 			MapLocation guess = m.add(suspectedLocation[0],
 					suspectedLocation[1]);
-			System.out.println("Compiled guess: " + suspectedLocation[0] + ", "
-					+ suspectedLocation[1]);
+			// System.out.println("Compiled guess: " + suspectedLocation[0] +
+			// ", "
+			// + suspectedLocation[1]);
 			return guess;
 		} catch (Exception e) {
 			e.printStackTrace();
