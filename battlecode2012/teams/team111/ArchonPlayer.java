@@ -157,21 +157,21 @@ public class ArchonPlayer extends BasePlayer {
 	 * @author brian
 	 */
 	
-	public void runArchonRush(boolean Trigger) {
+	public void runArchonRush() {
+		boolean trigger=false;
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
 					runAtEndOfTurn();
 				}
-				if (myRC.getFlux()==290) {
+				if (myRC.getFlux()>=290) {
 					spawnSoldierAndTransferFlux();
-					Trigger=true;
+					trigger=true;
 				}
-				if (Trigger && soldierCount<3) {
-					
+				if (trigger) {
+					spawnSoldierAndTransferFlux();
 				}
 				runAtEndOfTurn();
-
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();
