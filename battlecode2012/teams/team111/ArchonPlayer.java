@@ -60,7 +60,7 @@ public class ArchonPlayer extends BasePlayer {
 				IDNumbers[Counter] = r.getID();
 				Counter++;
 			}
-			if (true) {//myRC.getRobot().getID()==IDNumbers[0]) {
+			if (myRC.getRobot().getID()==IDNumbers[0]) {
 				runDefendCoreWithScorchers();
 			} else {
 				runArchonBrain();
@@ -150,6 +150,13 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	/**
+	 * A method for archons to sit and refuel scorchers after building a defensive perimiter
+	 * around the power core.
+	 * 
+	 * @author tburfield
+	 */
 
 	public void fluxToFriends() {
 		try {
@@ -870,7 +877,6 @@ public class ArchonPlayer extends BasePlayer {
 	 * Archons sense each other and determine who has the lowest robot number.
 	 * He executes special code.
 	 * 
-	 * @TODO Find a way to sense objects out of range.
 	 * @author brian
 	 */
 
