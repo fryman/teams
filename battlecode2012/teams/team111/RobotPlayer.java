@@ -16,7 +16,8 @@ public class RobotPlayer {
 	public void nonStaticRun(RobotController rc){
 		switch (rc.getType()) {
 		case ARCHON:
-			new ArchonPlayer(rc).run();
+			new ArchonPlayer(rc).estimateEnemyPowerCore();
+			//new ArchonPlayer(rc).run();
 //			if (count < (battlecode.common.GameConstants.NUMBER_OF_ARCHONS-2)){
 //				new ArchonPlayer(rc).run();
 //				count++;

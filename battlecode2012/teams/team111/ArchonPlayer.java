@@ -1034,4 +1034,17 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 	}
+	
+	public void estimateEnemyPowerCore(){
+		int dist = (int)Math.sqrt(myRC.getType().sensorRadiusSquared);
+		MapLocation m = this.myRC.getLocation();
+		MapLocation[] neighbors = { m.add(Direction.EAST,dist),
+				m.add(Direction.NORTH,dist), m.add(Direction.NORTH_EAST,dist),
+				m.add(Direction.NORTH_WEST,dist), m.add(Direction.SOUTH,dist),
+				m.add(Direction.SOUTH_EAST,dist), m.add(Direction.SOUTH_WEST,dist),
+				m.add(Direction.WEST,dist) };
+		for (MapLocation n : neighbors){
+			System.out.println(myRC.senseTerrainTile(m));
+		}
+	}
 }
