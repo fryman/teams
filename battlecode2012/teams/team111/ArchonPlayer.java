@@ -25,6 +25,7 @@ public class ArchonPlayer extends BasePlayer {
 	private int scoutCount = 0;
 	private MapLocation locationApproaching;
 	private MapLocation enemyPowerCoreEstimate;
+	private boolean iSeeEnemy = false;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -128,6 +129,10 @@ public class ArchonPlayer extends BasePlayer {
 				// runAtEndOfTurn();
 				// }
 				// }
+				if (iSeeEnemy){
+					runAtEndOfTurn();
+					continue;
+				}
 				MapLocation capturing = getNewTarget();
 				myRC.setIndicatorString(0, "capturing: " + capturing + " "
 						+ Clock.getRoundNum());
@@ -986,7 +991,7 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 5) {
+			if (soldierPresent < 4) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 			// if cannot see scout, spawn one.
@@ -1023,8 +1028,10 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Robot bestEnemy = senseBestEnemy();
 			if (bestEnemy == null) {
+				iSeeEnemy = false;
 				pingPresence();
 			} else {
+				iSeeEnemy = true;
 				Message message = new Message();
 				message.ints = new int[] { ARCHON_ENEMY_MESSAGE };
 				message.locations = new MapLocation[] { this.myRC
@@ -1051,7 +1058,7 @@ public class ArchonPlayer extends BasePlayer {
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
 			message.locations = new MapLocation[] { this.myRC.getLocation()
 					.add(this.myRC.getLocation().directionTo(
-							locationApproaching), 2) };
+							locationApproaching), 3) };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()
 					&& !this.myRC.hasBroadcasted()) {
