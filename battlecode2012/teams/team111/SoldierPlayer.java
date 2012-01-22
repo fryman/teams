@@ -237,11 +237,13 @@ public class SoldierPlayer extends BasePlayer {
 				}
 				if (weakest != null) {
 					RobotInfo wInfo = myRC.senseRobotInfo(weakest);
-					if (wInfo.type == RobotType.TOWER
+					if (wInfo.type.equals(RobotType.TOWER)
 							&& !ownAdjacentTower(wInfo.location)) {
+						myRC.setIndicatorString(1, "No adjacent tower owned -- do not attack");
 						return null;
 					}
 				}
+				System.out.println("weakest: " + myRC.senseRobotInfo(weakest).type);
 				return weakest;
 			}
 			return null;
