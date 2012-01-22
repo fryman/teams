@@ -510,11 +510,16 @@ public class ArchonPlayer extends BasePlayer {
 				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
 				// 0.01)
 				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
+//				if( capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6 ){
+//					best = capturablePowerNodes[i];
+//					targetLoc = best;
+//					return best;
+//				}
 				sample = this.myRC.sensePowerCore().getLocation()
 						.distanceSquaredTo(capturablePowerNodes[i])
 						/ Math.pow(
 								(archonCOM
-										.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+										.distanceSquaredTo(capturablePowerNodes[i]) + 1.0),
 								2);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
