@@ -90,24 +90,24 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			 MapLocation[] archons = myRC.senseAlliedArchons();
-			 int[] IDNumbers = new
-			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			 int Counter = 0;
-			 for (MapLocation m : archons) {
-			 Robot r = (Robot) myRC.senseObjectAtLocation(m,
-			 RobotLevel.ON_GROUND);
-			 IDNumbers[Counter] = r.getID();
-			 Counter++;
-			 }
-			 if (myRC.getRobot().getID() == IDNumbers[0]) {
-			 runDefendCoreWithScorchers();
-			 } else {
-			 runArchonBrain();
-			 }
-//			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-//			runArchonBrain();
+//			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
+//			 MapLocation[] archons = myRC.senseAlliedArchons();
+//			 int[] IDNumbers = new
+//			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+//			 int Counter = 0;
+//			 for (MapLocation m : archons) {
+//			 Robot r = (Robot) myRC.senseObjectAtLocation(m,
+//			 RobotLevel.ON_GROUND);
+//			 IDNumbers[Counter] = r.getID();
+//			 Counter++;
+//			 }
+//			 if (myRC.getRobot().getID() == IDNumbers[0]) {
+//			 runDefendCoreWithScorchers();
+//			 } else {
+//			 runArchonBrain();
+//			 }
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -500,7 +500,7 @@ public class ArchonPlayer extends BasePlayer {
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
 				sample = capturablePowerNodes[i].distanceSquaredTo(here)
 						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01)
-						* best.distanceSquaredTo(enemyPowerCoreEstimate);
+						+ best.distanceSquaredTo(enemyPowerCoreEstimate);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
 					best = capturablePowerNodes[i];
