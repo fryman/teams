@@ -73,14 +73,14 @@ public class ArchonPlayer extends BasePlayer {
 	 * Causes archon to move backward (assumes it is being attacked)
 	 */
 	public void bugOut() {
-//		if (!myRC.isMovementActive()
-//				&& myRC.canMove(myRC.getDirection().opposite())) {
-//			try {
-//				myRC.moveBackward();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
+		// if (!myRC.isMovementActive()
+		// && myRC.canMove(myRC.getDirection().opposite())) {
+		// try {
+		// myRC.moveBackward();
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
 		this.nav.getNextMove(this.myRC.sensePowerCore().getLocation());
 	}
 
@@ -1071,10 +1071,10 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Message message = new Message();
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
-//			message.locations = new MapLocation[] { this.myRC.getLocation()
-//					.add(this.myRC.getLocation().directionTo(
-//							locationApproaching), 3) };
-			message.locations = new MapLocation[] {this.locationApproaching};
+			// message.locations = new MapLocation[] { this.myRC.getLocation()
+			// .add(this.myRC.getLocation().directionTo(
+			// locationApproaching), 3) };
+			message.locations = new MapLocation[] { this.locationApproaching };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()
 					&& !this.myRC.hasBroadcasted()) {
@@ -1182,5 +1182,20 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public void testBottleneck() {
+		MapLocation capturing = getNewTarget();
+		try {
+			while (!bottleneckDetected()) {
+				this.nav.getNextMove(capturing);
+				this.myRC.yield();
+			}
+			while (true) {
+				this.myRC.yield();
+			}
+		} catch (Exception e) {
+
+		}
 	}
 }

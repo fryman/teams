@@ -20,6 +20,8 @@ public abstract class BasePlayer extends StaticStuff {
 	public static final int GROUND_PING_MESSAGE = 21122;
 	protected Message[] messages;
 	protected double prevEnergon;
+	protected double oldMovingAverageCorridorWidth = 12;
+	protected double recentMovingAverageCorridorWidth = 12;
 
 	public BasePlayer(RobotController rc) {
 		this.nav = new LocalAreaNav(rc);
@@ -962,5 +964,63 @@ public abstract class BasePlayer extends StaticStuff {
 		int offsetX = (int) (coords[0] - here.x);
 		int offsetY = (int) (coords[1] - here.y);
 		return here.add(offsetX, offsetY);
+	}
+
+	/**
+	 * Returns true when this robot is in a bottleneck. Bottleneck is determined
+	 * by comparing moving average width of traveling corridor with the current
+	 * width.
+	 * 
+	 * alpha = 0.8
+	 * 
+	 * @return true if standing in bottleneck, else false.
+	 */
+	public boolean bottleneckDetected() {
+		// figure out current width.
+		// compute in with current average.
+		// if difference above threshold, in bottleneck!
+
+		// look left.
+		double max_diff = 0.5;
+		double alphaRecent = 0.7;
+		double alphaOld = 0.2;
+		double sensorRange = this.myRC.getType().sensorRadiusSquared;
+		MapLocation here = this.myRC.getLocation();
+		Direction d = this.myRC.getDirection();
+		double leftCorridor = 0;
+		double rightCorridor = 0;
+		boolean blocked = false;
+		for (int i = 1; i * i < sensorRange; i++) {
+			TerrainTile l = this.myRC.senseTerrainTile(here.add(d.rotateLeft(),
+					i));
+			TerrainTile r = this.myRC.senseTerrainTile(here.add(
+					d.rotateRight(), i));
+			TerrainTile f = this.myRC.senseTerrainTile(here.add(d, i));
+			if (l == TerrainTile.LAND) {
+				leftCorridor = i;
+			}
+			if (r == TerrainTile.LAND) {
+				rightCorridor = i;
+			}
+			if (f != TerrainTile.LAND) {
+				blocked = true;
+			}
+		}
+		double currentCorridor = leftCorridor + rightCorridor;
+		if (!blocked
+				&& this.recentMovingAverageCorridorWidth
+						- this.oldMovingAverageCorridorWidth > max_diff) {
+			this.recentMovingAverageCorridorWidth = alphaRecent
+					* currentCorridor + (1 - alphaRecent)
+					* this.recentMovingAverageCorridorWidth;
+			this.oldMovingAverageCorridorWidth = alphaOld * currentCorridor
+					+ (1 - alphaOld) * this.oldMovingAverageCorridorWidth;
+			return true;
+		}
+		this.recentMovingAverageCorridorWidth = alphaRecent * currentCorridor
+				+ (1 - alphaRecent) * this.recentMovingAverageCorridorWidth;
+		this.oldMovingAverageCorridorWidth = alphaOld * currentCorridor
+				+ (1 - alphaOld) * this.oldMovingAverageCorridorWidth;
+		return false;
 	}
 }

@@ -2,6 +2,7 @@ package team111;
 
 
 import team111.Nav.BugNav;
+import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import battlecode.common.Clock;
 import battlecode.common.RobotInfo;
@@ -14,13 +15,10 @@ public class DisrupterPlayer extends BasePlayer {
 	
 	public DisrupterPlayer(RobotController rc) {
 		super(rc);
-		this.nav = new BugNav(rc);
+		this.nav = new LocalAreaNav(rc);
 	}
 	
 	public void run() {
-		
-		
-		
 		runAtEndOfTurn();
 	}
 
