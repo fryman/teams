@@ -73,14 +73,14 @@ public class ArchonPlayer extends BasePlayer {
 	 * Causes archon to move backward (assumes it is being attacked)
 	 */
 	public void bugOut() {
-//		if (!myRC.isMovementActive()
-//				&& myRC.canMove(myRC.getDirection().opposite())) {
-//			try {
-//				myRC.moveBackward();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
+		// if (!myRC.isMovementActive()
+		// && myRC.canMove(myRC.getDirection().opposite())) {
+		// try {
+		// myRC.moveBackward();
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
 		this.nav.getNextMove(this.myRC.sensePowerCore().getLocation());
 	}
 
@@ -400,25 +400,28 @@ public class ArchonPlayer extends BasePlayer {
 	public void checkAndCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
-			boolean scoutPresent = false;
-			boolean soldierPresent = false;
+			int scoutPresent = 0;
+			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
-						scoutPresent = true;
+						scoutPresent++;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
-						soldierPresent = true;
+						soldierPresent++;
 					}
 				}
 			}
 			// if cannot see scout, spawn one.
-			if (!scoutPresent) {
+			if (scoutPresent==0) {
 				spawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (!soldierPresent) {
+			if (soldierPresent<4) {
 				spawnSoldierAndTransferFlux();
+			}
+			if (scoutPresent<3) {
+				spawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -510,11 +513,16 @@ public class ArchonPlayer extends BasePlayer {
 				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
 				// 0.01)
 				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
+//				if( capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6 ){
+//					best = capturablePowerNodes[i];
+//					targetLoc = best;
+//					return best;
+//				}
 				sample = this.myRC.sensePowerCore().getLocation()
 						.distanceSquaredTo(capturablePowerNodes[i])
 						/ Math.pow(
 								(archonCOM
-										.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+										.distanceSquaredTo(capturablePowerNodes[i]) + 1.0),
 								2);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
@@ -710,7 +718,8 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND || potentialLocation.equals(myRC.senseLocationOf(myRC.sensePowerCore()))) {
+					myRC.setIndicatorString(0, "needs to rotate");
 					this.myRC.setDirection(this.myRC.getDirection()
 							.rotateRight());
 				}
@@ -995,24 +1004,27 @@ public class ArchonPlayer extends BasePlayer {
 	public void checkAndAttemptCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
-			boolean scoutPresent = false;
+			int scoutPresent = 0;
 			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
-						scoutPresent = true;
+						scoutPresent++;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
 						soldierPresent++;
 					}
 				}
 			}
+			if (scoutPresent == 0) {
+				attemptSpawnScoutAndTransferFlux();
+			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 4) {
+			if (soldierPresent < 5) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 			// if cannot see scout, spawn one.
-			if (!scoutPresent) {
+			if (scoutPresent < 3) {
 				attemptSpawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {
@@ -1073,10 +1085,10 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Message message = new Message();
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
-//			message.locations = new MapLocation[] { this.myRC.getLocation()
-//					.add(this.myRC.getLocation().directionTo(
-//							locationApproaching), 3) };
-			message.locations = new MapLocation[] {this.locationApproaching};
+			// message.locations = new MapLocation[] { this.myRC.getLocation()
+			// .add(this.myRC.getLocation().directionTo(
+			// locationApproaching), 3) };
+			message.locations = new MapLocation[] { this.locationApproaching };
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()
 					&& !this.myRC.hasBroadcasted()) {
@@ -1184,5 +1196,20 @@ public class ArchonPlayer extends BasePlayer {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public void testBottleneck() {
+		MapLocation capturing = getNewTarget();
+		try {
+			while (!bottleneckDetected()) {
+				this.nav.getNextMove(capturing);
+				this.myRC.yield();
+			}
+			while (true) {
+				this.myRC.yield();
+			}
+		} catch (Exception e) {
+
+		}
 	}
 }
