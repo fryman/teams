@@ -400,25 +400,28 @@ public class ArchonPlayer extends BasePlayer {
 	public void checkAndCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
-			boolean scoutPresent = false;
-			boolean soldierPresent = false;
+			int scoutPresent = 0;
+			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
-						scoutPresent = true;
+						scoutPresent++;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
-						soldierPresent = true;
+						soldierPresent++;
 					}
 				}
 			}
 			// if cannot see scout, spawn one.
-			if (!scoutPresent) {
+			if (scoutPresent==0) {
 				spawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (!soldierPresent) {
+			if (soldierPresent<4) {
 				spawnSoldierAndTransferFlux();
+			}
+			if (scoutPresent<3) {
+				spawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -995,24 +998,27 @@ public class ArchonPlayer extends BasePlayer {
 	public void checkAndAttemptCreateConvoy() {
 		try {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
-			boolean scoutPresent = false;
+			int scoutPresent = 0;
 			int soldierPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
-						scoutPresent = true;
+						scoutPresent++;
 					}
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
 						soldierPresent++;
 					}
 				}
 			}
+			if (scoutPresent == 0) {
+				attemptSpawnScoutAndTransferFlux();
+			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 4) {
+			if (soldierPresent < 5) {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 			// if cannot see scout, spawn one.
-			if (!scoutPresent) {
+			if (scoutPresent < 3) {
 				attemptSpawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {

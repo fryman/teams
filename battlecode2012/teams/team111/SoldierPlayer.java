@@ -35,6 +35,7 @@ public class SoldierPlayer extends BasePlayer {
 		runFollowFriendlyAndGuardMode();
 	}
 
+
 	/**
 	 * Finds an enemy, chases and attacks it. If there is no enemy, walks
 	 * aimlessly.

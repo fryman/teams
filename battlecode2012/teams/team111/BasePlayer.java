@@ -37,7 +37,8 @@ public abstract class BasePlayer extends StaticStuff {
 		// pingPresence();
 		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
 				&& !this.myRC.isMovementActive()
-				&& this.myRC.getFlux() > this.myRC.getType().moveCost) {
+				&& this.myRC.getFlux() > this.myRC.getType().moveCost
+				&& retreatOverride()) {
 			try {
 				myRC.moveBackward();
 			} catch (Exception e) {
@@ -46,6 +47,32 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
+	}
+	
+	/**
+	 * Function overrides retreat function, for example soldiers should not retreat when
+	 * attacking disrupters.
+	 */
+	public boolean retreatOverride() {
+		try {
+			if (myRC.getType() != RobotType.SOLDIER) {
+				return true;
+			} else {
+				if (senseBestEnemy() != null) {
+					if (myRC.senseRobotInfo(senseBestEnemy()).type == RobotType.DISRUPTER) {
+						return false;
+					} else {
+						return true;
+					}
+				} else {
+					return true;
+				}
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			return true;
+		}
+		
 	}
 
 	/**
