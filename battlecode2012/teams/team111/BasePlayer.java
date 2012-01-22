@@ -39,7 +39,8 @@ public abstract class BasePlayer extends StaticStuff {
 		// pingPresence();
 		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
 				&& !this.myRC.isMovementActive()
-				&& this.myRC.getFlux() > this.myRC.getType().moveCost) {
+				&& this.myRC.getFlux() > this.myRC.getType().moveCost
+				&& retreatOverride()) {
 			try {
 				myRC.moveBackward();
 			} catch (Exception e) {
@@ -48,6 +49,34 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
+	}
+	
+	/**
+	 * Function overrides retreat function, for example soldiers should not retreat when
+	 * attacking disrupters.
+	 * 
+	 * @author brian
+	 */
+	public boolean retreatOverride() {
+		try {
+			if (myRC.getType() != RobotType.SOLDIER) {
+				return true;
+			} else {
+				if (senseBestEnemy() != null) {
+					if (myRC.senseRobotInfo(senseBestEnemy()).type == RobotType.DISRUPTER) {
+						return false;
+					} else {
+						return true;
+					}
+				} else {
+					return true;
+				}
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			return true;
+		}
+		
 	}
 
 	/**
@@ -818,9 +847,9 @@ public abstract class BasePlayer extends StaticStuff {
 		try {
 			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 
-			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
 			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
 					enemies.length);
 			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
 					enemies.length);
@@ -840,17 +869,21 @@ public abstract class BasePlayer extends StaticStuff {
 					soldiers.add(e);
 					break;
 				case SCORCHER:
-					others.add(e);
+					scorchers.add(e);
 					break;
 				default:
 					others.add(e);
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (archons.size() > 0) {
-				priorityTargets = archons;
-			} else if (soldiers.size() > 0) {
+//			if (archons.size() > 0) {
+//				priorityTargets = archons;
+//			} else if (soldiers.size() > 0) {
+//				priorityTargets = soldiers;
+			if (soldiers.size() > 0) {
 				priorityTargets = soldiers;
+			} else if (archons.size() > 0) {
+				priorityTargets = archons;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
