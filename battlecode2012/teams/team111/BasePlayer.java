@@ -52,6 +52,8 @@ public abstract class BasePlayer extends StaticStuff {
 	/**
 	 * Function overrides retreat function, for example soldiers should not retreat when
 	 * attacking disrupters.
+	 * 
+	 * @author brian
 	 */
 	public boolean retreatOverride() {
 		try {
