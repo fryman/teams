@@ -189,9 +189,14 @@ public class ArchonPlayer extends BasePlayer {
 				 * (myRC.canMove(myRC.getDirection().opposite())) {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
-				goToPowerNodeForBuild(capturing);
-				buildOrDestroyTower(capturing);
-				runAtEndOfTurn();
+				if (Clock.getRoundNum() < 3000) {
+					spreadOutFromOtherArchons();
+					runAtEndOfTurn();
+				} else {
+					goToPowerNodeForBuild(capturing);
+					buildOrDestroyTower(capturing);
+					runAtEndOfTurn();
+				}
 			} catch (Exception e) {
 				System.out.println("caught exception:");
 				e.printStackTrace();

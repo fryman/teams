@@ -124,6 +124,7 @@ public class SoldierPlayer extends BasePlayer {
 	 * MAX_DEVIATION_DISTANCE_SQUARE of nearest archon.
 	 */
 	public void runFollowFriendlyAndGuardMode() {
+		int justChasing = 0;
 		while (true) {
 			try {
 				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
@@ -134,8 +135,15 @@ public class SoldierPlayer extends BasePlayer {
 				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy != null
 						&& myRC.senseRobotInfo(closeEnemy).type == RobotType.ARCHON) {
+					justChasing = 0;
 					attackAndChaseClosestEnemy(closeEnemy);
 					runAtEndOfTurn();
+				}
+				if (justChasing < 4) {
+					nav.getNextMove(this.myRC.getLocation().add(this.myRC.getDirection()));
+					runAtEndOfTurn();
+					justChasing ++;
+					continue;
 				}
 				MapLocation archonEnemy = receiveMessagesReturnAttack();
 				if (archonEnemy != null) {
@@ -205,12 +213,12 @@ public class SoldierPlayer extends BasePlayer {
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
+			if (archons.size() > 0) {
+				priorityTargets = archons;
 			} else if (disrupters.size() > 0) {
 				priorityTargets = disrupters;
-			} else if (archons.size() > 0) {
-				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}

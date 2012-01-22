@@ -35,25 +35,23 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-		// broadcastMessage();
-		// pingPresence();
-		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
-				&& !this.myRC.isMovementActive()
-				&& this.myRC.getFlux() > this.myRC.getType().moveCost
-				&& retreatOverride()) {
-			try {
-				myRC.moveBackward();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
+//				&& !this.myRC.isMovementActive()
+//				&& this.myRC.getFlux() > this.myRC.getType().moveCost
+//				&& retreatOverride()) {
+//			try {
+//				myRC.moveBackward();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
 	}
-	
+
 	/**
-	 * Function overrides retreat function, for example soldiers should not retreat when
-	 * attacking disrupters.
+	 * Function overrides retreat function, for example soldiers should not
+	 * retreat when attacking disrupters.
 	 * 
 	 * @author brian
 	 */
@@ -72,11 +70,11 @@ public abstract class BasePlayer extends StaticStuff {
 					return true;
 				}
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return true;
 		}
-		
+
 	}
 
 	/**
@@ -522,35 +520,41 @@ public abstract class BasePlayer extends StaticStuff {
 	 *            Target to seek and destroy.
 	 */
 	public void attackAndChaseClosestEnemy(Robot closestTar) {
-		try {
-			if (closestTar == null) {
-				return;
-			}
-			if (myRC.canSenseObject(closestTar)) {
-				MapLocation attack = myRC.senseLocationOf(closestTar);
-				if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
-					if (ownAdjacentTower(attack)) {
-						myRC.setIndicatorString(0, "Attempting tower destroy");
-						destroyTower(attack);
-					} else {
-						return;
+		while (true) {
+			try {
+				if (closestTar == null) {
+					return;
+				}
+				if (myRC.canSenseObject(closestTar)) {
+					MapLocation attack = myRC.senseLocationOf(closestTar);
+					if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
+						if (ownAdjacentTower(attack)) {
+							myRC.setIndicatorString(0,
+									"Attempting tower destroy");
+							destroyTower(attack);
+						} else {
+							return;
+						}
 					}
-				}
-				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
-						myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-					} else {
-						myRC.attackSquare(attack, RobotLevel.IN_AIR);
+					if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+						if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+							myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+						} else {
+							myRC.attackSquare(attack, RobotLevel.IN_AIR);
+						}
+						myRC.setIndicatorString(2,
+								"Attacking: " + attack.toString());
 					}
-					myRC.setIndicatorString(2,
-							"Attacking: " + attack.toString());
+					if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
+						this.nav.getNextMove(attack);
+					}
+				} else {
+					return;
 				}
-				if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
-					this.nav.getNextMove(attack);
-				}
+				runAtEndOfTurn();
+			} catch (GameActionException e1) {
+				e1.printStackTrace();
 			}
-		} catch (GameActionException e1) {
-			e1.printStackTrace();
 		}
 	}
 
@@ -869,21 +873,21 @@ public abstract class BasePlayer extends StaticStuff {
 					soldiers.add(e);
 					break;
 				case SCORCHER:
-					scorchers.add(e);
+					others.add(e);
 					break;
 				default:
 					others.add(e);
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-//			if (archons.size() > 0) {
-//				priorityTargets = archons;
-//			} else if (soldiers.size() > 0) {
-//				priorityTargets = soldiers;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
-			} else if (archons.size() > 0) {
+			// if (archons.size() > 0) {
+			// priorityTargets = archons;
+			// } else if (soldiers.size() > 0) {
+			// priorityTargets = soldiers;
+			if (archons.size() > 0) {
 				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
