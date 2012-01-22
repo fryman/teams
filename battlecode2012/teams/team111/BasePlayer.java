@@ -10,7 +10,7 @@ import team111.util.FastArrayList;
 import battlecode.common.*;
 
 public abstract class BasePlayer extends StaticStuff {
-	protected Navigation nav = null;
+	protected Navigation nav;
 	public static final int ARCHON_PING_MESSAGE = 47;
 	public static final int ARCHON_ENEMY_MESSAGE = 98;
 	public static final int NON_ARCHON_PING_MESSAGE = 982;

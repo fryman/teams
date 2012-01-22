@@ -73,14 +73,15 @@ public class ArchonPlayer extends BasePlayer {
 	 * Causes archon to move backward (assumes it is being attacked)
 	 */
 	public void bugOut() {
-		if (!myRC.isMovementActive()
-				&& myRC.canMove(myRC.getDirection().opposite())) {
-			try {
-				myRC.moveBackward();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if (!myRC.isMovementActive()
+//				&& myRC.canMove(myRC.getDirection().opposite())) {
+//			try {
+//				myRC.moveBackward();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+		this.nav.getNextMove(this.myRC.sensePowerCore().getLocation());
 	}
 
 	/**
@@ -90,23 +91,23 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-//			MapLocation[] archons = myRC.senseAlliedArchons();
-//			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-//			int Counter = 0;
-//			for (MapLocation m : archons) {
-//				Robot r = (Robot) myRC.senseObjectAtLocation(m,
-//						RobotLevel.ON_GROUND);
-//				IDNumbers[Counter] = r.getID();
-//				Counter++;
-//			}
-//			if (myRC.getRobot().getID() == IDNumbers[0]) {
-//				runDefendCoreWithScorchers();
-//			} else {
-//				enemyPowerCoreEstimate = estimateEnemyPowerCore();
-//				runArchonBrain();
-//			}
-			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			 runArchonBrain();
+			// MapLocation[] archons = myRC.senseAlliedArchons();
+			// int[] IDNumbers = new
+			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			// int Counter = 0;
+			// for (MapLocation m : archons) {
+			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
+			// RobotLevel.ON_GROUND);
+			// IDNumbers[Counter] = r.getID();
+			// Counter++;
+			// }
+			// if (myRC.getRobot().getID() == IDNumbers[0]) {
+			// runDefendCoreWithScorchers();
+			// } else {
+			// runArchonBrain();
+			// }
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -494,15 +495,27 @@ public class ArchonPlayer extends BasePlayer {
 			double[] com = archonCOM();
 			MapLocation archonCOM = getMapLocationFromCoordinates(com);
 
-			double smallestScoreToThis = here.distanceSquaredTo(best)
-					/ (best.distanceSquaredTo(archonCOM) + 1.01)
-					+ best.distanceSquaredTo(enemyPowerCoreEstimate);
+			// double smallestScoreToThis = here.distanceSquaredTo(best)
+			// / (best.distanceSquaredTo(archonCOM) + 1.01)
+			// + best.distanceSquaredTo(enemyPowerCoreEstimate);
+			double smallestScoreToThis = this.myRC.sensePowerCore()
+					.getLocation().distanceSquaredTo(capturablePowerNodes[0])
+					/ Math.pow((archonCOM
+							.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+							2);
 			double sample;
 
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
-				sample = capturablePowerNodes[i].distanceSquaredTo(here)
-						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01)
-						* best.distanceSquaredTo(enemyPowerCoreEstimate);
+				// sample = capturablePowerNodes[i].distanceSquaredTo(here)
+				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
+				// 0.01)
+				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
+				sample = this.myRC.sensePowerCore().getLocation()
+						.distanceSquaredTo(capturablePowerNodes[i])
+						/ Math.pow(
+								(archonCOM
+										.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+								2);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
 					best = capturablePowerNodes[i];
@@ -801,6 +814,7 @@ public class ArchonPlayer extends BasePlayer {
 						.directionTo(closest).opposite(), minimumDistance
 						- (int) smallestDistance);
 				this.nav.getNextMove(fartherAwayTarget);
+				this.locationApproaching = fartherAwayTarget;
 				roundsUsedToMoveAway++;
 				return false;
 			}
@@ -1059,9 +1073,10 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Message message = new Message();
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
-			message.locations = new MapLocation[] { this.myRC.getLocation()
-					.add(this.myRC.getLocation().directionTo(
-							locationApproaching), 3) };
+//			message.locations = new MapLocation[] { this.myRC.getLocation()
+//					.add(this.myRC.getLocation().directionTo(
+//							locationApproaching), 3) };
+			message.locations = new MapLocation[] {this.locationApproaching};
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()
 					&& !this.myRC.hasBroadcasted()) {
