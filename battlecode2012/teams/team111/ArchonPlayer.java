@@ -90,23 +90,23 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			// MapLocation[] archons = myRC.senseAlliedArchons();
-			// int[] IDNumbers = new
-			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			// int Counter = 0;
-			// for (MapLocation m : archons) {
-			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
-			// RobotLevel.ON_GROUND);
-			// IDNumbers[Counter] = r.getID();
-			// Counter++;
-			// }
-			// if (myRC.getRobot().getID() == IDNumbers[0]) {
-			// runDefendCoreWithScorchers();
-			// } else {
-			// runArchonBrain();
-			// }
-			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			runArchonBrain();
+//			MapLocation[] archons = myRC.senseAlliedArchons();
+//			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+//			int Counter = 0;
+//			for (MapLocation m : archons) {
+//				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+//						RobotLevel.ON_GROUND);
+//				IDNumbers[Counter] = r.getID();
+//				Counter++;
+//			}
+//			if (myRC.getRobot().getID() == IDNumbers[0]) {
+//				runDefendCoreWithScorchers();
+//			} else {
+//				enemyPowerCoreEstimate = estimateEnemyPowerCore();
+//				runArchonBrain();
+//			}
+			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			 runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -129,7 +129,8 @@ public class ArchonPlayer extends BasePlayer {
 				// runAtEndOfTurn();
 				// }
 				// }
-				if (iSeeEnemy){
+				if (iSeeEnemy) {
+					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
 					continue;
 				}
@@ -293,7 +294,8 @@ public class ArchonPlayer extends BasePlayer {
 				if (!soldierNearby()
 						&& myRC.senseObjectAtLocation(
 								myRC.getLocation().add(myRC.getDirection()),
-								RobotLevel.ON_GROUND) != null && !this.myRC.isMovementActive()) {
+								RobotLevel.ON_GROUND) != null
+						&& !this.myRC.isMovementActive()) {
 					// turn so that we can spawn a soldier
 					myRC.setIndicatorString(
 							2,
@@ -352,7 +354,8 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			MapLocation locationToCapture = capturing;
 			while (locationToCapture != null
-					&& !myRC.getLocation().isAdjacentTo(locationToCapture) && !beingAttacked()) {
+					&& !myRC.getLocation().isAdjacentTo(locationToCapture)
+					&& !beingAttacked()) {
 				this.nav.getNextMove(locationToCapture);
 				this.locationApproaching = locationToCapture;
 				runAtEndOfTurn();

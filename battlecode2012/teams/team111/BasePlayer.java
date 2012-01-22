@@ -816,9 +816,9 @@ public abstract class BasePlayer extends StaticStuff {
 		try {
 			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
 
-			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
 			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
 					enemies.length);
 			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
 					enemies.length);
@@ -838,17 +838,21 @@ public abstract class BasePlayer extends StaticStuff {
 					soldiers.add(e);
 					break;
 				case SCORCHER:
-					others.add(e);
+					scorchers.add(e);
 					break;
 				default:
 					others.add(e);
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (archons.size() > 0) {
-				priorityTargets = archons;
-			} else if (soldiers.size() > 0) {
+//			if (archons.size() > 0) {
+//				priorityTargets = archons;
+//			} else if (soldiers.size() > 0) {
+//				priorityTargets = soldiers;
+			if (soldiers.size() > 0) {
 				priorityTargets = soldiers;
+			} else if (archons.size() > 0) {
+				priorityTargets = archons;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
