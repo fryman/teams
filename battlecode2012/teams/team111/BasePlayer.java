@@ -34,9 +34,15 @@ public abstract class BasePlayer extends StaticStuff {
 	public void runAtEndOfTurn() {
 		aboutToDie();
 		// broadcastMessage();
-		pingPresence();
-		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())){
-			try {myRC.moveBackward();} catch (Exception e){e.printStackTrace();}
+		// pingPresence();
+		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
+				&& !this.myRC.isMovementActive()
+				&& this.myRC.getFlux() > this.myRC.getType().moveCost) {
+			try {
+				myRC.moveBackward();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
@@ -195,9 +201,9 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
-	
+
 	/**
-	 * @return the closest enemy Robot of 
+	 * @return the closest enemy Robot of
 	 */
 
 	/**
@@ -385,16 +391,14 @@ public abstract class BasePlayer extends StaticStuff {
 			if (!myRC.canSenseSquare(target)) {
 				return;
 			}
-			while (myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
+			while (myRC.canSenseSquare(target)
+					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND) != null
 					&& myRC.senseObjectAtLocation(target, RobotLevel.ON_GROUND)
 							.getTeam() != myRC.getTeam()) {
 				if (myRC.canAttackSquare(target) && !myRC.isAttackActive()) {
 					myRC.attackSquare(target, RobotLevel.ON_GROUND);
 				} else if (!myRC.isAttackActive()) {
 					nav.getNextMove(target);
-				}
-				if (!myRC.canSenseSquare(target)) {
-					break;
 				}
 				runAtEndOfTurn();
 			}
@@ -625,7 +629,8 @@ public abstract class BasePlayer extends StaticStuff {
 				if (neighbor == null) {
 					// move backward
 					if (this.myRC.canMove(this.myRC.getDirection().opposite())
-							&& !this.myRC.isMovementActive()) {
+							&& !this.myRC.isMovementActive()
+							&& this.myRC.getFlux() > this.myRC.getType().moveCost) {
 						this.myRC.moveBackward();
 					}
 				}
@@ -721,7 +726,7 @@ public abstract class BasePlayer extends StaticStuff {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Note that this method depends on sensor range, so not a good option to
 	 * sense enemy towers
@@ -752,7 +757,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 	}
 
-	/** 
+	/**
 	 * @return MapLocation of closest allied tower
 	 */
 	public MapLocation findNearestAlliedTower() {
@@ -900,8 +905,17 @@ public abstract class BasePlayer extends StaticStuff {
 				return;
 			}
 			if (myRC.canAttackSquare(n) && !myRC.isAttackActive()) {
-				myRC.attackSquare(n, RobotLevel.ON_GROUND);
-				myRC.setIndicatorString(2, "Attacking: " + n.toString());
+				if (myRC.canSenseSquare(n)) {
+					if (myRC.senseObjectAtLocation(n, RobotLevel.ON_GROUND) != null) {
+						myRC.attackSquare(n, RobotLevel.ON_GROUND);
+						myRC.setIndicatorString(2,
+								"Attacking on ground: " + n.toString());
+					} else {
+						myRC.attackSquare(n, RobotLevel.IN_AIR);
+						myRC.setIndicatorString(2,
+								"Attacking in air: " + n.toString());
+					}
+				}
 			}
 			if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
 				this.nav.getNextMove(n);
@@ -910,12 +924,43 @@ public abstract class BasePlayer extends StaticStuff {
 			e1.printStackTrace();
 		}
 	}
-	
+
 	public boolean beingAttacked() {
 		if (myRC.getEnergon() < prevEnergon) {
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Returns a double[] representing the x and y coordinates of the archon
+	 * center of mass
+	 * 
+	 * @return
+	 */
+	public double[] archonCOM() {
+		double[] com = new double[2];
+		MapLocation[] archons = this.myRC.senseAlliedArchons();
+		for (MapLocation m : archons) {
+			com[0] += m.x;
+			com[1] += m.y;
+		}
+		com[0] = com[0] / (1.0 * archons.length);
+		com[1] = com[1] / (1.0 * archons.length);
+		return com;
+	}
+
+	/**
+	 * Translates double[] of (x,y) into a MapLocation
+	 * 
+	 * @param coords
+	 * @return
+	 */
+	public MapLocation getMapLocationFromCoordinates(double[] coords) {
+		MapLocation here = this.myRC.getLocation();
+		int offsetX = (int) (coords[0] - here.x);
+		int offsetY = (int) (coords[1] - here.y);
+		return here.add(offsetX, offsetY);
 	}
 }

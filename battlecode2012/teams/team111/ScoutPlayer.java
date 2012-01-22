@@ -22,7 +22,7 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
-		//this.nav = new LocalAreaNav(rc);
+		// this.nav = new LocalAreaNav(rc);
 		this.nav = new LocalAreaNav(rc);
 	}
 
@@ -37,7 +37,11 @@ public class ScoutPlayer extends BasePlayer {
 	@Override
 	public void runAtEndOfTurn() {
 		try {
-			pingPresence(); // added
+			if (suitableTimeToHeal()) {
+				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
+				this.myRC.regenerate();
+			}
+			// pingPresence(); // added
 			// broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
 			if (closestTar != null
@@ -53,10 +57,6 @@ public class ScoutPlayer extends BasePlayer {
 						myRC.attackSquare(Location, RobotLevel.IN_AIR);
 					}
 				}
-			}
-			if (suitableTimeToHeal()) {
-				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
-				this.myRC.regenerate();
 			}
 			aboutToDie();
 			myRC.yield();
@@ -79,7 +79,8 @@ public class ScoutPlayer extends BasePlayer {
 			try {
 				Robot target = findNearestEnemyRobotType(RobotType.SCORCHER);
 				if (target != null && myRC.senseRobotInfo(target).flux > 2) {
-					while (myRC.senseRobotInfo(target).flux > 2) {
+					while (myRC.canSenseObject(target)
+							&& myRC.senseRobotInfo(target).flux > 2) {
 						attackAndFollowScorcher(target);
 					}
 				} else {
@@ -142,15 +143,15 @@ public class ScoutPlayer extends BasePlayer {
 	 * Determines when it is cost effective for a scout to heal his
 	 * surroundings.
 	 * 
-	 * Returns true when any robot nearby is <95% energon. Returns false when
-	 * this robot's flux is less than 10% max or if nearby weaklings are null.
+	 * Returns true when any robot nearby is <100% energon. Returns false when
+	 * this robot's flux is less than 5% max or if nearby weaklings are null.
 	 * 
 	 * @return true if it is a good time to heal the surroundings, false
 	 *         otherwise
 	 */
 	public boolean suitableTimeToHeal() {
 		try {
-			if (this.myRC.getFlux() < 0.1 * this.myRC.getType().maxFlux) {
+			if (this.myRC.getFlux() < 0.05 * this.myRC.getType().maxFlux) {
 				return false;
 			}
 			Robot weakling = findALowEnergonFriendly();
@@ -158,7 +159,7 @@ public class ScoutPlayer extends BasePlayer {
 				return false;
 			}
 			RobotInfo weakInfo = myRC.senseRobotInfo(weakling);
-			if (weakInfo.energon / weakInfo.type.maxEnergon < 0.95) {
+			if (weakInfo.energon / weakInfo.type.maxEnergon < 1) {
 				return true;
 			}
 			return false;
@@ -174,7 +175,6 @@ public class ScoutPlayer extends BasePlayer {
 			if (myRC.getLocation().distanceSquaredTo(scorcherLoc) > 3
 					&& !myRC.isMovementActive()) {
 				this.nav.getNextMove(scorcherLoc);
-				System.out.println("Why are you not working ass hole?");
 			}
 			if (myRC.canAttackSquare(scorcherLoc) && !myRC.isAttackActive()) {
 				myRC.attackSquare(scorcherLoc, RobotLevel.ON_GROUND);
