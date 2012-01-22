@@ -67,21 +67,21 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-//			MapLocation[] archons = myRC.senseAlliedArchons();
-//			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-//			int Counter = 0;
-//			for (MapLocation m : archons) {
-//				Robot r = (Robot) myRC.senseObjectAtLocation(m,
-//						RobotLevel.ON_GROUND);
-//				IDNumbers[Counter] = r.getID();
-//				Counter++;
-//			}
-//			if (myRC.getRobot().getID() == IDNumbers[0]) {
-//				runDefendCoreWithScorchers();
-//			} else {
-//				runArchonBrain();
-//			}
-			runArchonBrain();
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			int Counter = 0;
+			for (MapLocation m : archons) {
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				IDNumbers[Counter] = r.getID();
+				Counter++;
+			}
+			if (myRC.getRobot().getID() == IDNumbers[0]) {
+				runDefendCoreWithScorchers();
+			} else {
+				runArchonBrain();
+			}
+//			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
