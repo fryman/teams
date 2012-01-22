@@ -7,7 +7,6 @@ public class RobotPlayer {
 
 	// public static RobotController myRC;
 	// public static int alliedBots = 0;
-	private int count = 0;
 	
 	public static void run(RobotController rc) {
 		StaticStuff.init(rc);// defines myRC and base location for later use
@@ -18,14 +17,6 @@ public class RobotPlayer {
 		case ARCHON:
 			//new ArchonPlayer(rc).runArchonRush();
 			new ArchonPlayer(rc).run();
-//			if (count < (battlecode.common.GameConstants.NUMBER_OF_ARCHONS-2)){
-//				new ArchonPlayer(rc).run();
-//				count++;
-//				System.out.println("count "+count);
-//			} else{
-//				System.out.println("GOT HERE. count "+count);
-//				new ArchonPlayer2(rc).run();
-//			}
 			//new ArchonPlayer(rc).runToTestNav();
 			break;
 		case SCOUT:
