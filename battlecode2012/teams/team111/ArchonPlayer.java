@@ -73,14 +73,15 @@ public class ArchonPlayer extends BasePlayer {
 	 * Causes archon to move backward (assumes it is being attacked)
 	 */
 	public void bugOut() {
-		if (!myRC.isMovementActive()
-				&& myRC.canMove(myRC.getDirection().opposite())) {
-			try {
-				myRC.moveBackward();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if (!myRC.isMovementActive()
+//				&& myRC.canMove(myRC.getDirection().opposite())) {
+//			try {
+//				myRC.moveBackward();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+		this.nav.getNextMove(this.myRC.sensePowerCore().getLocation());
 	}
 
 	/**
@@ -105,7 +106,7 @@ public class ArchonPlayer extends BasePlayer {
 			// } else {
 			// runArchonBrain();
 			// }
-			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			// enemyPowerCoreEstimate = estimateEnemyPowerCore();
 			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -123,13 +124,12 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 50 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				// while (Clock.getRoundNum() < 50 &&
-				// !spreadOutFromOtherArchons()) {
-				// while (myRC.isMovementActive()) {
-				// runAtEndOfTurn();
-				// }
-				// }
-				if (iSeeEnemy){
+				while (Clock.getRoundNum() < 50 && !spreadOutFromOtherArchons()) {
+					while (myRC.isMovementActive()) {
+						runAtEndOfTurn();
+					}
+				}
+				if (iSeeEnemy) {
 					runAtEndOfTurn();
 					continue;
 				}
@@ -293,7 +293,8 @@ public class ArchonPlayer extends BasePlayer {
 				if (!soldierNearby()
 						&& myRC.senseObjectAtLocation(
 								myRC.getLocation().add(myRC.getDirection()),
-								RobotLevel.ON_GROUND) != null && !this.myRC.isMovementActive()) {
+								RobotLevel.ON_GROUND) != null
+						&& !this.myRC.isMovementActive()) {
 					// turn so that we can spawn a soldier
 					myRC.setIndicatorString(
 							2,
@@ -352,7 +353,8 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			MapLocation locationToCapture = capturing;
 			while (locationToCapture != null
-					&& !myRC.getLocation().isAdjacentTo(locationToCapture) && !beingAttacked()) {
+					&& !myRC.getLocation().isAdjacentTo(locationToCapture)
+					&& !beingAttacked()) {
 				this.nav.getNextMove(locationToCapture);
 				this.locationApproaching = locationToCapture;
 				runAtEndOfTurn();
@@ -491,15 +493,27 @@ public class ArchonPlayer extends BasePlayer {
 			double[] com = archonCOM();
 			MapLocation archonCOM = getMapLocationFromCoordinates(com);
 
-			double smallestScoreToThis = here.distanceSquaredTo(best)
-					/ (best.distanceSquaredTo(archonCOM) + 1.01)
-					+ best.distanceSquaredTo(enemyPowerCoreEstimate);
+			// double smallestScoreToThis = here.distanceSquaredTo(best)
+			// / (best.distanceSquaredTo(archonCOM) + 1.01)
+			// + best.distanceSquaredTo(enemyPowerCoreEstimate);
+			double smallestScoreToThis = this.myRC.sensePowerCore()
+					.getLocation().distanceSquaredTo(capturablePowerNodes[0])
+					/ Math.pow((archonCOM
+							.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+							2);
 			double sample;
 
 			for (int i = 1; i < capturablePowerNodes.length; i++) {
-				sample = capturablePowerNodes[i].distanceSquaredTo(here)
-						/ (capturablePowerNodes[i].distanceSquaredTo(archonCOM) + 0.01)
-						* best.distanceSquaredTo(enemyPowerCoreEstimate);
+				// sample = capturablePowerNodes[i].distanceSquaredTo(here)
+				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
+				// 0.01)
+				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
+				sample = this.myRC.sensePowerCore().getLocation()
+						.distanceSquaredTo(capturablePowerNodes[i])
+						/ Math.pow(
+								(archonCOM
+										.distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
+								2);
 				if (sample < smallestScoreToThis) {
 					smallestScoreToThis = sample;
 					best = capturablePowerNodes[i];
@@ -798,6 +812,7 @@ public class ArchonPlayer extends BasePlayer {
 						.directionTo(closest).opposite(), minimumDistance
 						- (int) smallestDistance);
 				this.nav.getNextMove(fartherAwayTarget);
+				this.locationApproaching = fartherAwayTarget;
 				roundsUsedToMoveAway++;
 				return false;
 			}
@@ -1056,9 +1071,10 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Message message = new Message();
 			message.ints = new int[] { ARCHON_PING_MESSAGE };
-			message.locations = new MapLocation[] { this.myRC.getLocation()
-					.add(this.myRC.getLocation().directionTo(
-							locationApproaching), 3) };
+//			message.locations = new MapLocation[] { this.myRC.getLocation()
+//					.add(this.myRC.getLocation().directionTo(
+//							locationApproaching), 3) };
+			message.locations = new MapLocation[] {this.locationApproaching};
 			if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
 					+ 16 * message.getFluxCost()
 					&& !this.myRC.hasBroadcasted()) {
