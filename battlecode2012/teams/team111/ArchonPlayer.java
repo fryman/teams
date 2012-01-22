@@ -167,12 +167,11 @@ public class ArchonPlayer extends BasePlayer {
 				// This causes the archons to spread out quickly, and limits
 				// spreading to 50 rounds. Realistically spreading out is
 				// limited to 20 rounds in spreadOutFromOtherArchons()
-				// while (Clock.getRoundNum() < 50 &&
-				// !spreadOutFromOtherArchons()) {
-				// while (myRC.isMovementActive()) {
-				// runAtEndOfTurn();
-				// }
-				// }
+				while (Clock.getRoundNum() < 50 && !spreadOutFromOtherArchons()) {
+					while (myRC.isMovementActive()) {
+						runAtEndOfTurn();
+					}
+				}
 				if (iSeeEnemy) {
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
@@ -548,29 +547,36 @@ public class ArchonPlayer extends BasePlayer {
 			// / Math.pow((archonCOM
 			// .distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
 			// 2);
-			double smallestScoreToThis = this.myRC.sensePowerCore()
-					.getLocation().distanceSquaredTo(capturablePowerNodes[0]);
-			double sample;
-
-			for (int i = 1; i < capturablePowerNodes.length; i++) {
-				// sample = capturablePowerNodes[i].distanceSquaredTo(here)
-				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
-				// 0.01)
-				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
-				// if(
-				// capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6
-				// ){
-				// best = capturablePowerNodes[i];
-				// targetLoc = best;
-				// return best;
-				// }
-				sample = this.myRC.sensePowerCore().getLocation()
-						.distanceSquaredTo(capturablePowerNodes[i]);
-				if (sample < smallestScoreToThis) {
-					smallestScoreToThis = sample;
-					best = capturablePowerNodes[i];
+//			double smallestScoreToThis = this.myRC.sensePowerCore()
+//					.getLocation().distanceSquaredTo(capturablePowerNodes[0]);
+//			double sample;
+//
+//			for (int i = 1; i < capturablePowerNodes.length; i++) {
+//				// sample = capturablePowerNodes[i].distanceSquaredTo(here)
+//				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
+//				// 0.01)
+//				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
+//				// if(
+//				// capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6
+//				// ){
+//				// best = capturablePowerNodes[i];
+//				// targetLoc = best;
+//				// return best;
+//				// }
+//				sample = this.myRC.sensePowerCore().getLocation()
+//						.distanceSquaredTo(capturablePowerNodes[i]);
+//				if (sample < smallestScoreToThis) {
+//					smallestScoreToThis = sample;
+//					best = capturablePowerNodes[i];
+//				}
+//			}
+			MapLocation[] allies = this.myRC.senseAlliedArchons();
+			for (int i = 0; i < allies.length; i++) {
+				if (allies[i].equals(this.myRC.getLocation())) {
+					best = capturablePowerNodes[i % capturablePowerNodes.length];
 				}
 			}
+
 			targetLoc = best; // to conform to method signature
 			return best;
 		} else {

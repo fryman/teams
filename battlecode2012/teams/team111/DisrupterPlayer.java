@@ -24,6 +24,28 @@ public class DisrupterPlayer extends BasePlayer {
 		followAndAttack();
 	}
 
+	/**
+	 * Code to run once per turn, at the very end
+	 * 
+	 * Includes RobotController.yield() statement, so this method should be
+	 * called when the Robot is done with its turn.
+	 */
+	@Override
+	public void runAtEndOfTurn() {
+		aboutToDie();
+		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
+				&& !this.myRC.isMovementActive()
+				&& this.myRC.getFlux() > this.myRC.getType().moveCost) {
+			try {
+				myRC.moveBackward();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		this.prevEnergon = this.myRC.getEnergon();
+		myRC.yield();
+	}
+
 	public void followAndAttack() {
 		while (true) {
 			try {
