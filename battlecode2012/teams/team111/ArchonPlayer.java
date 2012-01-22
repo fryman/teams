@@ -174,9 +174,9 @@ public class ArchonPlayer extends BasePlayer {
 					}
 				}
 				if (iSeeEnemy) {
-//					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
-//						spawnScorcherAndTransferFlux();
-//					}
+					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
+						spawnScorcherAndTransferFlux();
+					}
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
 					continue;
@@ -203,7 +203,7 @@ public class ArchonPlayer extends BasePlayer {
 		Robot[] sensedRobots = myRC.senseNearbyGameObjects(Robot.class);
 		int e = 0;
 		for (Robot r : sensedRobots) {
-			if (r.getTeam() != this.myRC.getTeam()){
+			if (r.getTeam() != this.myRC.getTeam()) {
 				e++;
 			}
 		}
@@ -562,29 +562,30 @@ public class ArchonPlayer extends BasePlayer {
 			// / Math.pow((archonCOM
 			// .distanceSquaredTo(capturablePowerNodes[0]) + 1.0),
 			// 2);
-//			double smallestScoreToThis = this.myRC.sensePowerCore()
-//					.getLocation().distanceSquaredTo(capturablePowerNodes[0]);
-//			double sample;
-//
-//			for (int i = 1; i < capturablePowerNodes.length; i++) {
-//				// sample = capturablePowerNodes[i].distanceSquaredTo(here)
-//				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
-//				// 0.01)
-//				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
-//				// if(
-//				// capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6
-//				// ){
-//				// best = capturablePowerNodes[i];
-//				// targetLoc = best;
-//				// return best;
-//				// }
-//				sample = this.myRC.sensePowerCore().getLocation()
-//						.distanceSquaredTo(capturablePowerNodes[i]);
-//				if (sample < smallestScoreToThis) {
-//					smallestScoreToThis = sample;
-//					best = capturablePowerNodes[i];
-//				}
-//			}
+			// double smallestScoreToThis = this.myRC.sensePowerCore()
+			// .getLocation().distanceSquaredTo(capturablePowerNodes[0]);
+			// double sample;
+			//
+			// for (int i = 1; i < capturablePowerNodes.length; i++) {
+			// // sample = capturablePowerNodes[i].distanceSquaredTo(here)
+			// // / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
+			// // 0.01)
+			// // * best.distanceSquaredTo(enemyPowerCoreEstimate);
+			// // if(
+			// //
+			// capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6
+			// // ){
+			// // best = capturablePowerNodes[i];
+			// // targetLoc = best;
+			// // return best;
+			// // }
+			// sample = this.myRC.sensePowerCore().getLocation()
+			// .distanceSquaredTo(capturablePowerNodes[i]);
+			// if (sample < smallestScoreToThis) {
+			// smallestScoreToThis = sample;
+			// best = capturablePowerNodes[i];
+			// }
+			// }
 			MapLocation[] allies = this.myRC.senseAlliedArchons();
 			for (int i = 0; i < allies.length; i++) {
 				if (allies[i].equals(this.myRC.getLocation())) {
@@ -772,69 +773,65 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	public void spawnScorcherAndTransferFlux() {
-		while (true) {
-			try {
-				myRC.setIndicatorString(0, "creating scorcher");
-				while (myRC.isMovementActive()) {
-					// runAtEndOfTurn();
-					super.runAtEndOfTurn();
-				}
-				MapLocation potentialLocation = myRC.getLocation().add(
-						myRC.getDirection());
-				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
-						|| potentialLocation.equals(myRC
-								.sensePowerCore().getLocation())) {
-					myRC.setIndicatorString(0, "needs to rotate");
-					this.myRC.setDirection(this.myRC.getDirection()
-							.rotateRight());
-				}
-				if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
-						&& myRC.senseObjectAtLocation(potentialLocation,
-								RobotLevel.ON_GROUND) == null
-						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
-						&& this.myRC.senseObjectAtLocation(potentialLocation,
-								RobotLevel.POWER_NODE) == null) {
-					myRC.spawn(RobotType.SCORCHER);
-					myRC.setIndicatorString(2, "just spawned scorcher: ");
-					// runAtEndOfTurn();
-					super.runAtEndOfTurn();
-					Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
-							potentialLocation, RobotLevel.ON_GROUND);
-					myRC.setIndicatorString(2, "recent scorcher: "
-							+ recentScorcher);
-					if (recentScorcher == null) {
-						// runAtEndOfTurn();
-						super.runAtEndOfTurn();
-						myRC.setIndicatorString(2, "recent scorcher null");
-						continue;
-					}
-					// runAtEndOfTurn();
-					super.runAtEndOfTurn();
-					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
-							&& myRC.canSenseObject(recentScorcher)) {
-						super.runAtEndOfTurn();
-					}
-					if (myRC.canSenseObject(recentScorcher)
-							&& acceptableFluxTransferLocation(myRC
-									.senseLocationOf(recentScorcher))
-							&& myRC.senseRobotInfo(recentScorcher).flux < RobotType.SOLDIER.maxFlux / 2) {
-						myRC.transferFlux(myRC.senseLocationOf(recentScorcher),
-								RobotLevel.ON_GROUND,
-								RobotType.SCORCHER.maxFlux / 2);
-					}
-					return;
-				}
-				myRC.setIndicatorString(1, "did not attempt to create scorcher");
-				myRC.setIndicatorString(
-						2,
-						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
+		try {
+			myRC.setIndicatorString(0, "creating scorcher");
+			while (myRC.isMovementActive()) {
 				// runAtEndOfTurn();
 				super.runAtEndOfTurn();
-			} catch (GameActionException e) {
-				System.out.println("Exception caught");
-				e.printStackTrace();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+					|| potentialLocation.equals(myRC.sensePowerCore()
+							.getLocation())) {
+				myRC.setIndicatorString(0, "needs to rotate");
+				this.myRC.setDirection(this.myRC.getDirection().rotateRight());
+			}
+			if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.ON_GROUND) == null
+					&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+					&& this.myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.POWER_NODE) == null) {
+				myRC.spawn(RobotType.SCORCHER);
+				myRC.setIndicatorString(2, "just spawned scorcher: ");
+				// runAtEndOfTurn();
+				super.runAtEndOfTurn();
+				Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "recent scorcher: " + recentScorcher);
+				if (recentScorcher == null) {
+					// runAtEndOfTurn();
+					super.runAtEndOfTurn();
+					myRC.setIndicatorString(2, "recent scorcher null");
+					return;
+				}
+				// runAtEndOfTurn();
+				super.runAtEndOfTurn();
+				while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
+						&& myRC.canSenseObject(recentScorcher)) {
+					super.runAtEndOfTurn();
+				}
+				if (myRC.canSenseObject(recentScorcher)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentScorcher))
+						&& myRC.senseRobotInfo(recentScorcher).flux < RobotType.SOLDIER.maxFlux / 2) {
+					myRC.transferFlux(myRC.senseLocationOf(recentScorcher),
+							RobotLevel.ON_GROUND,
+							RobotType.SCORCHER.maxFlux / 2);
+				}
 				return;
 			}
+			myRC.setIndicatorString(1, "did not attempt to create scorcher");
+			myRC.setIndicatorString(
+					2,
+					Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
+			// runAtEndOfTurn();
+			super.runAtEndOfTurn();
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+			return;
 		}
 	}
 
