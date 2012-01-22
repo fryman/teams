@@ -90,23 +90,24 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			// MapLocation[] archons = myRC.senseAlliedArchons();
-			// int[] IDNumbers = new
-			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			// int Counter = 0;
-			// for (MapLocation m : archons) {
-			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
-			// RobotLevel.ON_GROUND);
-			// IDNumbers[Counter] = r.getID();
-			// Counter++;
-			// }
-			// if (myRC.getRobot().getID() == IDNumbers[0]) {
-			// runDefendCoreWithScorchers();
-			// } else {
-			// runArchonBrain();
-			// }
-			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			runArchonBrain();
+			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			 MapLocation[] archons = myRC.senseAlliedArchons();
+			 int[] IDNumbers = new
+			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			 int Counter = 0;
+			 for (MapLocation m : archons) {
+			 Robot r = (Robot) myRC.senseObjectAtLocation(m,
+			 RobotLevel.ON_GROUND);
+			 IDNumbers[Counter] = r.getID();
+			 Counter++;
+			 }
+			 if (myRC.getRobot().getID() == IDNumbers[0]) {
+			 runDefendCoreWithScorchers();
+			 } else {
+			 runArchonBrain();
+			 }
+//			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+//			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -694,7 +695,8 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND || potentialLocation.equals(myRC.senseLocationOf(myRC.sensePowerCore()))) {
+					myRC.setIndicatorString(0, "needs to rotate");
 					this.myRC.setDirection(this.myRC.getDirection()
 							.rotateRight());
 				}
