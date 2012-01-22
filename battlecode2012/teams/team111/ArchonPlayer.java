@@ -106,7 +106,7 @@ public class ArchonPlayer extends BasePlayer {
 			// } else {
 			// runArchonBrain();
 			// }
-			// enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
 			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();

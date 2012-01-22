@@ -33,8 +33,6 @@ public class ScorcherPlayer extends BasePlayer {
 	}
 
 	public void runDefendCore() {
-		// fix - if myRC.getFlux()<move cost - to check if can move
-		// fix - navigation - after coming in
 		while (true) {
 			try {
 				if (!in_position) {
