@@ -26,6 +26,7 @@ public class ArchonPlayer extends BasePlayer {
 	private MapLocation locationApproaching;
 	private MapLocation enemyPowerCoreEstimate;
 	private boolean iSeeEnemy = false;
+	private final int MIN_ENEMIES_FOR_SCORCHER = 3;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -173,6 +174,9 @@ public class ArchonPlayer extends BasePlayer {
 					}
 				}
 				if (iSeeEnemy) {
+//					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
+//						spawnScorcherAndTransferFlux();
+//					}
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
 					continue;
@@ -193,6 +197,17 @@ public class ArchonPlayer extends BasePlayer {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private int numEnemiesPresent() {
+		Robot[] sensedRobots = myRC.senseNearbyGameObjects(Robot.class);
+		int e = 0;
+		for (Robot r : sensedRobots) {
+			if (r.getTeam() != this.myRC.getTeam()){
+				e++;
+			}
+		}
+		return e;
 	}
 
 	public void runDefendCoreWithScorchers() {
@@ -767,8 +782,8 @@ public class ArchonPlayer extends BasePlayer {
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
 				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
-						|| potentialLocation.equals(myRC.senseLocationOf(myRC
-								.sensePowerCore()))) {
+						|| potentialLocation.equals(myRC
+								.sensePowerCore().getLocation())) {
 					myRC.setIndicatorString(0, "needs to rotate");
 					this.myRC.setDirection(this.myRC.getDirection()
 							.rotateRight());

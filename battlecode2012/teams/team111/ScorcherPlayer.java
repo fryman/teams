@@ -29,7 +29,9 @@ public class ScorcherPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runDefendCore();
+		while (true) {
+			scorcherAttackAvoidArchons();
+		}
 	}
 
 	public void runDefendCore() {
