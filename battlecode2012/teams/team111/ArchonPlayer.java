@@ -53,7 +53,57 @@ public class ArchonPlayer extends BasePlayer {
 		this.prevEnergon = this.myRC.getEnergon();
 		// run away from scorchers.
 		if (scorcherPresent()) {
+			spawnDisrupterAndTransferFlux();
 			bugOut();
+		}
+	}
+
+	private void spawnDisrupterAndTransferFlux() {
+		while (true) {
+			try {
+				while (myRC.isMovementActive()) {
+					super.runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				TerrainTile potentialTerrain = myRC
+						.senseTerrainTile(potentialLocation);
+				if (potentialTerrain == TerrainTile.OFF_MAP
+						|| potentialTerrain == TerrainTile.VOID) {
+					return;
+				}
+				if (myRC.getFlux() >= RobotType.DISRUPTER.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.ON_GROUND) == null) {
+					myRC.spawn(RobotType.DISRUPTER);
+					System.out.println("Disrupter, bitch.");
+					runAtEndOfTurn();
+					Robot recentDisrupter = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, RobotLevel.ON_GROUND);
+					if (recentDisrupter == null) {
+						return;
+					}
+					runAtEndOfTurn();
+					while ((RobotType.DISRUPTER.maxFlux / 2.0) > myRC.getFlux()
+							&& myRC.canSenseObject(recentDisrupter)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentDisrupter)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentDisrupter))
+							&& myRC.senseRobotInfo(recentDisrupter).flux < RobotType.DISRUPTER.maxFlux / 2.0) {
+						myRC.transferFlux(
+								myRC.senseLocationOf(recentDisrupter),
+								RobotLevel.ON_GROUND,
+								RobotType.DISRUPTER.maxFlux / 2.0);
+					}
+					return;
+				}
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
 		}
 	}
 
@@ -413,14 +463,14 @@ public class ArchonPlayer extends BasePlayer {
 				}
 			}
 			// if cannot see scout, spawn one.
-			if (scoutPresent==0) {
+			if (scoutPresent == 0) {
 				spawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent<4) {
+			if (soldierPresent < 4) {
 				spawnSoldierAndTransferFlux();
 			}
-			if (scoutPresent<3) {
+			if (scoutPresent < 3) {
 				spawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {
@@ -513,11 +563,13 @@ public class ArchonPlayer extends BasePlayer {
 				// / (capturablePowerNodes[i].distanceSquaredTo(archonCOM) +
 				// 0.01)
 				// * best.distanceSquaredTo(enemyPowerCoreEstimate);
-//				if( capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6 ){
-//					best = capturablePowerNodes[i];
-//					targetLoc = best;
-//					return best;
-//				}
+				// if(
+				// capturablePowerNodes[i].distanceSquaredTo(estimateEnemyPowerCore())<6
+				// ){
+				// best = capturablePowerNodes[i];
+				// targetLoc = best;
+				// return best;
+				// }
 				sample = this.myRC.sensePowerCore().getLocation()
 						.distanceSquaredTo(capturablePowerNodes[i])
 						/ Math.pow(
@@ -718,7 +770,9 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
-				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND || potentialLocation.equals(myRC.senseLocationOf(myRC.sensePowerCore()))) {
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+						|| potentialLocation.equals(myRC.senseLocationOf(myRC
+								.sensePowerCore()))) {
 					myRC.setIndicatorString(0, "needs to rotate");
 					this.myRC.setDirection(this.myRC.getDirection()
 							.rotateRight());

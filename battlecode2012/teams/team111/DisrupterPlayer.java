@@ -21,7 +21,7 @@ public class DisrupterPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runAtEndOfTurn();
+		followAndAttack();
 	}
 
 	public void followAndAttack() {
