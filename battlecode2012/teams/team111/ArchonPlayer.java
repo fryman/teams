@@ -164,6 +164,7 @@ public class ArchonPlayer extends BasePlayer {
 	 * @author saf
 	 */
 	public void runArchonBrain() {
+		MapLocation core = this.myRC.sensePowerCore().getLocation();
 		while (true) {
 			try {
 				// This causes the archons to spread out quickly, and limits
@@ -190,8 +191,25 @@ public class ArchonPlayer extends BasePlayer {
 				 * (myRC.canMove(myRC.getDirection().opposite())) {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
-				if (Clock.getRoundNum() < 3000) {
-					spreadOutFromOtherArchons();
+				if (Clock.getRoundNum() < 1000) {
+					int roundNum = Clock.getBytecodeNum();
+					if (roundNum % 10 == 0) {
+						runAtEndOfTurn();
+						continue;
+					}
+					switch (roundNum % 4) {
+					case 0:
+						this.nav.getNextMove(core.add(4,4));
+						break;
+					case 1:
+						this.nav.getNextMove(core.add(4,-4));
+						break;
+					case 2:
+						this.nav.getNextMove(core.add(-4,4));
+						break;
+					case 3:
+						this.nav.getNextMove(core.add(-4,-4));
+					}
 					runAtEndOfTurn();
 				} else {
 					goToPowerNodeForBuild(capturing);
@@ -509,7 +527,10 @@ public class ArchonPlayer extends BasePlayer {
 				double weakFluxAmount = weakRobotInfo.flux;
 				double maxFluxAmount = weakRobotInfo.type.maxFlux;
 				double fluxAmountToTransfer = 0;
-				if (weakFluxAmount / maxFluxAmount < 0.3) {
+				if (weakFluxAmount / maxFluxAmount < 0.3
+						&& weakRobotInfo.type != RobotType.SCOUT) {
+					fluxAmountToTransfer = 0.3 * maxFluxAmount;
+				} else if (weakFluxAmount / maxFluxAmount < 0.3) {
 					fluxAmountToTransfer = 0.3 * maxFluxAmount;
 				}
 				if (fluxAmountToTransfer > 0
@@ -858,7 +879,7 @@ public class ArchonPlayer extends BasePlayer {
 			if (roundsUsedToMoveAway >= 50) {
 				return true;
 			}
-			int minimumDistance = GameConstants.PRODUCTION_PENALTY_R2;
+			int minimumDistance = GameConstants.PRODUCTION_PENALTY_R2/2;
 			MapLocation[] archons = myRC.senseAlliedArchons();
 			MapLocation currentLoc = this.myRC.getLocation();
 			MapLocation closest = null;
@@ -1082,9 +1103,6 @@ public class ArchonPlayer extends BasePlayer {
 						soldierPresent++;
 					}
 				}
-			}
-			if (scoutPresent == 0) {
-				attemptSpawnScoutAndTransferFlux();
 			}
 			// if cannot see soldier, spawn one.
 			if (soldierPresent < 5) {

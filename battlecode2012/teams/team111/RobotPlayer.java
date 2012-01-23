@@ -1,6 +1,8 @@
 package team111;
 
 //this is the top level
+import java.util.Random;
+
 import battlecode.common.*;
 
 public class RobotPlayer {
