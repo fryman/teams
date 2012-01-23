@@ -136,7 +136,11 @@ public class SoldierPlayer extends BasePlayer {
 						&& myRC.senseRobotInfo(scorcherNoFlux).flux < 10) {
 					attackAndChaseClosestEnemy(scorcherNoFlux);
 				}
-				
+				/*if (scorcherNoFlux != null
+						&& myRC.senseRobotInfo(scorcherNoFlux).flux >= 10) {
+					bugOut();
+				}*/
+
 				Robot unprotectedArchon = senseUnprotectedArchon();
 				if (unprotectedArchon != null) {
 					attackAndChaseUnprotectedArchon(unprotectedArchon);
@@ -165,6 +169,17 @@ public class SoldierPlayer extends BasePlayer {
 
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void bugOut() {
+		if (!myRC.isMovementActive()
+				&& myRC.canMove(myRC.getDirection().opposite())) {
+			try {
+				myRC.moveBackward();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

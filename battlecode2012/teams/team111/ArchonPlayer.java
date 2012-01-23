@@ -192,7 +192,7 @@ public class ArchonPlayer extends BasePlayer {
 				 */
 				if (Clock.getRoundNum() < 3000) {
 					goToPowerNodeForBuild(capturing);
-					buildOrDestroyTower(capturing);
+					//buildOrDestroyTower(capturing);
 					runAtEndOfTurn();
 				} else {
 					goToPowerNodeForBuild(capturing);
