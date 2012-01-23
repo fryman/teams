@@ -1,16 +1,21 @@
 package team111;
 
+import java.util.Random;
+
 import team111.Nav.BoidianNav;
 import team111.Nav.BugNav;
 import team111.Nav.LocalAreaNav;
 import team111.Nav.Navigation;
 import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.Message;
 import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
 import battlecode.common.RobotLevel;
 import battlecode.common.RobotType;
+import battlecode.common.TerrainTile;
 
 public class ScoutPlayer extends BasePlayer {
 
@@ -19,6 +24,9 @@ public class ScoutPlayer extends BasePlayer {
 	private Robot closestTar;
 	private Robot friendlyToFollow = null;
 	private MapLocation friendlyMapLocationToFollow = null;
+	private final static int HOLDING_PATTERN_DISTANCE = 10;
+	private MapLocation[] holdingPatternWaypoints;
+	private Random r = new Random(Clock.getBytecodeNum() * Clock.getRoundNum());
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
@@ -56,6 +64,15 @@ public class ScoutPlayer extends BasePlayer {
 					}
 				}
 			}
+			Robot archon = this.findNearestEnemyRobotType(RobotType.ARCHON);
+			if (archon != null) {
+				MapLocation archonLoc = this.myRC.senseLocationOf(archon);
+				Message msg = new Message();
+				msg.ints = new int[] { BasePlayer.ENEMY_ARCHON_LOCATION_MESSAGE };
+				msg.locations = new MapLocation[] { archonLoc };
+				nav.getNextMove(archonLoc);
+				this.myRC.broadcast(msg);
+			}
 			aboutToDie();
 			myRC.yield();
 		} catch (Exception e) {
@@ -64,7 +81,15 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	public void run() {
+		// double decider = r.nextDouble();
+		// System.out.println(decider);
+		// if (decider > 0) {
+		// System.out.println("Normal Pattern");
 		runFollowFriendlyMode();
+		// } else {
+		// System.out.println("Holding Pattern");
+		seekAndBroadcastEnemyArchon();
+		// }
 	}
 
 	/**
@@ -76,9 +101,13 @@ public class ScoutPlayer extends BasePlayer {
 		while (true) {
 			try {
 				Robot target = findNearestEnemyRobotType(RobotType.SCORCHER);
-				if (target != null && myRC.senseRobotInfo(target).flux > 2) {
+				Robot soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
+				if (target != null && myRC.senseRobotInfo(target).flux > 2
+						&& soldier == null) {
 					while (myRC.canSenseObject(target)
-							&& myRC.senseRobotInfo(target).flux > 2) {
+							&& myRC.senseRobotInfo(target).flux > 2
+							&& soldier == null) {
+						soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
 						attackAndFollowScorcher(target);
 					}
 				} else {
@@ -87,12 +116,30 @@ public class ScoutPlayer extends BasePlayer {
 						// game over...
 						myRC.suicide();
 					}
-					this.nav.getNextMove(friendlyMapLocationToFollow);
+					int roundNum = Clock.getBytecodeNum();
+					switch (roundNum % 4) {
+					case 0:
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
+								4));
+						break;
+					case 1:
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
+								-4));
+						break;
+					case 2:
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(
+								-4, 4));
+						break;
+					case 3:
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(
+								-4, -4));
+					}
+
 					myRC.setIndicatorString(0, "following a friendly");
-					//attackEnemy();
+					// attackEnemy();
 					runAtEndOfTurn();
 				}
-
+				runAtEndOfTurn();
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();
@@ -119,10 +166,10 @@ public class ScoutPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
-						//attackEnemy();
+						// attackEnemy();
 						runAtEndOfTurn();
 					}
-					//attackEnemy();
+					// attackEnemy();
 					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
@@ -173,7 +220,8 @@ public class ScoutPlayer extends BasePlayer {
 	/**
 	 * Attacks enemy scorchers until they run out of flux
 	 * 
-	 * @param Robot scorcher
+	 * @param Robot
+	 *            scorcher
 	 */
 	public void attackAndFollowScorcher(Robot scorcher) {
 		try {
@@ -193,10 +241,93 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Code from runAtEndOfTurn() method that causes scouts to attack
+	 * <<<<<<< HEAD Designed so that the scouts can go, find a friggen archon,
+	 * and tell the soldier buddies to go get it.
+	 * 
+	 * Scouts walk in a "holding pattern" around the powercore looking for
+	 * archons.
 	 */
-	//not sure if this is needed -- used this to try and get rid of Game 
-	//Exception but now it is not being thrown anymore
+	public void seekAndBroadcastEnemyArchon() {
+		int waypointNum = 0;
+		initializeHoldingPatternWaypoints();
+		int movesToCurrentWaypoint = 0;
+		int roundsInSeek = 0;
+		while (roundsInSeek < 150) {
+			try {
+				roundsInSeek++;
+				if (this.myRC.getFlux() < 0.05 * this.myRC.getType().maxFlux) {
+					// find an archon friendly to refeul.
+					friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+					if (friendlyMapLocationToFollow == null) {
+						// game over...
+						myRC.suicide();
+					}
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					myRC.setIndicatorString(0, "following a friendly");
+					runAtEndOfTurn();
+					continue;
+				}
+
+				// sense enemy archons.
+				Robot archon = this.findNearestEnemyRobotType(RobotType.ARCHON);
+				if (archon != null) {
+					MapLocation archonLoc = this.myRC.senseLocationOf(archon);
+					Message msg = new Message();
+					msg.ints = new int[] { BasePlayer.ENEMY_ARCHON_LOCATION_MESSAGE };
+					msg.locations = new MapLocation[] { archonLoc };
+					nav.getNextMove(archonLoc);
+					this.myRC.broadcast(msg);
+					runAtEndOfTurn();
+					continue;
+				}
+
+				nav.getNextMove(this.holdingPatternWaypoints[waypointNum]);
+				if (this.myRC.getLocation().distanceSquaredTo(
+						this.holdingPatternWaypoints[waypointNum]) < 2
+						|| (this.myRC
+								.canSenseSquare(this.holdingPatternWaypoints[waypointNum]) && this.myRC
+								.senseObjectAtLocation(
+										this.holdingPatternWaypoints[waypointNum],
+										RobotLevel.IN_AIR) != null)) {
+					waypointNum = (waypointNum + 1)
+							% this.holdingPatternWaypoints.length;
+					movesToCurrentWaypoint = 0;
+					runAtEndOfTurn();
+					continue;
+				}
+				// rotate around counterclockwise. if wall on right, nexxtttt.
+				if (this.myRC.senseTerrainTile(this.myRC.getLocation().add(
+						this.myRC.getDirection())) == TerrainTile.OFF_MAP
+						&& movesToCurrentWaypoint > 10) {
+					waypointNum = (waypointNum + 1)
+							% this.holdingPatternWaypoints.length;
+					movesToCurrentWaypoint = 0;
+				}
+				movesToCurrentWaypoint++;
+				runAtEndOfTurn();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void initializeHoldingPatternWaypoints() {
+		MapLocation core = this.myRC.sensePowerCore().getLocation();
+		MapLocation[] waypoints = new MapLocation[] {
+				core.add(Direction.EAST, HOLDING_PATTERN_DISTANCE),
+				// core.add(Direction.NORTH_EAST, HOLDING_PATTERN_DISTANCE),
+				core.add(Direction.NORTH, HOLDING_PATTERN_DISTANCE),
+				// core.add(Direction.NORTH_WEST, HOLDING_PATTERN_DISTANCE),
+				core.add(Direction.WEST, HOLDING_PATTERN_DISTANCE),
+				// core.add(Direction.SOUTH_WEST, HOLDING_PATTERN_DISTANCE),
+				core.add(Direction.SOUTH, HOLDING_PATTERN_DISTANCE),
+		// core.add(Direction.SOUTH_EAST, HOLDING_PATTERN_DISTANCE)
+		};
+		this.holdingPatternWaypoints = waypoints;
+	}
+
+	// not sure if this is needed -- used this to try and get rid of Game
+	// Exception but now it is not being thrown anymore
 	public void attackEnemy() {
 		Robot closestTar = senseClosestEnemy();
 		try {

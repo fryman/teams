@@ -18,6 +18,7 @@ public abstract class BasePlayer extends StaticStuff {
 	public static final int SCOUT_PING_MESSAGE = 212;
 	public static final int AIRBORNE_PING_MESSAGE = 2123;
 	public static final int GROUND_PING_MESSAGE = 21122;
+	public static final int ENEMY_ARCHON_LOCATION_MESSAGE = 666;
 	protected Message[] messages;
 	protected double prevEnergon;
 	protected double oldMovingAverageCorridorWidth = 12;
@@ -35,16 +36,16 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-//		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
-//				&& !this.myRC.isMovementActive()
-//				&& this.myRC.getFlux() > this.myRC.getType().moveCost
-//				&& retreatOverride()) {
-//			try {
-//				myRC.moveBackward();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
+		// if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
+		// && !this.myRC.isMovementActive()
+		// && this.myRC.getFlux() > this.myRC.getType().moveCost
+		// && retreatOverride()) {
+		// try {
+		// myRC.moveBackward();
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
 	}
@@ -557,7 +558,7 @@ public abstract class BasePlayer extends StaticStuff {
 			}
 		}
 	}
-	
+
 	/**
 	 * Attacks and chases an unprotected archon until another enemy is sensed.
 	 * 
@@ -947,7 +948,7 @@ public abstract class BasePlayer extends StaticStuff {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Sees if there is an unprotected archon.
 	 */
@@ -995,12 +996,16 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public MapLocation receiveMessagesReturnAttack() {
 		this.messages = this.myRC.getAllMessages();
+		MapLocation bestToAttack = null;
 		for (Message r : this.messages) {
 			if (r.ints != null && r.ints[0] == ARCHON_ENEMY_MESSAGE) {
+				bestToAttack = r.locations[0];
+			}
+			if (r.ints != null && r.ints[0] == ENEMY_ARCHON_LOCATION_MESSAGE) {
 				return r.locations[0];
 			}
 		}
-		return null;
+		return bestToAttack;
 	}
 
 	/**
