@@ -52,10 +52,15 @@ public class ArchonPlayer extends BasePlayer {
 		this.prevEnergon = this.myRC.getEnergon();
 		if (scorcherPresent()) {
 			bugOut();
-			spawnDisrupterAndTransferFlux();
+			spawnUnitAndTransferFlux(RobotType.DISRUPTER);
 		}
 	}
-
+	
+	/**
+	 * Spawns disrupter.
+	 * @deprecated Replaced by spawnUnitAndTransferFlux();
+	 */
+	@Deprecated
 	private void spawnDisrupterAndTransferFlux() {
 		try {
 			while (myRC.isMovementActive()) {
@@ -136,23 +141,22 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			 MapLocation[] archons = myRC.senseAlliedArchons();
-			 int[] IDNumbers = new
-			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			 int Counter = 0;
-			 for (MapLocation m : archons) {
-			 Robot r = (Robot) myRC.senseObjectAtLocation(m,
-			 RobotLevel.ON_GROUND);
-			 IDNumbers[Counter] = r.getID();
-			 Counter++;
-			 }
-			 if (myRC.getRobot().getID() == IDNumbers[0]) {
-			 runDefendCoreWithScorchers();
-			 } else {
-			 runArchonBrain();
-			 }
-//			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-//			runArchonBrain();
+			MapLocation[] archons = myRC.senseAlliedArchons();
+			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			int Counter = 0;
+			for (MapLocation m : archons) {
+				Robot r = (Robot) myRC.senseObjectAtLocation(m,
+						RobotLevel.ON_GROUND);
+				IDNumbers[Counter] = r.getID();
+				Counter++;
+			}
+			if (myRC.getRobot().getID() == IDNumbers[0]) {
+				runDefendCoreWithScorchers();
+			} else {
+				runArchonBrain();
+			}
+			// enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			// runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -176,7 +180,7 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				if (iSeeEnemy) {
 					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
-						spawnScorcherAndTransferFlux();
+						spawnUnitAndTransferFlux(RobotType.SCORCHER);
 					}
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
@@ -225,19 +229,19 @@ public class ArchonPlayer extends BasePlayer {
 					super.runAtEndOfTurn();
 				}
 				while (scoutCount < 1) {
-					spawnScoutAndTransferFlux();
+					spawnUnitAndTransferFlux(RobotType.SCOUT);
 					scoutCount++;
 				}
 				while (scorcherCount < 5) {
 					int countMoves = 0;
-					spawnScorcherAndTransferFlux();
+					spawnUnitAndTransferFlux(RobotType.SCORCHER);
 					scorcherCount++;
 					while (countMoves < 4) {
 						randomWalk();
 						countMoves++;
 					}
 				}
-				if(myRC.getLocation().distanceSquaredTo(core)>9){
+				if (myRC.getLocation().distanceSquaredTo(core) > 9) {
 					while (!myRC.getLocation().isAdjacentTo(core)) {
 						this.nav.getNextMove(core);
 						super.runAtEndOfTurn();
@@ -268,11 +272,11 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				nav.getNextMove(estimate);
 				if (myRC.getFlux() >= 290) {
-					spawnSoldierAndTransferFlux();
+					spawnUnitAndTransferFlux(RobotType.SOLDIER);
 					trigger = true;
 				}
 				if (trigger) {
-					spawnSoldierAndTransferFlux();
+					spawnUnitAndTransferFlux(RobotType.SOLDIER);
 				}
 				runAtEndOfTurn();
 			} catch (Exception e) {
@@ -293,7 +297,7 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
 			if (weakFriendlyUnit != null) {
-				myRC.setIndicatorString(0,"found friendly");
+				myRC.setIndicatorString(0, "found friendly");
 				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
 					this.nav.getNextMove(weakLoc);
@@ -308,7 +312,7 @@ public class ArchonPlayer extends BasePlayer {
 					fluxAmountToTransfer = myRC.getFlux();
 				}
 				if (fluxAmountToTransfer > 0) {
-					myRC.setIndicatorString(1,"transfered flux");
+					myRC.setIndicatorString(1, "transfered flux");
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
@@ -477,14 +481,14 @@ public class ArchonPlayer extends BasePlayer {
 			}
 			// if cannot see scout, spawn one.
 			if (scoutPresent == 0) {
-				spawnScoutAndTransferFlux();
+				spawnUnitAndTransferFlux(RobotType.SCOUT);
 			}
 			// if cannot see soldier, spawn one.
 			if (soldierPresent < 4) {
-				spawnSoldierAndTransferFlux();
+				spawnUnitAndTransferFlux(RobotType.SOLDIER);
 			}
 			if (scoutPresent < 3) {
-				spawnScoutAndTransferFlux();
+				spawnUnitAndTransferFlux(RobotType.SCOUT);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -654,7 +658,9 @@ public class ArchonPlayer extends BasePlayer {
 	 * 
 	 * Currently the amount of flux transferred to the scout is the *full*
 	 * amount that the scout is allowed to carry.
+	 * @deprecated Replaced by spawnUnitAndTransferFlux();
 	 */
+	@Deprecated
 	public void spawnScoutAndTransferFlux() {
 		while (true) {
 			try {
@@ -713,12 +719,240 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
+	 * Spawns a unit and transfers flux to it. Causes this archon to wait
+	 * (yielding) until it has enough flux to create the unity, and then waits
+	 * again until it has enough flux to give to the unit.
+	 */
+	public void spawnUnitAndTransferFlux(RobotType unitType) {
+		while (true) {
+			try {
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
+					// turn right
+					if (!myRC.isMovementActive()) {
+						myRC.setDirection(myRC.getDirection().rotateRight());
+					}
+					continue;
+				}
+				RobotLevel unitLevel = RobotLevel.ON_GROUND;
+				double flux = unitType.maxFlux / 2;
+				if (unitType == RobotType.SCOUT) {
+					unitLevel = RobotLevel.IN_AIR;
+					flux = RobotType.SCOUT.maxFlux;
+				}
+				if (myRC.getFlux() > unitType.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								unitLevel) == null) {
+					myRC.spawn(unitType);
+					runAtEndOfTurn();
+					Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, unitLevel);
+					if (recentUnit == null) {
+						runAtEndOfTurn();
+						continue;
+					}
+					runAtEndOfTurn();
+					while ((flux) > myRC.getFlux()
+							&& myRC.canSenseObject(recentUnit)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentUnit)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentUnit))
+							&& myRC.senseRobotInfo(recentUnit).flux < unitType.maxFlux) {
+						myRC.transferFlux(myRC.senseLocationOf(recentUnit),
+								unitLevel, flux);
+					}
+					return;
+				}
+				runAtEndOfTurn();
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Overloaded spawnUnit function that allows for variable flux transfer.
+	 */
+	public void spawnUnitAndTransferFlux(RobotType unitType, double fractionOfMaxFlux) {
+		while (true) {
+			try {
+				while (myRC.isMovementActive()) {
+					runAtEndOfTurn();
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
+					// turn right
+					if (!myRC.isMovementActive()) {
+						myRC.setDirection(myRC.getDirection().rotateRight());
+					}
+					continue;
+				}
+				RobotLevel unitLevel = RobotLevel.ON_GROUND;
+				double flux = unitType.maxFlux * fractionOfMaxFlux;
+				if (fractionOfMaxFlux>1) {
+					flux = unitType.maxFlux;
+				}
+				if (unitType==RobotType.SCOUT) {
+					unitLevel = RobotLevel.IN_AIR;
+				}
+				if (myRC.getFlux() > unitType.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								unitLevel) == null) {
+					myRC.spawn(unitType);
+					runAtEndOfTurn();
+					Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, unitLevel);
+					if (recentUnit == null) {
+						runAtEndOfTurn();
+						continue;
+					}
+					runAtEndOfTurn();
+					while ((flux) > myRC.getFlux()
+							&& myRC.canSenseObject(recentUnit)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentUnit)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentUnit))
+							&& myRC.senseRobotInfo(recentUnit).flux < unitType.maxFlux) {
+						myRC.transferFlux(myRC.senseLocationOf(recentUnit),
+								unitLevel, flux);
+					}
+					return;
+				}
+				runAtEndOfTurn();
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
+		}
+	}
+	
+	/**
+	 * ATTEMPTS to spawns a unit and transfers flux to it. Causes this archon
+	 * to wait (yielding) until it has enough flux to transfer to a unit. Does
+	 * NOT cause the archon to wait until it has enough flux to spawn a unit.
+	 */
+	public void attemptSpawnUnitAndTransferFlux(RobotType unitType) {
+		try {
+			while (myRC.isMovementActive()) {
+				super.runAtEndOfTurn();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
+				return;
+			}
+			RobotLevel unitLevel = RobotLevel.ON_GROUND;
+			double flux = unitType.maxFlux / 2;
+			if (unitType == RobotType.SCOUT) {
+				unitLevel = RobotLevel.IN_AIR;
+				flux = RobotType.SCOUT.maxFlux;
+			}
+			if (myRC.getFlux() > unitType.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							unitLevel) == null) {
+				myRC.spawn(unitType);
+				runAtEndOfTurn();
+				Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, unitLevel);
+				if (recentUnit == null) {
+					return;
+				}
+				runAtEndOfTurn();
+				while (flux > myRC.getFlux()
+						&& myRC.canSenseObject(recentUnit)) {
+					super.runAtEndOfTurn();
+				}
+				if (myRC.canSenseObject(recentUnit)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentUnit))
+						&& myRC.senseRobotInfo(recentUnit).flux < unitType.maxFlux) {
+					myRC.transferFlux(myRC.senseLocationOf(recentUnit),
+							unitLevel, flux);
+				}
+				return;
+			}
+			return;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+			return;
+		}
+	}
+	
+	/**
+	 * Overloaded attemptSpawnUnit function that allows for custom flux transfer.
+	 */
+	public void attemptSpawnUnitAndTransferFlux(RobotType unitType, double fractionOfMaxFlux) {
+		try {
+			while (myRC.isMovementActive()) {
+				super.runAtEndOfTurn();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
+				return;
+			}
+			RobotLevel unitLevel = RobotLevel.ON_GROUND;
+			double flux = unitType.maxFlux * fractionOfMaxFlux;
+			if (fractionOfMaxFlux>1) {
+				flux = unitType.maxFlux;
+			}
+			if (unitType==RobotType.SCOUT) {
+				unitLevel = RobotLevel.IN_AIR;
+			}
+			if (myRC.getFlux() > unitType.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							unitLevel) == null) {
+				myRC.spawn(unitType);
+				runAtEndOfTurn();
+				Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, unitLevel);
+				if (recentUnit == null) {
+					return;
+				}
+				runAtEndOfTurn();
+				while (flux > myRC.getFlux()
+						&& myRC.canSenseObject(recentUnit)) {
+					super.runAtEndOfTurn();
+				}
+				if (myRC.canSenseObject(recentUnit)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentUnit))
+						&& myRC.senseRobotInfo(recentUnit).flux < unitType.maxFlux) {
+					myRC.transferFlux(myRC.senseLocationOf(recentUnit),
+							unitLevel, flux);
+				}
+				return;
+			}
+			return;
+		} catch (GameActionException e) {
+			System.out.println("Exception caught");
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	/**
 	 * Spawns a soldier and transfers flux to it. Causes this archon to wait
 	 * (yielding) until it has enough flux to create a soldier, and then waits
 	 * again until it has enough flux to give to the soldier.
 	 * 
 	 * TODO is this initial flux transfer the correct amount?
+	 * @deprecated Replaced by spawnUnitAndTransferFlux();
 	 */
+	@Deprecated
 	public void spawnSoldierAndTransferFlux() {
 		while (true) {
 			try {
@@ -778,14 +1012,15 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
-
 	/**
 	 * Spawns a scorcher and transfers flux to it. Causes this archon to wait
 	 * (yielding) until it has enough flux to create a scorcher, and then waits
 	 * again until it has enough flux to give to the scorcher.
 	 * 
 	 * TODO is this initial flux transfer the correct amount?
-	 */	
+	 * @deprecated Replaced by spawnUnitAndTransferFlux();
+	 */
+	@Deprecated
 	public void spawnScorcherAndTransferFlux() {
 		while (true) {
 			try {
@@ -796,7 +1031,8 @@ public class ArchonPlayer extends BasePlayer {
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
 				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
-						|| potentialLocation.equals(myRC.sensePowerCore().getLocation())
+						|| potentialLocation.equals(myRC.sensePowerCore()
+								.getLocation())
 						|| this.myRC.senseObjectAtLocation(potentialLocation,
 								RobotLevel.ON_GROUND) != null) {
 					this.myRC.setDirection(this.myRC.getDirection()
@@ -810,7 +1046,8 @@ public class ArchonPlayer extends BasePlayer {
 								RobotLevel.POWER_NODE) == null) {
 					myRC.spawn(RobotType.SCORCHER);
 					myRC.setIndicatorString(2, "just spawned SCORCHER: ");
-					super.runAtEndOfTurn();;
+					super.runAtEndOfTurn();
+					;
 					Robot recentSCORCHER = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, RobotLevel.ON_GROUND);
 					myRC.setIndicatorString(2, "recent SCORCHER: "
@@ -916,7 +1153,9 @@ public class ArchonPlayer extends BasePlayer {
 	 * 
 	 * Currently the amount of flux transferred to the scout is the *full*
 	 * amount that the scout is allowed to carry.
+	 * @deprecated Replaced by attemptSpawnUnitAndTransferFlux();
 	 */
+	@Deprecated
 	public void attemptSpawnScoutAndTransferFlux() {
 		try {
 			// myRC.setIndicatorString(0, "creating scout");
@@ -976,7 +1215,9 @@ public class ArchonPlayer extends BasePlayer {
 	 * soldier.
 	 * 
 	 * TODO is this initial flux transfer the correct amount?
+	 * @deprecated Replaced by attemptSpawnUnitAndTransferFlux();
 	 */
+	@Deprecated
 	public void attemptSpawnSoldierAndTransferFlux() {
 		try {
 			// myRC.setIndicatorString(0,
@@ -1081,6 +1322,7 @@ public class ArchonPlayer extends BasePlayer {
 			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
 			int scoutPresent = 0;
 			int soldierPresent = 0;
+			int disrupterPresent = 0;
 			for (Robot n : neighbors) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
@@ -1089,18 +1331,25 @@ public class ArchonPlayer extends BasePlayer {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
 						soldierPresent++;
 					}
+					if (myRC.senseRobotInfo(n).type.equals(RobotType.DISRUPTER)) {
+						disrupterPresent++;
+					}
 				}
 			}
 			if (scoutPresent == 0) {
-				attemptSpawnScoutAndTransferFlux();
+				attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 5) {
-				attemptSpawnSoldierAndTransferFlux();
+			if (soldierPresent < 3) {
+				attemptSpawnUnitAndTransferFlux(RobotType.SOLDIER);
+			}
+			// if cannot see disrupter, spawn two.
+			if (disrupterPresent < 2) {
+				attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
 			}
 			// if cannot see scout, spawn one.
 			if (scoutPresent < 2) {
-				attemptSpawnScoutAndTransferFlux();
+				attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
