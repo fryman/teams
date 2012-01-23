@@ -5,6 +5,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import battlecode.common.TerrainTile;
 
 public class ScorcherPlayer extends BasePlayer {
 	private boolean in_position = false;
@@ -33,7 +34,12 @@ public class ScorcherPlayer extends BasePlayer {
 	}
 
 	public void run() {
+		//sense power core if can then defend core else follow and attack
+		if (myRC.getLocation().distanceSquaredTo(myRC.sensePowerCore().getLocation()) < 17){
+			runDefendCore();
+		} else {
 		followAndAttack();
+		}
 	}
 
 	public void runDefendCore() {
@@ -53,13 +59,21 @@ public class ScorcherPlayer extends BasePlayer {
 							in_position = false;
 						} else {
 							in_position = true;
-							break;
+							//break;
 						}
+						if(rangeOffMap()){
+							myRC.setIndicatorString(0, "range off map");
+							System.out.println("off map");
+							attempts_to_position -= 1;
+							in_position = false;
+						}
+						myRC.setIndicatorString(0,"");
 					} else {
 						navToCoreAndAboutFace();
 					}
 				} else {
 					scorcherAttackAvoidArchons();
+					myRC.setIndicatorString(2, "in attack mode");
 					if (actual_squares_from_core != desired_squares_from_core && myRC.canMove(myRC.getDirection())) {
 						attempts_to_position = 0;
 					}
@@ -80,6 +94,17 @@ public class ScorcherPlayer extends BasePlayer {
 		}
 	}
 
+	public boolean rangeOffMap() {
+		myRC.setIndicatorString(3, "checking range on map");
+		boolean ans = false;
+		int dist = ((int) Math.sqrt(myRC.getType().sensorRadiusSquared) - 1);
+		TerrainTile t = myRC.senseTerrainTile(myRC.getLocation().add(myRC.getDirection(), dist));
+		if (t == TerrainTile.OFF_MAP) {
+			ans = true;
+		}
+		return ans;
+	}
+	
 	public void navToCoreAndAboutFace() {
 		try {
 			navToCore();

@@ -81,15 +81,15 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		//double decider = r.nextDouble();
+		// double decider = r.nextDouble();
 		// System.out.println(decider);
-		//if (decider > 0) {
-			// System.out.println("Normal Pattern");
-			runFollowFriendlyMode();
-		//} else {
-			// System.out.println("Holding Pattern");
-			seekAndBroadcastEnemyArchon();
-		//}
+		// if (decider > 0) {
+		// System.out.println("Normal Pattern");
+		runFollowFriendlyMode();
+		// } else {
+		// System.out.println("Holding Pattern");
+		seekAndBroadcastEnemyArchon();
+		// }
 	}
 
 	/**
@@ -101,9 +101,13 @@ public class ScoutPlayer extends BasePlayer {
 		while (true) {
 			try {
 				Robot target = findNearestEnemyRobotType(RobotType.SCORCHER);
-				if (target != null && myRC.senseRobotInfo(target).flux > 2) {
+				Robot soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
+				if (target != null && myRC.senseRobotInfo(target).flux > 2
+						&& soldier == null) {
 					while (myRC.canSenseObject(target)
-							&& myRC.senseRobotInfo(target).flux > 2) {
+							&& myRC.senseRobotInfo(target).flux > 2
+							&& soldier == null) {
+						soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
 						attackAndFollowScorcher(target);
 					}
 				} else {
@@ -115,19 +119,24 @@ public class ScoutPlayer extends BasePlayer {
 					int roundNum = Clock.getBytecodeNum();
 					switch (roundNum % 4) {
 					case 0:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,4));
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
+								4));
 						break;
 					case 1:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,-4));
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
+								-4));
 						break;
 					case 2:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(-4,4));
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(
+								-4, 4));
 						break;
 					case 3:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(-4,-4));
+						this.nav.getNextMove(friendlyMapLocationToFollow.add(
+								-4, -4));
 					}
-					
+
 					myRC.setIndicatorString(0, "following a friendly");
+					// attackEnemy();
 					runAtEndOfTurn();
 				}
 				runAtEndOfTurn();
@@ -157,8 +166,10 @@ public class ScoutPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
+						// attackEnemy();
 						runAtEndOfTurn();
 					}
+					// attackEnemy();
 					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
@@ -206,6 +217,12 @@ public class ScoutPlayer extends BasePlayer {
 		return false;
 	}
 
+	/**
+	 * Attacks enemy scorchers until they run out of flux
+	 * 
+	 * @param Robot
+	 *            scorcher
+	 */
 	public void attackAndFollowScorcher(Robot scorcher) {
 		try {
 			MapLocation scorcherLoc = myRC.senseLocationOf(scorcher);
@@ -224,8 +241,8 @@ public class ScoutPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Designed so that the scouts can go, find a friggen archon, and tell the
-	 * soldier buddies to go get it.
+	 * <<<<<<< HEAD Designed so that the scouts can go, find a friggen archon,
+	 * and tell the soldier buddies to go get it.
 	 * 
 	 * Scouts walk in a "holding pattern" around the powercore looking for
 	 * archons.
@@ -307,5 +324,29 @@ public class ScoutPlayer extends BasePlayer {
 		// core.add(Direction.SOUTH_EAST, HOLDING_PATTERN_DISTANCE)
 		};
 		this.holdingPatternWaypoints = waypoints;
+	}
+
+	// not sure if this is needed -- used this to try and get rid of Game
+	// Exception but now it is not being thrown anymore
+	public void attackEnemy() {
+		Robot closestTar = senseClosestEnemy();
+		try {
+			if (closestTar != null
+					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
+					&& myRC.senseRobotInfo(closestTar).flux > .5) {
+				MapLocation Location = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
+					myRC.setIndicatorString(0,
+							"Attacking at the end of the turn.");
+					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
+					} else {
+						myRC.attackSquare(Location, RobotLevel.IN_AIR);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
