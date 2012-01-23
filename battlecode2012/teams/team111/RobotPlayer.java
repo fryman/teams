@@ -25,7 +25,7 @@ public class RobotPlayer {
 			new SoldierPlayer(rc).run();
 			break;
 		case SCORCHER:
-			new ScorcherPlayer2(rc).run();
+			new ScorcherPlayer(rc).run();
 			break;
 		case DISRUPTER:
 			new DisrupterPlayer(rc).run();
