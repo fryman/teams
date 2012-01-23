@@ -152,6 +152,9 @@ public class ScorcherPlayer extends BasePlayer {
 	public void navToCoreAndMoveToNextCardinal() {
 		try {
 			navToCore();
+			while (myRC.isMovementActive()) {
+				runAtEndOfTurn();
+			}
 			if (myRC.getDirection().isDiagonal()
 					&& myRC.getFlux() > myRC.getType().moveCost) {
 				myRC.setDirection(myRC.getDirection().rotateLeft());
