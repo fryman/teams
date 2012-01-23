@@ -17,7 +17,6 @@ public class RobotPlayer {
 		case ARCHON:
 			//new ArchonPlayer(rc).runArchonRush();
 			new ArchonPlayer(rc).run();
-			//new ArchonPlayer(rc).runToTestNav();
 			break;
 		case SCOUT:
 			new ScoutPlayer(rc).run();
