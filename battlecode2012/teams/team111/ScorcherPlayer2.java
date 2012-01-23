@@ -15,6 +15,7 @@ public class ScorcherPlayer2 extends BasePlayer {
 	
 	//intended for these scorchers to sit at choke points and 
 	//attack all enemies as they try to pass through
+	private MapLocation friendlyMapLocationToFollow = null;
 
 	public ScorcherPlayer2(RobotController rc) {
 		super(rc);
@@ -37,11 +38,17 @@ public class ScorcherPlayer2 extends BasePlayer {
 	public void runChokePoints() {
 		while (true) {
 			try {
-				if (shouldAttack()) {
+				if (shouldAttack() && !myRC.isAttackActive()) {
 					//scorcher ignores inputs to attackSquare()
 					myRC.attackSquare(myRC.getLocation(), RobotLevel.ON_GROUND);
 					runAtEndOfTurn();
 				}else {
+					friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+					if (friendlyMapLocationToFollow == null) {
+						// game over...
+						myRC.suicide();
+					}
+					this.nav.getNextMove(friendlyMapLocationToFollow);
 					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
