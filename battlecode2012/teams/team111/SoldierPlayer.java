@@ -135,37 +135,28 @@ public class SoldierPlayer extends BasePlayer {
 				if (unprotectedArchon != null) {
 					attackAndChaseUnprotectedArchon(unprotectedArchon);
 				}
+				MapLocation archonEnemy = receiveMessagesReturnAttack();
+				if (archonEnemy != null) {
+					attackAndChaseMapLocation(archonEnemy);
+					runAtEndOfTurn();
+					continue;
+				}
 				Robot closeEnemy = senseBestEnemy();
-				if (closeEnemy != null
-						&& myRC.senseRobotInfo(closeEnemy).type == RobotType.ARCHON) {
-					attackAndChaseClosestEnemy(closeEnemy);
+				if (closeEnemy == null) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (!myRC.canSenseObject(closeEnemy)) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				} else if (myRC.senseLocationOf(closeEnemy).distanceSquaredTo(
+						myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
 					runAtEndOfTurn();
 				} else {
-					if (closeEnemy != null) {
-						attackAndChaseClosestEnemy(closeEnemy);
-						runAtEndOfTurn();
-					}
-					MapLocation archonEnemy = receiveMessagesReturnAttack();
-					if (archonEnemy != null) {
-						attackAndChaseMapLocation(archonEnemy);
-						runAtEndOfTurn();
-						continue;
-					}
-					if (closeEnemy == null) {
-						this.nav.getNextMove(friendlyMapLocationToFollow);
-						runAtEndOfTurn();
-					} else if (!myRC.canSenseObject(closeEnemy)) {
-						this.nav.getNextMove(friendlyMapLocationToFollow);
-						runAtEndOfTurn();
-					} else if (myRC.senseLocationOf(closeEnemy)
-							.distanceSquaredTo(myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
-						this.nav.getNextMove(friendlyMapLocationToFollow);
-						runAtEndOfTurn();
-					} else {
-						attackAndChaseClosestEnemy(closeEnemy);
-						runAtEndOfTurn();
-					}
+					attackAndChaseClosestEnemy(closeEnemy);
+					runAtEndOfTurn();
 				}
+
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
 				e.printStackTrace();

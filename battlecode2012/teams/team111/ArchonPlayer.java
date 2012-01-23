@@ -114,7 +114,8 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	/**
-	 * Causes archon to move backward (assumes it is being attacked)
+	 * Causes archon to move back to the powercore (assumes it is being
+	 * attacked)
 	 */
 	public void bugOut() {
 		// if (!myRC.isMovementActive()
@@ -597,7 +598,6 @@ public class ArchonPlayer extends BasePlayer {
 					best = capturablePowerNodes[i % capturablePowerNodes.length];
 				}
 			}
-
 			targetLoc = best; // to conform to method signature
 			return best;
 		} else {
