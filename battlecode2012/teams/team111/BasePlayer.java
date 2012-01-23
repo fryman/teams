@@ -216,6 +216,7 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyObjects.length > 0) {
 				for (Robot e : nearbyObjects) {
 					if (e.getTeam() != myRC.getTeam()
+							|| !myRC.canSenseObject(e)
 							|| myRC.senseRobotInfo(e).type == RobotType.TOWER) {
 						continue;
 					}
@@ -383,6 +384,7 @@ public abstract class BasePlayer extends StaticStuff {
 					myRC.senseLocationOf(two));
 			return distToOne < distToTwo;
 		} catch (GameActionException e) {
+			System.out.println(Clock.getBytecodeNum());
 			e.printStackTrace();
 		}
 		return false;
@@ -800,6 +802,7 @@ public abstract class BasePlayer extends StaticStuff {
 			if (nearbyRobots.length > 0) {
 				for (Robot r : nearbyRobots) {
 					if (r.getTeam() == myRC.getTeam()
+							|| !myRC.canSenseObject(r)
 							|| myRC.senseRobotInfo(r).type != rt) {
 						continue;
 					}

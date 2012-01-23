@@ -30,7 +30,6 @@ public class ScoutPlayer extends BasePlayer {
 
 	public ScoutPlayer(RobotController rc) {
 		super(rc);
-		// this.nav = new LocalAreaNav(rc);
 		this.nav = new LocalAreaNav(rc);
 	}
 
@@ -71,25 +70,29 @@ public class ScoutPlayer extends BasePlayer {
 				msg.ints = new int[] { BasePlayer.ENEMY_ARCHON_LOCATION_MESSAGE };
 				msg.locations = new MapLocation[] { archonLoc };
 				nav.getNextMove(archonLoc);
-				this.myRC.broadcast(msg);
+				if (myRC.getFlux() > battlecode.common.GameConstants.BROADCAST_FIXED_COST
+						+ 16 * msg.getFluxCost() && !this.myRC.hasBroadcasted()) {
+					myRC.broadcast(msg);
+				}
 			}
 			aboutToDie();
 			myRC.yield();
 		} catch (Exception e) {
+			System.out.println(Clock.getBytecodeNum());
 			e.printStackTrace();
 		}
 	}
 
 	public void run() {
-		// double decider = r.nextDouble();
+		 double decider = r.nextDouble();
 		// System.out.println(decider);
-		// if (decider > 0) {
+		 if (decider > .1) {
 		// System.out.println("Normal Pattern");
 		runFollowFriendlyMode();
-		// } else {
+		 } else {
 		// System.out.println("Holding Pattern");
 		seekAndBroadcastEnemyArchon();
-		// }
+		 }
 	}
 
 	/**
@@ -109,6 +112,7 @@ public class ScoutPlayer extends BasePlayer {
 							&& soldier == null) {
 						soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
 						attackAndFollowScorcher(target);
+						runAtEndOfTurn();
 					}
 				} else {
 					friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
@@ -116,25 +120,7 @@ public class ScoutPlayer extends BasePlayer {
 						// game over...
 						myRC.suicide();
 					}
-					int roundNum = Clock.getBytecodeNum();
-					switch (roundNum % 4) {
-					case 0:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
-								4));
-						break;
-					case 1:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(4,
-								-4));
-						break;
-					case 2:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(
-								-4, 4));
-						break;
-					case 3:
-						this.nav.getNextMove(friendlyMapLocationToFollow.add(
-								-4, -4));
-					}
-
+					this.nav.getNextMove(friendlyMapLocationToFollow);
 					myRC.setIndicatorString(0, "following a friendly");
 					// attackEnemy();
 					runAtEndOfTurn();
@@ -252,7 +238,7 @@ public class ScoutPlayer extends BasePlayer {
 		initializeHoldingPatternWaypoints();
 		int movesToCurrentWaypoint = 0;
 		int roundsInSeek = 0;
-		while (roundsInSeek < 150) {
+		while (true) {
 			try {
 				roundsInSeek++;
 				if (this.myRC.getFlux() < 0.05 * this.myRC.getType().maxFlux) {

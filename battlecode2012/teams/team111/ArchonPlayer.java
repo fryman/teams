@@ -52,7 +52,7 @@ public class ArchonPlayer extends BasePlayer {
 		this.prevEnergon = this.myRC.getEnergon();
 		if (scorcherPresent()) {
 			bugOut();
-			spawnUnitAndTransferFlux(RobotType.DISRUPTER);
+			attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
 		}
 	}
 
@@ -156,8 +156,8 @@ public class ArchonPlayer extends BasePlayer {
 			} else {
 				runArchonBrain();
 			}
-			// enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			// runArchonBrain();
+			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			 runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -182,7 +182,7 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				if (iSeeEnemy) {
 					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
-						spawnUnitAndTransferFlux(RobotType.SCORCHER);
+						attemptSpawnUnitAndTransferFlux(RobotType.SCORCHER);
 					}
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
@@ -254,7 +254,7 @@ public class ArchonPlayer extends BasePlayer {
 					int countMoves = 0;
 					spawnUnitAndTransferFlux(RobotType.SCORCHER);
 					scorcherCount++;
-					while (countMoves < 4) {
+					while (countMoves < 4) {	
 						randomWalk();
 						countMoves++;
 					}
@@ -873,14 +873,15 @@ public class ArchonPlayer extends BasePlayer {
 			}
 			MapLocation potentialLocation = myRC.getLocation().add(
 					myRC.getDirection());
-			if (myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP) {
-				return;
-			}
 			RobotLevel unitLevel = RobotLevel.ON_GROUND;
 			double flux = unitType.maxFlux / 2;
 			if (unitType == RobotType.SCOUT) {
 				unitLevel = RobotLevel.IN_AIR;
 				flux = RobotType.SCOUT.maxFlux;
+			}
+			if ((myRC.senseTerrainTile(potentialLocation) == TerrainTile.OFF_MAP)
+					|| (myRC.senseTerrainTile(potentialLocation) == TerrainTile.VOID && unitLevel != RobotLevel.IN_AIR)) {
+				return;
 			}
 			if (myRC.getFlux() > unitType.spawnCost
 					&& myRC.senseObjectAtLocation(potentialLocation, unitLevel) == null) {
@@ -1430,15 +1431,15 @@ public class ArchonPlayer extends BasePlayer {
 					}
 				}
 			}
-			if (scoutPresent == 0) {
-				attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
-			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 3) {
+			if (soldierPresent < 5) {
 				attemptSpawnUnitAndTransferFlux(RobotType.SOLDIER);
 			}
+			if (scoutPresent < 2) {
+				attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
+			}
 			// if cannot see disrupter, spawn two.
-			if (disrupterPresent < 2) {
+			if (disrupterPresent < 0) {
 				attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
 			}
 		} catch (Exception e) {
