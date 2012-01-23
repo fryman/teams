@@ -76,9 +76,13 @@ public class ScoutPlayer extends BasePlayer {
 		while (true) {
 			try {
 				Robot target = findNearestEnemyRobotType(RobotType.SCORCHER);
-				if (target != null && myRC.senseRobotInfo(target).flux > 2) {
+				Robot soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
+				if (target != null && myRC.senseRobotInfo(target).flux > 2
+						&& soldier == null) {
 					while (myRC.canSenseObject(target)
-							&& myRC.senseRobotInfo(target).flux > 2) {
+							&& myRC.senseRobotInfo(target).flux > 2
+							&& soldier == null) {
+						soldier = findNearestEnemyRobotType(RobotType.SOLDIER);
 						attackAndFollowScorcher(target);
 					}
 				} else {
