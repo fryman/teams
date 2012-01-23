@@ -136,7 +136,7 @@ public class SoldierPlayer extends BasePlayer {
 						&& myRC.senseRobotInfo(scorcherNoFlux).flux < 10) {
 					attackAndChaseClosestEnemy(scorcherNoFlux);
 				}
-
+				
 				Robot unprotectedArchon = senseUnprotectedArchon();
 				if (unprotectedArchon != null) {
 					attackAndChaseUnprotectedArchon(unprotectedArchon);

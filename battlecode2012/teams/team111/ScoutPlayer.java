@@ -41,21 +41,6 @@ public class ScoutPlayer extends BasePlayer {
 				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
-			Robot closestTar = senseClosestEnemy();
-			if (closestTar != null
-					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
-					&& myRC.senseRobotInfo(closestTar).flux > .5) {
-				MapLocation Location = myRC.senseLocationOf(closestTar);
-				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
-					myRC.setIndicatorString(0,
-							"Attacking at the end of the turn.");
-					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
-						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
-					} else {
-						myRC.attackSquare(Location, RobotLevel.IN_AIR);
-					}
-				}
-			}
 			aboutToDie();
 			myRC.yield();
 		} catch (Exception e) {
@@ -118,8 +103,10 @@ public class ScoutPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
+						attackEnemy();
 						runAtEndOfTurn();
 					}
+					attackEnemy();
 					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
@@ -181,6 +168,28 @@ public class ScoutPlayer extends BasePlayer {
 		} catch (Exception e) {
 			e.printStackTrace();
 			runAtEndOfTurn();
+		}
+	}
+
+	public void attackEnemy() {
+		Robot closestTar = senseClosestEnemy();
+		try {
+			if (closestTar != null
+					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
+					&& myRC.senseRobotInfo(closestTar).flux > .5) {
+				MapLocation Location = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
+					myRC.setIndicatorString(0,
+							"Attacking at the end of the turn.");
+					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
+					} else {
+						myRC.attackSquare(Location, RobotLevel.IN_AIR);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
