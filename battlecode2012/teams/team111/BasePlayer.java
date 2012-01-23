@@ -932,6 +932,13 @@ public abstract class BasePlayer extends StaticStuff {
 						}
 					}
 				}
+				if (weakest != null) {
+					RobotInfo wInfo = myRC.senseRobotInfo(weakest);
+					if (wInfo.type == RobotType.TOWER
+							&& !ownAdjacentTower(wInfo.location)) {
+						return null;
+					}
+				}
 				return weakest;
 			}
 			return null;
