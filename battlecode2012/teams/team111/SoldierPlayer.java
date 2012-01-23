@@ -35,7 +35,6 @@ public class SoldierPlayer extends BasePlayer {
 		runFollowFriendlyAndGuardMode();
 	}
 
-
 	/**
 	 * Finds an enemy, chases and attacks it. If there is no enemy, walks
 	 * aimlessly.
@@ -240,11 +239,9 @@ public class SoldierPlayer extends BasePlayer {
 					RobotInfo wInfo = myRC.senseRobotInfo(weakest);
 					if (wInfo.type.equals(RobotType.TOWER)
 							&& !ownAdjacentTower(wInfo.location)) {
-						myRC.setIndicatorString(1, "No adjacent tower owned -- do not attack");
 						return null;
 					}
 				}
-				System.out.println("weakest: " + myRC.senseRobotInfo(weakest).type);
 				return weakest;
 			}
 			return null;
