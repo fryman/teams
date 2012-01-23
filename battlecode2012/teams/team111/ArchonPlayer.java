@@ -1024,7 +1024,7 @@ public class ArchonPlayer extends BasePlayer {
 				attemptSpawnSoldierAndTransferFlux();
 			}
 			// if cannot see scout, spawn one.
-			if (scoutPresent < 3) {
+			if (scoutPresent < 2) {
 				attemptSpawnScoutAndTransferFlux();
 			}
 		} catch (Exception e) {

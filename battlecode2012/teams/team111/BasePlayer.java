@@ -551,6 +551,29 @@ public abstract class BasePlayer extends StaticStuff {
 			e1.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Attacks and chases an unprotected archon until another enemy is sensed.
+	 * 
+	 * @author brian
+	 */
+	public void attackAndChaseUnprotectedArchon(Robot archon) {
+		try {
+			if (myRC.canSenseObject(archon)) {
+				MapLocation attack = myRC.senseLocationOf(archon);
+				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2,
+							"Attacking: " + attack.toString());
+				}
+				if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
+					this.nav.getNextMove(attack);
+				}
+			}
+		} catch (GameActionException e1) {
+			e1.printStackTrace();
+		}
+	}
 
 	/**
 	 * Determines if an adjacent tower is owned. Returns true if yes.
@@ -866,9 +889,9 @@ public abstract class BasePlayer extends StaticStuff {
 				case SOLDIER:
 					soldiers.add(e);
 					break;
-				case SCORCHER:
-					scorchers.add(e);
-					break;
+//				case SCORCHER:
+//					scorchers.add(e);
+//					break;
 				default:
 					others.add(e);
 				}
@@ -906,6 +929,47 @@ public abstract class BasePlayer extends StaticStuff {
 				return weakest;
 			}
 			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Sees if there is an unprotected archon.
+	 */
+	public Robot senseUnprotectedArchon() {
+		try {
+			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+
+			FastArrayList<Robot> scouts = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> others = new FastArrayList<Robot>(
+					enemies.length);
+
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
+					continue;
+				}
+				RobotInfo eInfo = myRC.senseRobotInfo(e);
+				switch (eInfo.type) {
+				case ARCHON:
+					archons.add(e);
+					break;
+				case SCOUT:
+					scouts.add(e);
+					break;
+				default:
+					others.add(e);
+				}
+			}
+			if (archons.size() > 0 && others.size() == 0) {
+				return archons.get(1);
+			} else {
+				return null;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
