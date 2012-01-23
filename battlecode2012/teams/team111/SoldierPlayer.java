@@ -123,6 +123,7 @@ public class SoldierPlayer extends BasePlayer {
 	 * MAX_DEVIATION_DISTANCE_SQUARE of nearest archon.
 	 */
 	public void runFollowFriendlyAndGuardMode() {
+		int justChasing = 0;
 		while (true) {
 			try {
 				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
@@ -130,31 +131,40 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
+				Robot unprotectedArchon = senseUnprotectedArchon();
+				if (unprotectedArchon != null) {
+					attackAndChaseUnprotectedArchon(unprotectedArchon);
+				}
 				Robot closeEnemy = senseBestEnemy();
 				if (closeEnemy != null
 						&& myRC.senseRobotInfo(closeEnemy).type == RobotType.ARCHON) {
 					attackAndChaseClosestEnemy(closeEnemy);
 					runAtEndOfTurn();
-				}
-				MapLocation archonEnemy = receiveMessagesReturnAttack();
-				if (archonEnemy != null) {
-					attackAndChaseMapLocation(archonEnemy);
-					runAtEndOfTurn();
-					continue;
-				}
-				if (closeEnemy == null) {
-					this.nav.getNextMove(friendlyMapLocationToFollow);
-					runAtEndOfTurn();
-				} else if (!myRC.canSenseObject(closeEnemy)) {
-					this.nav.getNextMove(friendlyMapLocationToFollow);
-					runAtEndOfTurn();
-				} else if (myRC.senseLocationOf(closeEnemy).distanceSquaredTo(
-						myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
-					this.nav.getNextMove(friendlyMapLocationToFollow);
-					runAtEndOfTurn();
 				} else {
-					attackAndChaseClosestEnemy(closeEnemy);
-					runAtEndOfTurn();
+					if (closeEnemy != null) {
+						attackAndChaseClosestEnemy(closeEnemy);
+						runAtEndOfTurn();
+					}
+					MapLocation archonEnemy = receiveMessagesReturnAttack();
+					if (archonEnemy != null) {
+						attackAndChaseMapLocation(archonEnemy);
+						runAtEndOfTurn();
+						continue;
+					}
+					if (closeEnemy == null) {
+						this.nav.getNextMove(friendlyMapLocationToFollow);
+						runAtEndOfTurn();
+					} else if (!myRC.canSenseObject(closeEnemy)) {
+						this.nav.getNextMove(friendlyMapLocationToFollow);
+						runAtEndOfTurn();
+					} else if (myRC.senseLocationOf(closeEnemy)
+							.distanceSquaredTo(myRC.getLocation()) > MAX_DEVIATION_DISTANCE_SQUARE) {
+						this.nav.getNextMove(friendlyMapLocationToFollow);
+						runAtEndOfTurn();
+					} else {
+						attackAndChaseClosestEnemy(closeEnemy);
+						runAtEndOfTurn();
+					}
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Caught");
@@ -204,12 +214,12 @@ public class SoldierPlayer extends BasePlayer {
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
+			if (archons.size() > 0) {
+				priorityTargets = archons;
 			} else if (disrupters.size() > 0) {
 				priorityTargets = disrupters;
-			} else if (archons.size() > 0) {
-				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}

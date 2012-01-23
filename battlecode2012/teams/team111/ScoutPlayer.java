@@ -41,8 +41,6 @@ public class ScoutPlayer extends BasePlayer {
 				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
-			// pingPresence(); // added
-			// broadcastMessage();
 			Robot closestTar = senseClosestEnemy();
 			if (closestTar != null
 					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER

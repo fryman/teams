@@ -35,25 +35,23 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public void runAtEndOfTurn() {
 		aboutToDie();
-		// broadcastMessage();
-		// pingPresence();
-		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
-				&& !this.myRC.isMovementActive()
-				&& this.myRC.getFlux() > this.myRC.getType().moveCost
-				&& retreatOverride()) {
-			try {
-				myRC.moveBackward();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+//		if (beingAttacked() && myRC.canMove(myRC.getDirection().opposite())
+//				&& !this.myRC.isMovementActive()
+//				&& this.myRC.getFlux() > this.myRC.getType().moveCost
+//				&& retreatOverride()) {
+//			try {
+//				myRC.moveBackward();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 		this.prevEnergon = this.myRC.getEnergon();
 		myRC.yield();
 	}
-	
+
 	/**
-	 * Function overrides retreat function, for example soldiers should not retreat when
-	 * attacking disrupters.
+	 * Function overrides retreat function, for example soldiers should not
+	 * retreat when attacking disrupters.
 	 * 
 	 * @author brian
 	 */
@@ -72,11 +70,11 @@ public abstract class BasePlayer extends StaticStuff {
 					return true;
 				}
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return true;
 		}
-		
+
 	}
 
 	/**
@@ -522,26 +520,55 @@ public abstract class BasePlayer extends StaticStuff {
 	 *            Target to seek and destroy.
 	 */
 	public void attackAndChaseClosestEnemy(Robot closestTar) {
-		try {
-			if (closestTar == null) {
-				return;
-			}
-			if (myRC.canSenseObject(closestTar)) {
-				MapLocation attack = myRC.senseLocationOf(closestTar);
-				if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
-					if (ownAdjacentTower(attack)) {
-						myRC.setIndicatorString(0, "Attempting tower destroy");
-						destroyTower(attack);
-					} else {
-						return;
-					}
+		while (true) {
+			try {
+				if (closestTar == null) {
+					return;
 				}
-				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
-					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
-						myRC.attackSquare(attack, RobotLevel.ON_GROUND);
-					} else {
-						myRC.attackSquare(attack, RobotLevel.IN_AIR);
+				if (myRC.canSenseObject(closestTar)) {
+					MapLocation attack = myRC.senseLocationOf(closestTar);
+					if (myRC.senseRobotInfo(closestTar).type == RobotType.TOWER) {
+						if (ownAdjacentTower(attack)) {
+							myRC.setIndicatorString(0,
+									"Attempting tower destroy");
+							destroyTower(attack);
+						} else {
+							return;
+						}
 					}
+					if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+						if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+							myRC.attackSquare(attack, RobotLevel.ON_GROUND);
+						} else {
+							myRC.attackSquare(attack, RobotLevel.IN_AIR);
+						}
+						myRC.setIndicatorString(2,
+								"Attacking: " + attack.toString());
+					}
+					if (!myRC.isMovementActive() && !myRC.isAttackActive()) {
+						this.nav.getNextMove(attack);
+					}
+				} else {
+					return;
+				}
+				runAtEndOfTurn();
+			} catch (GameActionException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Attacks and chases an unprotected archon until another enemy is sensed.
+	 * 
+	 * @author brian
+	 */
+	public void attackAndChaseUnprotectedArchon(Robot archon) {
+		try {
+			if (myRC.canSenseObject(archon)) {
+				MapLocation attack = myRC.senseLocationOf(archon);
+				if (myRC.canAttackSquare(attack) && !myRC.isAttackActive()) {
+					myRC.attackSquare(attack, RobotLevel.ON_GROUND);
 					myRC.setIndicatorString(2,
 							"Attacking: " + attack.toString());
 				}
@@ -869,21 +896,21 @@ public abstract class BasePlayer extends StaticStuff {
 					soldiers.add(e);
 					break;
 				case SCORCHER:
-					scorchers.add(e);
+					others.add(e);
 					break;
 				default:
 					others.add(e);
 				}
 			}
 			FastArrayList<Robot> priorityTargets = null;
-//			if (archons.size() > 0) {
-//				priorityTargets = archons;
-//			} else if (soldiers.size() > 0) {
-//				priorityTargets = soldiers;
-			if (soldiers.size() > 0) {
-				priorityTargets = soldiers;
-			} else if (archons.size() > 0) {
+			// if (archons.size() > 0) {
+			// priorityTargets = archons;
+			// } else if (soldiers.size() > 0) {
+			// priorityTargets = soldiers;
+			if (archons.size() > 0) {
 				priorityTargets = archons;
+			} else if (soldiers.size() > 0) {
+				priorityTargets = soldiers;
 			} else if (others.size() > 0) {
 				priorityTargets = others;
 			}
@@ -908,6 +935,47 @@ public abstract class BasePlayer extends StaticStuff {
 				return weakest;
 			}
 			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Sees if there is an unprotected archon.
+	 */
+	public Robot senseUnprotectedArchon() {
+		try {
+			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+
+			FastArrayList<Robot> scouts = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> archons = new FastArrayList<Robot>(
+					enemies.length);
+			FastArrayList<Robot> others = new FastArrayList<Robot>(
+					enemies.length);
+
+			for (Robot e : enemies) {
+				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
+					continue;
+				}
+				RobotInfo eInfo = myRC.senseRobotInfo(e);
+				switch (eInfo.type) {
+				case ARCHON:
+					archons.add(e);
+					break;
+				case SCOUT:
+					scouts.add(e);
+					break;
+				default:
+					others.add(e);
+				}
+			}
+			if (archons.size() > 0 && others.size() == 0) {
+				return archons.get(1);
+			} else {
+				return null;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

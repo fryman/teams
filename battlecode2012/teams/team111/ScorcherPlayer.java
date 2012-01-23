@@ -2,7 +2,9 @@ package team111;
 
 import team111.Nav.Navigation;
 import battlecode.common.MapLocation;
+import battlecode.common.Robot;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
 public class ScorcherPlayer extends BasePlayer {
 	private boolean in_position = false;
@@ -10,6 +12,8 @@ public class ScorcherPlayer extends BasePlayer {
 	private int attempts_to_position = 0;
 	private MapLocation core = myRC.sensePowerCore().getLocation();
 	private int actual_squares_from_core = 0;
+	private MapLocation friendlyMapLocationToFollow = null;
+	private final int MAX_DEVIATION_DISTANCE_SQUARE = 100;
 
 	// private Robot friendlyToFollow = null;
 	// private MapLocation friendlyMapLocationToFollow = null;
@@ -29,7 +33,7 @@ public class ScorcherPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		runDefendCore();
+		followAndAttack();
 	}
 
 	public void runDefendCore() {
@@ -162,6 +166,35 @@ public class ScorcherPlayer extends BasePlayer {
 		} catch (Exception e) {
 			System.out.println("Exception Caught");
 			e.printStackTrace();
+		}
+	}
+	
+	public void followAndAttack() {
+		while (true) {
+			try {
+				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				if (friendlyMapLocationToFollow == null) {
+					// game over...
+					myRC.suicide();
+				}
+				myRC.setIndicatorString(0, "in position and attacking");
+				if (senseClosestGroundEnemy() != null
+						&& !myRC.isAttackActive()
+						&& !canSenseArchon()
+						&& myRC.canAttackSquare(myRC.getLocation().add(
+								myRC.getDirection()))) {
+					myRC.setIndicatorString(0, "about to attack ");
+					myRC.attackSquare(myRC.getLocation(),
+							battlecode.common.RobotLevel.ON_GROUND);
+					runAtEndOfTurn();
+				} else {
+					this.nav.getNextMove(friendlyMapLocationToFollow);
+					runAtEndOfTurn();
+				}
+			} catch (Exception e) {
+				System.out.println("Exception Caught");
+				e.printStackTrace();
+			}
 		}
 	}
 
