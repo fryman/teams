@@ -131,6 +131,12 @@ public class SoldierPlayer extends BasePlayer {
 					// game over...
 					myRC.suicide();
 				}
+				Robot scorcherNoFlux = findNearestEnemyRobotType(RobotType.SCORCHER);
+				if (scorcherNoFlux != null
+						&& myRC.senseRobotInfo(scorcherNoFlux).flux < 10) {
+					attackAndChaseClosestEnemy(scorcherNoFlux);
+				}
+
 				Robot unprotectedArchon = senseUnprotectedArchon();
 				if (unprotectedArchon != null) {
 					attackAndChaseUnprotectedArchon(unprotectedArchon);
@@ -238,7 +244,7 @@ public class SoldierPlayer extends BasePlayer {
 				}
 				if (weakest != null) {
 					RobotInfo wInfo = myRC.senseRobotInfo(weakest);
-					if (wInfo.type == RobotType.TOWER
+					if (wInfo.type.equals(RobotType.TOWER)
 							&& !ownAdjacentTower(wInfo.location)) {
 						return null;
 					}
