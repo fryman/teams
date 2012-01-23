@@ -136,7 +136,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			 MapLocation[] archons = myRC.senseAlliedArchons();
+			 /*MapLocation[] archons = myRC.senseAlliedArchons();
 			 int[] IDNumbers = new
 			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
 			 int Counter = 0;
@@ -150,9 +150,9 @@ public class ArchonPlayer extends BasePlayer {
 			 runDefendCoreWithScorchers();
 			 } else {
 			 runArchonBrain();
-			 }
-//			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-//			runArchonBrain();
+			 }*/
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

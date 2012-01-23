@@ -41,6 +41,21 @@ public class ScoutPlayer extends BasePlayer {
 				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
+			Robot closestTar = senseClosestEnemy();
+			if (closestTar != null
+					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
+					&& myRC.senseRobotInfo(closestTar).flux > .5) {
+				MapLocation Location = myRC.senseLocationOf(closestTar);
+				if (myRC.canAttackSquare(Location) && !myRC.isAttackActive()) {
+					myRC.setIndicatorString(0,
+							"Attacking at the end of the turn.");
+					if (closestTar.getRobotLevel() == RobotLevel.ON_GROUND) {
+						myRC.attackSquare(Location, RobotLevel.ON_GROUND);
+					} else {
+						myRC.attackSquare(Location, RobotLevel.IN_AIR);
+					}
+				}
+			}
 			aboutToDie();
 			myRC.yield();
 		} catch (Exception e) {
@@ -74,6 +89,7 @@ public class ScoutPlayer extends BasePlayer {
 					}
 					this.nav.getNextMove(friendlyMapLocationToFollow);
 					myRC.setIndicatorString(0, "following a friendly");
+					//attackEnemy();
 					runAtEndOfTurn();
 				}
 
@@ -103,10 +119,10 @@ public class ScoutPlayer extends BasePlayer {
 							&& !myRC.getLocation().isAdjacentTo(targetLoc)) {
 						attackClosestEnemy(closestTar);
 						this.nav.getNextMove(targetLoc);
-						attackEnemy();
+						//attackEnemy();
 						runAtEndOfTurn();
 					}
-					attackEnemy();
+					//attackEnemy();
 					runAtEndOfTurn();
 				}
 			} catch (Exception e) {
@@ -154,6 +170,11 @@ public class ScoutPlayer extends BasePlayer {
 		return false;
 	}
 
+	/**
+	 * Attacks enemy scorchers until they run out of flux
+	 * 
+	 * @param Robot scorcher
+	 */
 	public void attackAndFollowScorcher(Robot scorcher) {
 		try {
 			MapLocation scorcherLoc = myRC.senseLocationOf(scorcher);
@@ -171,6 +192,11 @@ public class ScoutPlayer extends BasePlayer {
 		}
 	}
 
+	/**
+	 * Code from runAtEndOfTurn() method that causes scouts to attack
+	 */
+	//not sure if this is needed -- used this to try and get rid of Game 
+	//Exception but now it is not being thrown anymore
 	public void attackEnemy() {
 		Robot closestTar = senseClosestEnemy();
 		try {
