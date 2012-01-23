@@ -136,23 +136,23 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			// MapLocation[] archons = myRC.senseAlliedArchons();
-			// int[] IDNumbers = new
-			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			// int Counter = 0;
-			// for (MapLocation m : archons) {
-			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
-			// RobotLevel.ON_GROUND);
-			// IDNumbers[Counter] = r.getID();
-			// Counter++;
-			// }
-			// if (myRC.getRobot().getID() == IDNumbers[0]) {
-			// runDefendCoreWithScorchers();
-			// } else {
-			// runArchonBrain();
-			// }
-			enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			runArchonBrain();
+			 MapLocation[] archons = myRC.senseAlliedArchons();
+			 int[] IDNumbers = new
+			 int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			 int Counter = 0;
+			 for (MapLocation m : archons) {
+			 Robot r = (Robot) myRC.senseObjectAtLocation(m,
+			 RobotLevel.ON_GROUND);
+			 IDNumbers[Counter] = r.getID();
+			 Counter++;
+			 }
+			 if (myRC.getRobot().getID() == IDNumbers[0]) {
+			 runDefendCoreWithScorchers();
+			 } else {
+			 runArchonBrain();
+			 }
+//			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+//			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -191,7 +191,8 @@ public class ArchonPlayer extends BasePlayer {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
 				if (Clock.getRoundNum() < 3000) {
-					spreadOutFromOtherArchons();
+					goToPowerNodeForBuild(capturing);
+					buildOrDestroyTower(capturing);
 					runAtEndOfTurn();
 				} else {
 					goToPowerNodeForBuild(capturing);
@@ -236,9 +237,7 @@ public class ArchonPlayer extends BasePlayer {
 						countMoves++;
 					}
 				}
-				while (scorcherCount < 6) {
-					spawnScorcherAndTransferFlux();
-					scorcherCount++;
+				if(myRC.getLocation().distanceSquaredTo(core)>9){
 					while (!myRC.getLocation().isAdjacentTo(core)) {
 						this.nav.getNextMove(core);
 						super.runAtEndOfTurn();
@@ -294,6 +293,7 @@ public class ArchonPlayer extends BasePlayer {
 		try {
 			Robot weakFriendlyUnit = findAWeakFriendly();
 			if (weakFriendlyUnit != null) {
+				myRC.setIndicatorString(0,"found friendly");
 				MapLocation weakLoc = myRC.senseLocationOf(weakFriendlyUnit);
 				while (!myRC.getLocation().isAdjacentTo(weakLoc)) {
 					this.nav.getNextMove(weakLoc);
@@ -308,6 +308,7 @@ public class ArchonPlayer extends BasePlayer {
 					fluxAmountToTransfer = myRC.getFlux();
 				}
 				if (fluxAmountToTransfer > 0) {
+					myRC.setIndicatorString(1,"transfered flux");
 					myRC.transferFlux(weakRobotInfo.location,
 							weakRobotInfo.robot.getRobotLevel(),
 							fluxAmountToTransfer);
@@ -777,66 +778,73 @@ public class ArchonPlayer extends BasePlayer {
 		}
 	}
 
+
+	/**
+	 * Spawns a scorcher and transfers flux to it. Causes this archon to wait
+	 * (yielding) until it has enough flux to create a scorcher, and then waits
+	 * again until it has enough flux to give to the scorcher.
+	 * 
+	 * TODO is this initial flux transfer the correct amount?
+	 */	
 	public void spawnScorcherAndTransferFlux() {
-		try {
-			myRC.setIndicatorString(0, "creating scorcher");
-			while (myRC.isMovementActive()) {
-				// runAtEndOfTurn();
-				super.runAtEndOfTurn();
-			}
-			MapLocation potentialLocation = myRC.getLocation().add(
-					myRC.getDirection());
-			if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
-					|| potentialLocation.equals(myRC.sensePowerCore()
-							.getLocation())) {
-				myRC.setIndicatorString(0, "needs to rotate");
-				this.myRC.setDirection(this.myRC.getDirection().rotateRight());
-			}
-			if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
-					&& myRC.senseObjectAtLocation(potentialLocation,
-							RobotLevel.ON_GROUND) == null
-					&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
-					&& this.myRC.senseObjectAtLocation(potentialLocation,
-							RobotLevel.POWER_NODE) == null) {
-				myRC.spawn(RobotType.SCORCHER);
-				myRC.setIndicatorString(2, "just spawned scorcher: ");
-				// runAtEndOfTurn();
-				super.runAtEndOfTurn();
-				Robot recentScorcher = (Robot) myRC.senseObjectAtLocation(
-						potentialLocation, RobotLevel.ON_GROUND);
-				myRC.setIndicatorString(2, "recent scorcher: " + recentScorcher);
-				if (recentScorcher == null) {
-					// runAtEndOfTurn();
+		while (true) {
+			try {
+				myRC.setIndicatorString(0, "creating SCORCHER");
+				while (myRC.isMovementActive()) {
 					super.runAtEndOfTurn();
-					myRC.setIndicatorString(2, "recent scorcher null");
+				}
+				MapLocation potentialLocation = myRC.getLocation().add(
+						myRC.getDirection());
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+						|| potentialLocation.equals(myRC.sensePowerCore().getLocation())
+						|| this.myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.ON_GROUND) != null) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+				}
+				if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
+						&& myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.ON_GROUND) == null
+						&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+						&& this.myRC.senseObjectAtLocation(potentialLocation,
+								RobotLevel.POWER_NODE) == null) {
+					myRC.spawn(RobotType.SCORCHER);
+					myRC.setIndicatorString(2, "just spawned SCORCHER: ");
+					super.runAtEndOfTurn();;
+					Robot recentSCORCHER = (Robot) myRC.senseObjectAtLocation(
+							potentialLocation, RobotLevel.ON_GROUND);
+					myRC.setIndicatorString(2, "recent SCORCHER: "
+							+ recentSCORCHER);
+					if (recentSCORCHER == null) {
+						super.runAtEndOfTurn();
+						myRC.setIndicatorString(2, "recent SCORCHER null");
+						continue;
+					}
+					super.runAtEndOfTurn();
+					while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
+							&& myRC.canSenseObject(recentSCORCHER)) {
+						super.runAtEndOfTurn();
+					}
+					if (myRC.canSenseObject(recentSCORCHER)
+							&& acceptableFluxTransferLocation(myRC
+									.senseLocationOf(recentSCORCHER))
+							&& myRC.senseRobotInfo(recentSCORCHER).flux < RobotType.SCORCHER.maxFlux / 2) {
+						myRC.transferFlux(myRC.senseLocationOf(recentSCORCHER),
+								RobotLevel.ON_GROUND,
+								RobotType.SCORCHER.maxFlux / 2);
+					}
 					return;
 				}
-				// runAtEndOfTurn();
+				myRC.setIndicatorString(1, "did not attempt to create SCORCHER");
+				myRC.setIndicatorString(
+						2,
+						Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
 				super.runAtEndOfTurn();
-				while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
-						&& myRC.canSenseObject(recentScorcher)) {
-					super.runAtEndOfTurn();
-				}
-				if (myRC.canSenseObject(recentScorcher)
-						&& acceptableFluxTransferLocation(myRC
-								.senseLocationOf(recentScorcher))
-						&& myRC.senseRobotInfo(recentScorcher).flux < RobotType.SOLDIER.maxFlux / 2) {
-					myRC.transferFlux(myRC.senseLocationOf(recentScorcher),
-							RobotLevel.ON_GROUND,
-							RobotType.SCORCHER.maxFlux / 2);
-				}
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
 				return;
 			}
-			myRC.setIndicatorString(1, "did not attempt to create scorcher");
-			myRC.setIndicatorString(
-					2,
-					Boolean.toString(myRC.getFlux() > RobotType.SCORCHER.spawnCost));
-			// runAtEndOfTurn();
-			super.runAtEndOfTurn();
-		} catch (GameActionException e) {
-			System.out.println("Exception caught");
-			e.printStackTrace();
-			return;
 		}
 	}
 
