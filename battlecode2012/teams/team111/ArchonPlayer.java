@@ -176,7 +176,7 @@ public class ArchonPlayer extends BasePlayer {
 				}
 				if (iSeeEnemy) {
 					if (numEnemiesPresent() >= MIN_ENEMIES_FOR_SCORCHER) {
-						spawnScorcherAndTransferFlux();
+						attemptSpawnScorcherAndTransferFlux();
 					}
 					this.nav.getNextMove(myRC.sensePowerCore().getLocation());
 					runAtEndOfTurn();
@@ -847,6 +847,74 @@ public class ArchonPlayer extends BasePlayer {
 			}
 		}
 	}
+	
+	/**
+	 * Spawns a scorcher and transfers flux to it. Does not cause this archon to wait
+	 * (yielding) until it has enough flux to create a scorcher, and then waits
+	 * again until it has enough flux to give to the scorcher.
+	 * 
+	 * TODO is this initial flux transfer the correct amount?
+	 */	
+	public void attemptSpawnScorcherAndTransferFlux() {
+		try {
+			// myRC.setIndicatorString(0,
+			// "creating soldier: " + Clock.getRoundNum());
+			while (myRC.isMovementActive()) {
+				super.runAtEndOfTurn();
+			}
+			MapLocation potentialLocation = myRC.getLocation().add(
+					myRC.getDirection());
+			if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND) {
+				return;
+			}
+			if (myRC.getFlux() > RobotType.SCORCHER.spawnCost
+					&& myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.ON_GROUND) == null
+					&& this.myRC.senseTerrainTile(potentialLocation) == TerrainTile.LAND
+					&& this.myRC.senseObjectAtLocation(potentialLocation,
+							RobotLevel.POWER_NODE) == null) {
+				myRC.spawn(RobotType.SCORCHER);
+				// myRC.setIndicatorString(2, "just spawned SCORCHER: ");
+				super.runAtEndOfTurn();
+				Robot recentSCORCHER = (Robot) myRC.senseObjectAtLocation(
+						potentialLocation, RobotLevel.ON_GROUND);
+				myRC.setIndicatorString(2, "recent SCORCHER: " + recentSCORCHER);
+				if (recentSCORCHER == null) {
+					myRC.setIndicatorString(2, "recent SCORCHER null");
+					return;
+				}
+				runAtEndOfTurn();
+				while ((RobotType.SCORCHER.maxFlux / 2) > myRC.getFlux()
+						&& myRC.canSenseObject(recentSCORCHER)) {
+					super.runAtEndOfTurn();
+				}
+				myRC.setIndicatorString(2, "enough flux for recent SCORCHER: "
+						+ recentSCORCHER);
+				myRC.setIndicatorString(
+						0,
+						"can sense recent: "
+								+ Boolean.toString(myRC
+										.canSenseObject(recentSCORCHER)));
+				if (myRC.canSenseObject(recentSCORCHER)
+						&& acceptableFluxTransferLocation(myRC
+								.senseLocationOf(recentSCORCHER))
+						&& myRC.senseRobotInfo(recentSCORCHER).flux < RobotType.SCORCHER.maxFlux / 2) {
+					myRC.transferFlux(myRC.senseLocationOf(recentSCORCHER),
+							RobotLevel.ON_GROUND, RobotType.SCORCHER.maxFlux / 2);
+				}
+				return;
+			}
+			// myRC.setIndicatorString(1, "did not attempt to create soldier");
+			// myRC.setIndicatorString(
+			// 2,
+			// Boolean.toString(myRC.getFlux() > RobotType.SOLDIER.spawnCost));
+			return;
+			} catch (GameActionException e) {
+				System.out.println("Exception caught");
+				e.printStackTrace();
+				return;
+			}
+		}
 
 	/**
 	 * Causes this archon to move away from neighboring archons, allowing
