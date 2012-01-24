@@ -198,7 +198,7 @@ public class ArchonPlayer extends BasePlayer {
 				 * (myRC.canMove(myRC.getDirection().opposite())) {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
-				if (Clock.getRoundNum() < 1) {
+				if (Clock.getRoundNum() < 3000) {
 					int roundNum = Clock.getBytecodeNum();
 					if (roundNum % 10 == 0) {
 						runAtEndOfTurn();
