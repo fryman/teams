@@ -765,7 +765,7 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
@@ -782,18 +782,28 @@ public class ArchonPlayer extends BasePlayer {
 					unitLevel = RobotLevel.IN_AIR;
 					flux = RobotType.SCOUT.maxFlux;
 				}
+				if (unitType == RobotType.SCORCHER) {
+					if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+							|| potentialLocation.equals(myRC.sensePowerCore()
+									.getLocation())
+							|| this.myRC.senseObjectAtLocation(
+									potentialLocation, RobotLevel.ON_GROUND) != null) {
+						this.myRC.setDirection(this.myRC.getDirection()
+								.rotateRight());
+					}
+				}
 				if (myRC.getFlux() > unitType.spawnCost
 						&& myRC.senseObjectAtLocation(potentialLocation,
 								unitLevel) == null) {
 					myRC.spawn(unitType);
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, unitLevel);
 					if (recentUnit == null) {
-						runAtEndOfTurn();
+						super.runAtEndOfTurn();
 						continue;
 					}
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					while ((flux) > myRC.getFlux()
 							&& myRC.canSenseObject(recentUnit)) {
 						super.runAtEndOfTurn();
@@ -807,7 +817,7 @@ public class ArchonPlayer extends BasePlayer {
 					}
 					return;
 				}
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
 				e.printStackTrace();
@@ -824,7 +834,7 @@ public class ArchonPlayer extends BasePlayer {
 		while (true) {
 			try {
 				while (myRC.isMovementActive()) {
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 				}
 				MapLocation potentialLocation = myRC.getLocation().add(
 						myRC.getDirection());
@@ -843,18 +853,29 @@ public class ArchonPlayer extends BasePlayer {
 				if (unitType == RobotType.SCOUT) {
 					unitLevel = RobotLevel.IN_AIR;
 				}
+
+				if (unitType == RobotType.SCORCHER) {
+					if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+							|| potentialLocation.equals(myRC.sensePowerCore()
+									.getLocation())
+							|| this.myRC.senseObjectAtLocation(
+									potentialLocation, RobotLevel.ON_GROUND) != null) {
+						this.myRC.setDirection(this.myRC.getDirection()
+								.rotateRight());
+					}
+				}
 				if (myRC.getFlux() > unitType.spawnCost
 						&& myRC.senseObjectAtLocation(potentialLocation,
 								unitLevel) == null) {
 					myRC.spawn(unitType);
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
 							potentialLocation, unitLevel);
 					if (recentUnit == null) {
-						runAtEndOfTurn();
+						super.runAtEndOfTurn();
 						continue;
 					}
-					runAtEndOfTurn();
+					super.runAtEndOfTurn();
 					while ((flux) > myRC.getFlux()
 							&& myRC.canSenseObject(recentUnit)) {
 						super.runAtEndOfTurn();
@@ -868,7 +889,7 @@ public class ArchonPlayer extends BasePlayer {
 					}
 					return;
 				}
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 			} catch (GameActionException e) {
 				System.out.println("Exception caught");
 				e.printStackTrace();
@@ -899,16 +920,26 @@ public class ArchonPlayer extends BasePlayer {
 					|| (myRC.senseTerrainTile(potentialLocation) == TerrainTile.VOID && unitLevel != RobotLevel.IN_AIR)) {
 				return;
 			}
+			if (unitType == RobotType.SCORCHER) {
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+						|| potentialLocation.equals(myRC.sensePowerCore()
+								.getLocation())
+						|| this.myRC.senseObjectAtLocation(
+								potentialLocation, RobotLevel.ON_GROUND) != null) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+				}
+			}
 			if (myRC.getFlux() > unitType.spawnCost
 					&& myRC.senseObjectAtLocation(potentialLocation, unitLevel) == null) {
 				myRC.spawn(unitType);
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 				Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, unitLevel);
 				if (recentUnit == null) {
 					return;
 				}
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 				while (flux > myRC.getFlux() && myRC.canSenseObject(recentUnit)) {
 					super.runAtEndOfTurn();
 				}
@@ -952,16 +983,27 @@ public class ArchonPlayer extends BasePlayer {
 			if (unitType == RobotType.SCOUT) {
 				unitLevel = RobotLevel.IN_AIR;
 			}
+
+			if (unitType == RobotType.SCORCHER) {
+				if (this.myRC.senseTerrainTile(potentialLocation) != TerrainTile.LAND
+						|| potentialLocation.equals(myRC.sensePowerCore()
+								.getLocation())
+						|| this.myRC.senseObjectAtLocation(
+								potentialLocation, RobotLevel.ON_GROUND) != null) {
+					this.myRC.setDirection(this.myRC.getDirection()
+							.rotateRight());
+				}
+			}
 			if (myRC.getFlux() > unitType.spawnCost
 					&& myRC.senseObjectAtLocation(potentialLocation, unitLevel) == null) {
 				myRC.spawn(unitType);
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 				Robot recentUnit = (Robot) myRC.senseObjectAtLocation(
 						potentialLocation, unitLevel);
 				if (recentUnit == null) {
 					return;
 				}
-				runAtEndOfTurn();
+				super.runAtEndOfTurn();
 				while (flux > myRC.getFlux() && myRC.canSenseObject(recentUnit)) {
 					super.runAtEndOfTurn();
 				}

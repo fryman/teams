@@ -175,6 +175,17 @@ public class SoldierPlayer extends BasePlayer {
 		}
 	}
 
+	public void bugOut() {
+		if (!myRC.isMovementActive()
+				&& myRC.canMove(myRC.getDirection().opposite())) {
+			try {
+				myRC.moveBackward();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/**
 	 * Finds and returns the BEST enemy to shoot at.
 	 */
