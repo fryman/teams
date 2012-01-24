@@ -126,7 +126,11 @@ public class SoldierPlayer extends BasePlayer {
 		int justChasing = 0;
 		while (true) {
 			try {
-				friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				friendlyMapLocationToFollow = this
+						.findNearestFriendlyRobotType(RobotType.SCOUT);
+				if (friendlyMapLocationToFollow == null) {
+					friendlyMapLocationToFollow = reacquireNearestFriendlyArchonLocation();
+				}
 				if (friendlyMapLocationToFollow == null) {
 					// game over...
 					myRC.suicide();
@@ -136,7 +140,7 @@ public class SoldierPlayer extends BasePlayer {
 						&& myRC.senseRobotInfo(scorcherNoFlux).flux < 10) {
 					attackAndChaseClosestEnemy(scorcherNoFlux);
 				}
-				
+
 				Robot unprotectedArchon = senseUnprotectedArchon();
 				if (unprotectedArchon != null) {
 					attackAndChaseUnprotectedArchon(unprotectedArchon);
@@ -176,20 +180,24 @@ public class SoldierPlayer extends BasePlayer {
 	 */
 	public Robot senseBestEnemy() {
 		try {
-			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 
 			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> others = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> disrupters = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 
-			for (Robot e : enemies) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}

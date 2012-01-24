@@ -48,7 +48,9 @@ public class ScoutPlayer extends BasePlayer {
 				myRC.setIndicatorString(2, "healing: " + Clock.getRoundNum());
 				this.myRC.regenerate();
 			}
+			int a = Clock.getBytecodeNum();
 			Robot closestTar = senseClosestEnemy();
+			
 			if (closestTar != null
 					&& myRC.senseRobotInfo(closestTar).type != RobotType.TOWER
 					&& myRC.senseRobotInfo(closestTar).flux > .5) {
@@ -63,8 +65,10 @@ public class ScoutPlayer extends BasePlayer {
 					}
 				}
 			}
+			
 			Robot archon = this.findNearestEnemyRobotType(RobotType.ARCHON);
-			if (archon != null) {
+			MapLocation soldier = this.findNearestFriendlyRobotType(RobotType.SOLDIER);
+			if (archon != null && soldier != null) {
 				MapLocation archonLoc = this.myRC.senseLocationOf(archon);
 				Message msg = new Message();
 				msg.ints = new int[] { BasePlayer.ENEMY_ARCHON_LOCATION_MESSAGE };

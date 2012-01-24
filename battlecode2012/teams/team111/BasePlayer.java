@@ -19,6 +19,24 @@ public abstract class BasePlayer extends StaticStuff {
 	public static final int AIRBORNE_PING_MESSAGE = 2123;
 	public static final int GROUND_PING_MESSAGE = 21122;
 	public static final int ENEMY_ARCHON_LOCATION_MESSAGE = 666;
+	protected Robot closestEnemyArchon;
+	protected Robot closestEnemyScout;
+	protected Robot closestEnemySoldier;
+	protected Robot closestEnemyDisrupter;
+	protected Robot closestEnemyScorcher;
+	protected Robot closestEnemyTower;
+
+	protected Robot closestFriendlyArchon;
+	protected Robot closestFriendlyScout;
+	protected Robot closestFriendlySoldier;
+	protected Robot closestFriendlyDisrupter;
+	protected Robot closestFriendlyScorcher;
+	protected Robot closestFriendlyTower;
+	
+	protected int lastRoundNumSurroundingsProcessed;
+	
+	protected Robot[] nearbyRobots;
+	
 	protected Message[] messages;
 	protected double prevEnergon;
 	protected double oldMovingAverageCorridorWidth = 12;
@@ -210,11 +228,15 @@ public abstract class BasePlayer extends StaticStuff {
 	 * @return the Robot closest to this Robot that is on the same team as this.
 	 */
 	public Robot findAFriendly() {
-		Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		Robot closestFriend = null;
 		try {
-			if (nearbyObjects.length > 0) {
-				for (Robot e : nearbyObjects) {
+			if (nearbyRobots.length > 0) {
+				for (Robot e : nearbyRobots) {
 					if (e.getTeam() != myRC.getTeam()
 							|| !myRC.canSenseObject(e)
 							|| myRC.senseRobotInfo(e).type == RobotType.TOWER) {
@@ -250,10 +272,14 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public Robot findAWeakFriendly() {
 		try {
-			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 			Robot weakestFriend = null;
-			if (nearbyObjects.length > 0) {
-				for (Robot e : nearbyObjects) {
+			if (nearbyRobots.length > 0) {
+				for (Robot e : nearbyRobots) {
 					if (e.getTeam() != myRC.getTeam()
 							|| myRC.senseRobotInfo(e).type == RobotType.ARCHON
 							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
@@ -287,10 +313,14 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public Robot findALowEnergonFriendly() {
 		try {
-			Robot[] nearbyObjects = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 			Robot weakestFriend = null;
-			if (nearbyObjects.length > 0) {
-				for (Robot e : nearbyObjects) {
+			if (nearbyRobots.length > 0) {
+				for (Robot e : nearbyRobots) {
 					if (e.getTeam() != myRC.getTeam()
 							|| myRC.senseRobotInfo(e).type == RobotType.TOWER
 							|| !myRC.canAttackSquare((myRC.senseLocationOf(e)))) {
@@ -446,10 +476,14 @@ public abstract class BasePlayer extends StaticStuff {
 	 *         robots are nearby.
 	 */
 	public Robot senseClosestEnemy() {
-		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		Robot closest = null;
-		if (enemies.length > 0) {
-			for (Robot e : enemies) {
+		if (nearbyRobots.length > 0) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
@@ -468,10 +502,14 @@ public abstract class BasePlayer extends StaticStuff {
 	 *         robots are nearby.
 	 */
 	public Robot senseClosestGroundEnemy() {
-		Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		Robot closest = null;
-		if (enemies.length > 0) {
-			for (Robot e : enemies) {
+		if (nearbyRobots.length > 0) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam()
 						|| !myRC.canSenseObject(e)
 						|| e.getRobotLevel() == battlecode.common.RobotLevel.IN_AIR) {
@@ -766,7 +804,11 @@ public abstract class BasePlayer extends StaticStuff {
 	public MapLocation findNearestFriendlyRobotType(RobotType rt) {
 		MapLocation closestLoc = null;
 		Robot closestRob = null;
-		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		try {
 			if (nearbyRobots.length > 0) {
 				for (Robot r : nearbyRobots) {
@@ -796,8 +838,12 @@ public abstract class BasePlayer extends StaticStuff {
 	 * @return returns closest enemy Robot of type rt
 	 */
 	public Robot findNearestEnemyRobotType(RobotType rt) {
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		Robot closestRob = null;
-		Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
 		try {
 			if (nearbyRobots.length > 0) {
 				for (Robot r : nearbyRobots) {
@@ -876,18 +922,22 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public Robot senseBestEnemy() {
 		try {
-			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 
 			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> others = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 
-			for (Robot e : enemies) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
@@ -957,16 +1007,20 @@ public abstract class BasePlayer extends StaticStuff {
 	 */
 	public Robot senseUnprotectedArchon() {
 		try {
-			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 
 			FastArrayList<Robot> scouts = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> others = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 
-			for (Robot e : enemies) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}

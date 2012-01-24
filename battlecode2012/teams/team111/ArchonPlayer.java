@@ -26,7 +26,8 @@ public class ArchonPlayer extends BasePlayer {
 	private MapLocation locationApproaching;
 	private MapLocation enemyPowerCoreEstimate;
 	private boolean iSeeEnemy = false;
-	private final int MIN_ENEMIES_FOR_SCORCHER = 3;
+	private final int MIN_ENEMIES_FOR_SCORCHER = 2;
+	private boolean buildingTower = false;
 
 	public ArchonPlayer(RobotController rc) {
 		super(rc);
@@ -142,22 +143,23 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void run() {
 		try {
-			MapLocation[] archons = myRC.senseAlliedArchons();
-			int[] IDNumbers = new int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
-			int Counter = 0;
-			for (MapLocation m : archons) {
-				Robot r = (Robot) myRC.senseObjectAtLocation(m,
-						RobotLevel.ON_GROUND);
-				IDNumbers[Counter] = r.getID();
-				Counter++;
-			}
-			if (myRC.getRobot().getID() == IDNumbers[0]) {
-				runDefendCoreWithScorchers();
-			} else {
-				runArchonBrain();
-			}
-			 enemyPowerCoreEstimate = estimateEnemyPowerCore();
-			 runArchonBrain();
+			// MapLocation[] archons = myRC.senseAlliedArchons();
+			// int[] IDNumbers = new
+			// int[battlecode.common.GameConstants.NUMBER_OF_ARCHONS];
+			// int Counter = 0;
+			// for (MapLocation m : archons) {
+			// Robot r = (Robot) myRC.senseObjectAtLocation(m,
+			// RobotLevel.ON_GROUND);
+			// IDNumbers[Counter] = r.getID();
+			// Counter++;
+			// }
+			// if (myRC.getRobot().getID() == IDNumbers[0]) {
+			// runDefendCoreWithScorchers();
+			// } else {
+			// runArchonBrain();
+			// }
+			enemyPowerCoreEstimate = estimateEnemyPowerCore();
+			runArchonBrain();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -196,7 +198,7 @@ public class ArchonPlayer extends BasePlayer {
 				 * (myRC.canMove(myRC.getDirection().opposite())) {
 				 * myRC.setDirection(myRC.getDirection().opposite()); } }
 				 */
-				if (Clock.getRoundNum() < 1000) {
+				if (Clock.getRoundNum() < 3000) {
 					int roundNum = Clock.getBytecodeNum();
 					if (roundNum % 10 == 0) {
 						runAtEndOfTurn();
@@ -229,9 +231,13 @@ public class ArchonPlayer extends BasePlayer {
 	}
 
 	private int numEnemiesPresent() {
-		Robot[] sensedRobots = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		int e = 0;
-		for (Robot r : sensedRobots) {
+		for (Robot r : nearbyRobots) {
 			if (r.getTeam() != this.myRC.getTeam()) {
 				e++;
 			}
@@ -254,7 +260,7 @@ public class ArchonPlayer extends BasePlayer {
 					int countMoves = 0;
 					spawnUnitAndTransferFlux(RobotType.SCORCHER);
 					scorcherCount++;
-					while (countMoves < 4) {	
+					while (countMoves < 4) {
 						randomWalk();
 						countMoves++;
 					}
@@ -407,8 +413,12 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public boolean soldierNearby() {
 		try {
-			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
-			for (Robot n : neighbors) {
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
+			for (Robot n : nearbyRobots) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
 						return true;
@@ -484,10 +494,14 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void checkAndCreateConvoy() {
 		try {
-			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 			int scoutPresent = 0;
 			int soldierPresent = 0;
-			for (Robot n : neighbors) {
+			for (Robot n : nearbyRobots) {
 				if (n.getTeam() == this.myRC.getTeam()) {
 					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
 						scoutPresent++;
@@ -643,6 +657,7 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void buildTower(MapLocation target) {
 		try {
+			buildingTower = true;
 			if (!myRC.canSenseSquare(target)) {
 				return;
 			}
@@ -661,6 +676,7 @@ public class ArchonPlayer extends BasePlayer {
 					runAtEndOfTurn();
 				}
 				if (!myRC.canSenseSquare(target)) {
+					buildingTower = false;
 					return;
 				}
 				getNewTarget();
@@ -1414,33 +1430,58 @@ public class ArchonPlayer extends BasePlayer {
 	 */
 	public void checkAndAttemptCreateConvoy() {
 		try {
-			Robot[] neighbors = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 			int scoutPresent = 0;
 			int soldierPresent = 0;
 			int disrupterPresent = 0;
-			for (Robot n : neighbors) {
+			int scorcherPresent = 0;
+			for (Robot n : nearbyRobots) {
 				if (n.getTeam() == this.myRC.getTeam()) {
-					if (myRC.senseRobotInfo(n).type.equals(RobotType.SCOUT)) {
+					RobotInfo rInfo = myRC.senseRobotInfo(n);
+					if (rInfo.type.equals(RobotType.SCOUT)) {
 						scoutPresent++;
 					}
-					if (myRC.senseRobotInfo(n).type.equals(RobotType.SOLDIER)) {
+					if (rInfo.type.equals(RobotType.SOLDIER)) {
 						soldierPresent++;
 					}
-					if (myRC.senseRobotInfo(n).type.equals(RobotType.DISRUPTER)) {
+					if (rInfo.type.equals(RobotType.DISRUPTER)) {
 						disrupterPresent++;
+					}
+					if (rInfo.type == RobotType.SCORCHER) {
+						scorcherPresent++;
 					}
 				}
 			}
 			// if cannot see soldier, spawn one.
-			if (soldierPresent < 5) {
-				attemptSpawnUnitAndTransferFlux(RobotType.SOLDIER);
-			}
-			if (scoutPresent < 2) {
-				attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
-			}
-			// if cannot see disrupter, spawn two.
-			if (disrupterPresent < 0) {
-				attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
+			if (buildingTower) {
+				if (soldierPresent < 1) {
+					attemptSpawnUnitAndTransferFlux(RobotType.SOLDIER);
+				}
+				if (scoutPresent < 1) {
+					attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
+				}
+				// if cannot see disrupter, spawn two.
+				if (disrupterPresent < 0) {
+					attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
+				}
+			} else {
+				if (soldierPresent < 5) {
+					attemptSpawnUnitAndTransferFlux(RobotType.SOLDIER);
+				}
+				if (scoutPresent < 2) {
+					attemptSpawnUnitAndTransferFlux(RobotType.SCOUT);
+				}
+				// if cannot see disrupter, spawn two.
+				if (disrupterPresent < 0) {
+					attemptSpawnUnitAndTransferFlux(RobotType.DISRUPTER);
+				}
+				if (disrupterPresent < 1) {
+					attemptSpawnUnitAndTransferFlux(RobotType.SCORCHER);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -34,12 +34,14 @@ public class ScorcherPlayer extends BasePlayer {
 	}
 
 	public void run() {
-		//sense power core if can then defend core else follow and attack
-		if (myRC.getLocation().distanceSquaredTo(myRC.sensePowerCore().getLocation()) < 17){
-			runDefendCore();
-		} else {
+//		//sense power core if can then defend core else follow and attack
+//		if (myRC.getLocation().distanceSquaredTo(myRC.sensePowerCore().getLocation()) < 17){
+//			runDefendCore();
+//		} else {
+//		followAndAttack();
+//		}
+		System.out.println("Scorcher created.");
 		followAndAttack();
-		}
 	}
 
 	public void runDefendCore() {

@@ -69,13 +69,17 @@ public class ScorcherPlayer2 extends BasePlayer {
 	 * scorcher to attack.
 	 */
 	public boolean shouldAttack() {
-		Robot[] surroundings = myRC.senseNearbyGameObjects(Robot.class);
+		int curRound = Clock.getRoundNum();
+		if (curRound != lastRoundNumSurroundingsProcessed) {
+			nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+			lastRoundNumSurroundingsProcessed = curRound;
+		}
 		int numAllies = 0;
 		int numEnemies = 0;
 
 		try {
-			if (surroundings.length > 0) {	//there are enemies in range
-				for (Robot r : surroundings) {
+			if (nearbyRobots.length > 0) {	//there are enemies in range
+				for (Robot r : nearbyRobots) {
 					if (r.getTeam() == myRC.getTeam()) {
 						numAllies++;
 					} else if (r.getTeam() != myRC.getTeam()

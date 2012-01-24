@@ -90,20 +90,24 @@ public class DisrupterPlayer extends BasePlayer {
 	@Override
 	public Robot senseBestEnemy() {
 		try {
-			Robot[] enemies = myRC.senseNearbyGameObjects(Robot.class);
+			int curRound = Clock.getRoundNum();
+			if (curRound != lastRoundNumSurroundingsProcessed) {
+				nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+				lastRoundNumSurroundingsProcessed = curRound;
+			}
 
 			FastArrayList<Robot> archons = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> soldiers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> scorchers = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> others = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 			FastArrayList<Robot> disrupters = new FastArrayList<Robot>(
-					enemies.length);
+					nearbyRobots.length);
 
-			for (Robot e : enemies) {
+			for (Robot e : nearbyRobots) {
 				if (e.getTeam() == myRC.getTeam() || !myRC.canSenseObject(e)) {
 					continue;
 				}
