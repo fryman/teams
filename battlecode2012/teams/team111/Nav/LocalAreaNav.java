@@ -19,6 +19,7 @@ public class LocalAreaNav extends Navigation {
 	private MapLocation next = null;
 	private BugNav altNav;
 	private boolean altNavInUse = false;
+	private boolean waited = false;
 
 	public LocalAreaNav(RobotController rc) {
 		this.myRC = rc;
@@ -81,13 +82,18 @@ public class LocalAreaNav extends Navigation {
 					myRC.setIndicatorString(1, "Turning ideal");
 					return;
 				}
+				waited = false;
 				myRC.moveForward();
 				next = null;
 				myRC.setIndicatorString(1, "Moving ideal "
 						+ this.movesSinceCalc);
 				return;
+			} else if (!waited) {
+				this.waited = true;
+				return;
 			} else {
 				altNavInUse = true;
+				waited = false;
 				useAltNav(target);
 			}
 		} catch (Exception e) {
@@ -117,7 +123,7 @@ public class LocalAreaNav extends Navigation {
 
 	private void useAltNav(MapLocation m) {
 		this.altNav.getNextMove(m);
-		if (!this.altNav.onWall()){
+		if (!this.altNav.onWall()) {
 			altNavInUse = false;
 		}
 	}
@@ -178,13 +184,13 @@ public class LocalAreaNav extends Navigation {
 			} else if (vTerrain.equals(TerrainTile.OFF_MAP)) {
 				return false;
 			}
-			if (this.myRC.canSenseSquare(loc)) {
-				GameObject obstruction = this.myRC.senseObjectAtLocation(loc,
-						this.myRC.getType().level);
-				if (obstruction != null) {
-					return false;
-				}
-			}
+			// if (this.myRC.canSenseSquare(loc)) {
+			// GameObject obstruction = this.myRC.senseObjectAtLocation(loc,
+			// this.myRC.getType().level);
+			// if (obstruction != null) {
+			// return false;
+			// }
+			// }
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
